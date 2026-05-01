@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="style-game.css">
+    <title>Tomb Of The Mask</title>
+    <link rel="icon" href="../Images/Icons/icon.png">
+</head>
+    <body onload="startGame()">
+        <div class="container">
+            <div class="header">
+                <div id="stage-number">
+                    <h1>STAGE <span class="stage-level"></span></h1>
+                </div>
+                <div id="arrow">
+                    &larr;
+                </div>
+            </div>
+        
+            <div id="map-container">
+
+            </div>
+
+            <div id="count-star">
+                  <p>STELLE RACCOLTE: <span id="numero-score">0</span> SU 3</p>
+              </div>
+        </div>
+        <div id="win-container">
+            <div id="first-sep">
+                <h4>STAGE <span class="stage-level"></span></h4>
+                <h3>LEVEL COMPLETED</h3>
+            </div>
+            <div id="second-sep">
+
+            </div>
+            
+            <div>
+                <button id="button-win">RETURN TO LEVEL SELECTION</button>
+            </div>
+        </div>
+
+        <div id="lose-container">
+            <h4>STAGE <span class="stage-level"></span></h4>
+            <h3>YOU LOSE, TRY AGAIN</h3>
+            <div>
+                <button id="button-lose">REPLAY</button>
+            </div>
+        </div>
+
+        <script src="script-game.js"></script>
+    </body>
+</html>

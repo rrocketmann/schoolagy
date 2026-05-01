@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="style-homepage.css">
+    <link rel="icon" href="Images/Icons/icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tomb Of The Mask</title>
+</head>
+    <body>
+        <img id="mutebtn" src="Images/Background/muted.png" alt="mute" onclick="muta()">
+        <div id="images" onclick="inizia()">
+            <img id="title" src="Images/Background/logo_tomb.png" alt="logo_tomb">
+            <img id="petp" src="Images/Background/scritta_tomb.png" alt="scritta" >
+        </div>
+        <div id="levels-container">
+            <img id="title-level" src="Images/Background/Titolo.png" alt="Scritte">
+            <div id="level-buttons">
+                <div><button onclick="levelOne()" type="button">1</button></div>
+                <div><button onclick="levelTwo()" type="button">2</button></div>
+                <div><button onclick="levelThree()" type="button">3</button></div>
+                <div><button onclick="levelFour()" type="button">4</button></div>
+                <div><button id="coming-soon" onclick="alert('OTHER LEVELS ARE COMING SOON!!')" type="button">COMING SOON</button></div>
+            </div>
+        </div>
+        <script src="script-homepage.js"></script>
+    </body>
+</html>

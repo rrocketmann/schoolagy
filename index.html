@@ -262,6 +262,9 @@ body.no-scroll{overflow:hidden;}
           <div class="nav-dropdown-item" data-url="tetris/index.html">Tetris</div>
           <div class="nav-dropdown-item" data-url="tinyfishing/index.html">Tiny Fishing</div>
           <div class="nav-dropdown-item" data-url="eaglercraft/index.html">Eaglercraft</div>
+          <div class="nav-dropdown-item" data-url="clusterrush/index.html">Cluster Rush</div>
+          <div class="nav-dropdown-item" data-url="retrobowlcollege/index.html">Retro Bowl College</div>
+          <div class="nav-dropdown-item" data-url="tombofthemask/index.html">Tomb of the Mask</div>
         </div>
       </a>
     <a class="nav-link" href="#">Grades <span class="caret">&#9660;</span></a>
@@ -572,13 +575,13 @@ var allGames = [
   {dir:'stickmanhook',name:'Stickman Hook'},{dir:'stickmansurvival',name:'Stickman Survival'},
   {dir:'tanukisunset',name:'Tanuki Sunset'},{dir:'tetris',name:'Tetris'},{dir:'themazeofspacegoblins',name:'Maze of Space Goblins'},
   {dir:'timeshooter',name:'Time Shooter'},{dir:'timeshooter2',name:'Time Shooter 2'},{dir:'timeshooter3',name:'Time Shooter 3'},
-  {dir:'tinyfishing',name:'Tiny Fishing'},{dir:'tombofthemask',name:'Tomb of the Mask'},{dir:'topspeedracing3d',name:'Top Speed Racing 3D'},
+  {dir:'tinyfishing',name:'Tiny Fishing'},{dir:'tombofthemask',name:'Tomb of the Mask'},{dir:'retrobowlcollege',name:'Retro Bowl College'},{dir:'topspeedracing3d',name:'Top Speed Racing 3D'},
   {dir:'towermaster',name:'Tower Master'},{dir:'trimps',name:'Trimps'},{dir:'tunnelrush',name:'Tunnel Rush'},
   {dir:'vex3',name:'Vex 3'},{dir:'vex4',name:'Vex 4'},{dir:'vex5',name:'Vex 5'},{dir:'vex6',name:'Vex 6'},
   {dir:'webecomewhatwebehold',name:'We Become What We Behold'},{dir:'worldshardestgame2',name:'World\'s Hardest Game 2'},
   {dir:'xx142b2exe',name:'xx142-b2exe'},{dir:'zombsroyale',name:'Zombs Royale'}
 ];
-var integratedGames = ['basketrandom','slope','drivemad','retrobowl','2048','bitlife','subwaysurferssingapore','vex3','vex4','vex5','vex6','tetris','tinyfishing','eaglercraft'];
+var integratedGames = ['basketrandom','slope','drivemad','retrobowl','2048','bitlife','subwaysurferssingapore','vex3','vex4','vex5','vex6','tetris','tinyfishing','eaglercraft','clusterrush','retrobowlcollege','tombofthemask'];
 var availableGames = allGames.filter(function(g){return integratedGames.indexOf(g.dir)===-1;});
 var select = document.getElementById('game-recommend-select');
 for(var i=0;i<availableGames.length;i++){

@@ -1,0 +1,491 @@
+*{
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+html, body{
+    height: 100%;
+}
+
+body{
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    background-image: url(Images/Background/background_tomb_mask.png);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: 100% 100%;
+    background-position-y: -2vh;
+    background-color: black;
+}
+
+#title{
+    height: 95%;
+    width: 100%;
+    -webkit-animation: opacity 6s ease-out;
+    -moz-animation: opacity 6s ease-out;
+    -ms--animation: opacity 6s ease-out;
+    -o-animation: opacity 6s ease-out;
+    animation: opacity 6s ease-out;
+}
+
+#mutebtn{
+    position: absolute;
+    width: 3vw;
+    top: 2%;
+    left: 2%;
+}
+
+#images{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+#petp{
+    height: 12%;
+    width: 25%;
+    -webkit-animation: opacity 6s ease-out;
+    -moz-animation: opacity 6s ease-out;
+    -ms-animation: opacity 6s ease-out;
+    -o-animation: opacity 6s ease-out;
+    animation: opacity 4.5s ease-out;
+}
+
+#levels-container{
+    display: none;
+    flex-flow: row wrap;
+    gap: 100%;
+}
+
+#title-level{
+    justify-content: center;
+    margin: auto;
+}
+
+#level-buttons{
+    display: none;
+    margin: auto;
+    -webkit-animation: opacity 6s ease-out;
+    -moz-animation: opacity 6s ease-out;
+    -ms-animation: opacity 6s ease-out;
+    -o-animation: opacity 6s ease-out;
+    animation: opacity_livelli 1s ease-out;
+}
+
+#coming-soon{
+    font-size: 50px;
+    border-radius: 10px;
+    font-weight: bolder;
+    padding: 20px;
+    width: 300px;
+    height: 150px;
+    background-color: #fff700;
+}
+
+button{
+    margin: 14px;
+    font-size: 70px;
+    border-radius: 10px;
+    font-weight: bolder;
+    padding: 20px;
+    width: 150px;
+    height: 150px;
+    background-color: #fff700;
+}
+
+@keyframes opacity {
+
+    0%{
+        display: none;
+        opacity: 0;
+    }
+    1%{
+        display: block;
+        opacity: 0;
+    }
+    100%{
+        display: block;
+        opacity: 1;
+    }
+}
+
+/* WebKit, Opera, Safari, Chrome */
+@-webkit-keyframes opacity {
+
+    0%{
+        display: none;
+        opacity: 0;
+    }
+    1%{
+        display: block;
+        opacity: 0;
+    }
+    100%{
+        display: block;
+        opacity: 1;
+    }
+}
+
+/* Mozilla, Firefox */
+@-moz-keyframes opacity {
+
+    0%{
+        display: none;
+        opacity: 0;
+    }
+    1%{
+        display: block;
+        opacity: 0;
+    }
+    100%{
+        display: block;
+        opacity: 1;
+    }
+}
+
+/* Opera */
+@-o-keyframes opacity {
+
+    0%{
+        display: none;
+        opacity: 0;
+    }
+    1%{
+        display: block;
+        opacity: 0;
+    }
+    100%{
+        display: block;
+        opacity: 1;
+    }
+}
+
+/* Internet Explorer, Edge */
+@-ms-keyframes opacity {
+
+    0%{
+        display: none;
+        opacity: 0;
+    }
+    1%{
+        display: block;
+        opacity: 0;
+    }
+    100%{
+        display: block;
+        opacity: 1;
+    }
+}
+
+@keyframes opacity_livelli {
+
+    0%{
+        display: none;
+        opacity: 0;
+    }
+    1%{
+        display: block;
+        opacity: 0;
+    }
+    100%{
+        display: block;
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes opacity_livelli {
+
+    0%{
+        display: none;
+        opacity: 0;
+    }
+    1%{
+        display: block;
+        opacity: 0;
+    }
+    100%{
+        display: block;
+        opacity: 1;
+    }
+}
+
+@-moz-keyframes opacity_livelli {
+
+    0%{
+        display: none;
+        opacity: 0;
+    }
+    1%{
+        display: block;
+        opacity: 0;
+    }
+    100%{
+        display: block;
+        opacity: 1;
+    }
+}
+
+@-o-keyframes opacity_livelli {
+
+    0%{
+        display: none;
+        opacity: 0;
+    }
+    1%{
+        display: block;
+        opacity: 0;
+    }
+    100%{
+        display: block;
+        opacity: 1;
+    }
+}
+
+@-ms-keyframes opacity_livelli {
+
+    0%{
+        display: none;
+        opacity: 0;
+    }
+    1%{
+        display: block;
+        opacity: 0;
+    }
+    100%{
+        display: block;
+        opacity: 1;
+    }
+}
+
+
+/*cellulari piccoli*/
+@media screen and (max-width: 320px){
+
+    #title{
+        height: 55%;
+        width: 100%;
+        margin-top: -10%;
+    }
+
+    #petp{
+        height: 10%;
+        width: 35%;
+    }
+
+    #mutebtn{
+        position: absolute;
+        width: 9vw;
+        top: 2%;
+        left: 2%;
+    }
+    #title-level{
+        width: 100%;
+    }
+
+    #levels-container{
+        width: 100%;
+        height: 100%;
+    }
+
+    #level-buttons{
+        margin: 0;
+        flex-wrap: wrap;
+        text-align: center;
+    } 
+
+    #level-buttons > div{
+        flex: 50%;
+    }
+
+    button{
+        font-size: 40px;
+        padding: 10px;
+        width: 100px;
+        height: 100px;
+    }
+
+    #title-level{
+        width: 100%;
+    }
+
+    
+    #coming-soon{
+        width: 85%;
+        font-size: 40px;
+    }
+}
+
+/*cellulari medi*/
+@media screen and (min-width: 321px) and (max-width: 768px){
+    
+    #title{
+        height: 65%;
+        width: 100%;
+    }
+
+    #petp{
+        height: 10%;
+        width: 30%;
+    }
+
+    #mutebtn{
+        position: absolute;
+        width: 7vw;
+        top: 2%;
+        left: 2%;
+    }
+
+    #levels-container{
+        width: 100%;
+        height: 100%;
+    }
+
+    #level-buttons{
+        margin: 0;
+        flex-wrap: wrap;
+        text-align: center;
+    } 
+
+    #level-buttons > div{
+        flex: 50%;
+    }
+
+    #title-level{
+        width: 100%;
+    }
+
+    button{
+        font-size: 50px;
+        padding: 10px;
+        width: 125px;
+        height: 125px;
+    }
+    
+    #coming-soon{
+        width: 85%;
+    }
+}
+
+/*tablet*/
+@media (min-width: 768px) and (max-width: 1023px) {
+
+    #title{
+        height: 60%;
+        width: 100%;
+    }
+    
+    #petp{
+        height: 10%;
+        width: 30%;
+    }
+
+    #mutebtn{
+        position: absolute;
+        width: 6vw;
+        top: 2%;
+        left: 2%;
+    }
+
+    #levels-container{
+        display: none;
+        flex-flow: row wrap;
+        gap: 5%;
+    }
+
+    #level-buttons{
+        margin: 0;
+        flex-wrap: wrap;
+        text-align: center;
+    } 
+
+    #level-buttons > div{
+        flex: 50%;
+    }
+
+    button{
+        font-size: 80px;
+        padding: 10px;
+        width: 200px;
+        height: 200px;
+    }
+
+    #title-level{
+        width: 100%;
+    }
+    
+    #coming-soon{
+        width: 80%;
+        font-size: 70px;
+    }
+}
+
+/*Schermi 2K*/
+@media (min-width: 2256px) and (max-width: 3199px){
+    
+    #coming-soon{
+        font-size: 60px;
+        width: 400px;
+        height: 200px;
+        border-radius: 20px;
+    }
+    
+    button{
+        font-size: 80px;
+        border-radius: 20px;
+        width: 200px;
+        height: 200px;
+    }
+
+    #title-level{
+        width: 52%;
+    }
+}
+
+/*Schermi 3k*/
+@media (min-width: 3200px) and (max-width: 3839px){
+
+    #coming-soon{
+        font-size: 85px;
+        width: 450px;
+        height: 225px;
+        border-radius: 25px;
+    }
+    
+    button{
+        font-size: 100px;
+        border-radius: 25px;
+        width: 225px;
+        height: 225px;
+    }
+
+    #title-level{
+        width: 55%;
+    }
+}
+
+/*Schermi 4k*/
+@media (min-width: 3840px){
+    
+    #coming-soon{
+        font-size: 85px;
+        width: 500px;
+        height: 275px;
+        border-radius: 25px;
+    }
+    
+    button{
+        font-size: 100px;
+        border-radius: 25px;
+        width: 275px;
+        height: 275px;
+    }
+
+    #title-level{
+        width: 65%;
+    }
+}

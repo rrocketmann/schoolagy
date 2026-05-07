@@ -194,6 +194,7 @@ body.no-scroll{overflow:hidden;}
 .resources-page.open{display:flex;align-items:center;justify-content:center;}
 .resources-inner{position:relative;padding:0;}
 .game-container-iframe{width:85vw;height:85vh;border:3px solid var(--border-card);background:#000;display:block;}
+.game-container-iframe[src*="chromedino"]{width:1200px;height:300px;}
 .game-card{background:var(--bg-card);border:1px solid var(--border-card);padding:18px 18px 16px;cursor:pointer;transition:border-color .15s,background .25s;}
 .game-card:hover{border-color:var(--text-link);}
 .game-card-name{font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:5px;}
@@ -247,7 +248,7 @@ body.no-scroll{overflow:hidden;}
           <div class="nav-dropdown-item" data-url="clusterrush/index.html">Cluster Rush</div>
           <div class="nav-dropdown-item" data-url="retrobowlcollege/index.html">Retro Bowl College</div>
           <div class="nav-dropdown-item" data-url="tombofthemask/index.html">Tomb of the Mask</div>
-          <div class="nav-dropdown-item" data-url="chromedino/index.html">Chrome Dino</div>
+          <div class="nav-dropdown-item" data-url="chromedino/index.html" data-size="1200x300">Chrome Dino</div>
         </div>
       </a>
     <a class="nav-link" href="#">Grades <span class="caret">&#9660;</span></a>
@@ -420,7 +421,17 @@ document.getElementById('resources-btn').addEventListener('click',function(e){
 document.querySelectorAll('.nav-dropdown-item').forEach(function(item){
   item.addEventListener('click',function(){
     var url=this.getAttribute('data-url');
-    document.getElementById('game-iframe').src=url;
+    var size=this.getAttribute('data-size');
+    var iframe=document.getElementById('game-iframe');
+    iframe.src=url;
+    if(size){
+      var parts=size.split('x');
+      iframe.style.width=parts[0]+'px';
+      iframe.style.height=parts[1]+'px';
+    }else{
+      iframe.style.width='85vw';
+      iframe.style.height='85vh';
+    }
     document.getElementById('resources-dropdown').classList.remove('open');
     document.getElementById('resources-page').classList.add('open');
     updateDim();

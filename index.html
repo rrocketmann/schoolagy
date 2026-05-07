@@ -447,6 +447,19 @@ document.getElementById('resources-page').addEventListener('click',function(e){
   if(e.target===this)closeResources();
 });
 
+document.addEventListener('keydown',function(e){
+  if(e.key==='f'&&isResOpen()){
+    var iframe=document.getElementById('game-iframe');
+    if(iframe.requestFullscreen){iframe.requestFullscreen();}
+    else if(iframe.webkitRequestFullscreen){iframe.webkitRequestFullscreen();}
+    else if(iframe.mozRequestFullScreen){iframe.mozRequestFullScreen();}
+    else if(iframe.msRequestFullscreen){iframe.msRequestFullscreen();}
+  }
+  if(e.key==='Escape'&&isResOpen()){
+    closeResources();
+  }
+});
+
 /* COOKIES */
 function setCookie(n,v,d){var e=new Date();e.setTime(e.getTime()+d*864e5);document.cookie=n+'='+v+';expires='+e.toUTCString()+';path=/';}
 function getCookie(n){var ca=document.cookie.split(';');for(var i=0;i<ca.length;i++){var c=ca[i].trim();if(c.indexOf(n+'=')==0)return c.substring(n.length+1);}return null;}

@@ -238,14 +238,29 @@
          * Load and cache the image assets from the page.
          */
         loadImages: function() {
+            var self = this;
             var imageSources = IS_HIDPI ? Runner.imageSources.HDPI :
                 Runner.imageSources.LDPI;
             var numImages = imageSources.length;
+            var imagesLoaded = 0;
             for (var i = numImages - 1; i >= 0; i--) {
                 var imgSource = imageSources[i];
-                this.images[imgSource.name] = document.getElementById(imgSource.id);
+                var img = document.getElementById(imgSource.id);
+                self.images[imgSource.name] = img;
+                if (img.complete) {
+                    imagesLoaded++;
+                } else {
+                    img.onload = function() {
+                        imagesLoaded++;
+                        if (imagesLoaded === numImages) {
+                            self.init();
+                        }
+                    };
+                }
             }
-            this.init();
+            if (imagesLoaded === numImages) {
+                self.init();
+            }
         },
         /**
          * Load and decode base 64 encoded sounds.
@@ -299,7 +314,7 @@
 
             this.canvasCtx = this.canvas.getContext('2d');
             this.canvasCtx.fillStyle = '#f7f7f7';
-            this.canvasCtx.fill();
+            this.canvasCtx.fillRect(0, 0, this.dimensions.WIDTH, this.dimensions.HEIGHT);
             Runner.updateCanvasScaling(this.canvas);
             // Horizon contains clouds, obstacles and the ground.
             this.horizon = new Horizon(this.canvas, this.images, this.dimensions,

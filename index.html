@@ -435,6 +435,7 @@ document.querySelectorAll('.nav-dropdown-item').forEach(function(item){
     document.getElementById('resources-dropdown').classList.remove('open');
     document.getElementById('resources-page').classList.add('open');
     updateDim();
+    setTimeout(function(){iframe.focus();},100);
   });
 });
 

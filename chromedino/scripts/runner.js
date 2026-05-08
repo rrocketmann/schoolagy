@@ -340,13 +340,8 @@
          * Adjust game space dimensions on resize.
          */
         adjustDimensions: function() {
-            clearInterval(this.resizeTimerId_);
-            this.resizeTimerId_ = null;
-            var boxStyles = window.getComputedStyle(this.outerContainerEl);
-            var padding = Number(boxStyles.paddingLeft.substr(0,
-                boxStyles.paddingLeft.length - 2));
-
-            this.dimensions.WIDTH = this.outerContainerEl.offsetWidth - padding * 2;
+            this.dimensions.WIDTH = DEFAULT_WIDTH;
+            this.dimensions.HEIGHT = Runner.defaultDimensions.HEIGHT;
             // Redraw the elements back onto the canvas.
             if (this.canvas) {
                 this.canvas.width = this.dimensions.WIDTH;

@@ -238,29 +238,14 @@
          * Load and cache the image assets from the page.
          */
         loadImages: function() {
-            var self = this;
             var imageSources = IS_HIDPI ? Runner.imageSources.HDPI :
                 Runner.imageSources.LDPI;
             var numImages = imageSources.length;
-            var imagesLoaded = 0;
             for (var i = numImages - 1; i >= 0; i--) {
                 var imgSource = imageSources[i];
-                var img = document.getElementById(imgSource.id);
-                self.images[imgSource.name] = img;
-                if (img.complete) {
-                    imagesLoaded++;
-                } else {
-                    img.onload = function() {
-                        imagesLoaded++;
-                        if (imagesLoaded === numImages) {
-                            self.init();
-                        }
-                    };
-                }
+                this.images[imgSource.name] = document.getElementById(imgSource.id);
             }
-            if (imagesLoaded === numImages) {
-                self.init();
-            }
+            this.init();
         },
         /**
          * Load and decode base 64 encoded sounds.

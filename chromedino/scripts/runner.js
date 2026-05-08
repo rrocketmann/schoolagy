@@ -56,7 +56,7 @@
      * Default game width.
      * @const
      */
-    var DEFAULT_WIDTH = 600;
+    var DEFAULT_WIDTH = 1200;
     /**
      * Frames per second.
      * @const
@@ -99,7 +99,7 @@
      */
     Runner.defaultDimensions = {
         WIDTH: DEFAULT_WIDTH,
-        HEIGHT: 150
+        HEIGHT: 300
     };
 
     /**

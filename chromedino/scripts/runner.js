@@ -56,7 +56,7 @@
      * Default game width.
      * @const
      */
-    var DEFAULT_WIDTH = 1200;
+    var DEFAULT_WIDTH = 600;
     /**
      * Frames per second.
      * @const
@@ -99,7 +99,7 @@
      */
     Runner.defaultDimensions = {
         WIDTH: DEFAULT_WIDTH,
-        HEIGHT: 300
+        HEIGHT: 150
     };
 
     /**
@@ -299,7 +299,7 @@
 
             this.canvasCtx = this.canvas.getContext('2d');
             this.canvasCtx.fillStyle = '#f7f7f7';
-            this.canvasCtx.fillRect(0, 0, this.dimensions.WIDTH, this.dimensions.HEIGHT);
+            this.canvasCtx.fill();
             Runner.updateCanvasScaling(this.canvas);
             // Horizon contains clouds, obstacles and the ground.
             this.horizon = new Horizon(this.canvas, this.images, this.dimensions,

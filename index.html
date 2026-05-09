@@ -611,36 +611,6 @@ function loadLikes(){
 }
 loadLikes();
 
-/* FAKE PAGES */
-var fakePageMessages = {
-  courses: {title: 'Courses', body: 'You have no courses. But you do have <strong>unlimited games</strong>!'},
-  groups: {title: 'Groups', body: 'The only group that matters here is the <strong>gaming group</strong>.'},
-  grades: {title: 'Grades', body: 'Your grade in Gaming 101: <strong>A+</strong>. Keep it up!'},
-  search: {title: 'Search', body: 'Search results for "homework": <strong>0 results found</strong>. Try searching for games instead.'},
-  apps: {title: 'Apps', body: 'All installed apps: <strong>Schoolargy Games</strong>. That\'s the only one you need.'},
-  calendar: {title: 'Calendar', body: 'Upcoming events: <strong>Game Time</strong> (All day, Every day).'},
-  messages: {title: 'Messages', body: 'You have <strong>0 new messages</strong>. But you have <strong>100+ games</strong> to play!'},
-  notifications: {title: 'Notifications', body: 'Notification: <strong>It\'s time to play some games!</strong>'},
-  profile: {title: 'Profile', body: 'Name: <strong>Pro Gamer</strong><br>Status: <strong>Currently avoiding homework</strong><br>Level: <strong>Legend</strong>'}
-};
-
-function showFakePage(page){
-  var msg = fakePageMessages[page] || {title: 'Nice Try!', body: 'This page doesn\'t exist.'};
-  document.getElementById('fake-page-title').textContent = msg.title;
-  document.getElementById('fake-page-body').innerHTML = msg.body;
-  document.getElementById('fake-page').classList.add('open');
-  updateDim();
-}
-
-function closeFakePage(){
-  document.getElementById('fake-page').classList.remove('open');
-  updateDim();
-}
-
-document.getElementById('fake-page').addEventListener('click', function(e){
-  if(e.target === this) closeFakePage();
-});
-
 </script>
 </body>
 </html>

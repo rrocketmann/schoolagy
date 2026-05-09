@@ -1,21 +1,34 @@
 <html >
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0,
-        maximum-scale=1.0, user-scalable=no">
-        <title>t.rex extracted</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Chrome Dino</title>
         <style>
-            #offline-resources{
-                display: none;
+            * { margin: 0; padding: 0; }
+            html, body {
+                width: 100%;
+                height: 100%;
+                background: #f7f7f7;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
             }
+            .interstitial-wrapper {
+                width: 620px;
+                height: 170px;
+                background: #f7f7f7;
+                border: 3px solid #ddd;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #offline-resources { display: none; }
         </style>
     </head>
     <body>
-        <div id="main-frame-error" class="interstitial-wrapper" jstcache="0">
-        <img class="icon icon-offline" jseval="updateIconClass(this.classList, iconClass)" jstcache="1" style="visibility: hidden;">
-            <div class="runner-container" style="width: 600px; height: 150px;">
-                <canvas class="runner-canvas" width="600" height="150"></canvas>
-            </div>
+        <div id="main-frame-error" class="interstitial-wrapper">
+            <img class="icon icon-offline" style="visibility: hidden;">
         </div>
         <div id="offline-resources" jstcache="0">
             <div id="offline-resources-1x" jstcache="0">

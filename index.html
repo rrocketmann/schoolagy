@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Home | Schoology</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text x='1' y='27' font-family='Arial' font-size='30' font-weight='900' fill='%2349a8e0' stroke='%2349a8e0' stroke-width='2' paint-order='stroke'>P</text></svg>">
+<title>Home | schoolargy</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text x='1' y='27' font-family='Arial' font-size='30' font-weight='900' fill='%237ac8f5' stroke='%237ac8f5' stroke-width='6' paint-order='stroke'>P</text></svg>">
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-C7MHSFPRSE"></script>
 <script>
@@ -15,6 +15,7 @@
 </script>
 <style>
 :root,[data-theme="light"]{
+  --ui-scale:0.8;
   --bg-page:#f0f0f0;--bg-nav:#ffffff;--bg-card:#ffffff;--bg-hover:#f0f7fc;
   --bg-tag:#e8f4fb;--bg-event-icon:#e8f8e8;--bg-todo-icon:#e8f4fb;
   --bg-like-dot:#dddddd;--bg-modal:#f5f5f5;--bg-input:#ffffff;
@@ -27,7 +28,7 @@
   --border-tag:#b8d8f0;--border-event:#b0d8b0;--border-todo:#b8d8f0;
   --border-input:#ccc;--border-tab:#ccc;--border-likes:#f0f0f0;
   --border-post:#f0f0f0;--border-hr:#ddd;
-  --announce-bg:#f5d800;--badge-bg:#cc3333;--bell-color:#cc3333;
+  --announce-bg:#f5d800;--badge-bg:#9aa0a6;--bell-color:#9aa0a6;
   --caret-color:#555;--post-arrow:#0770a2;
   --toast-bg:#fff;--toast-border:#0770a2;--toast-text:#0770a2;--toast-sub:#555;--toast-icon-bg:#e8f4fb;
   --spirit-bg:#1a3a5c;--spirit-border:#2a6496;--spirit-eye:#7ab3d8;
@@ -37,6 +38,7 @@
   --overlay-bg:rgba(0,0,0,0.52);
 }
 [data-theme="dark"]{
+  --ui-scale:0.8;
   --bg-page:#1a1a1f;--bg-nav:#22232d;--bg-card:#2a2b38;--bg-hover:#2f3040;
   --bg-tag:#1e3448;--bg-event-icon:#1a3020;--bg-todo-icon:#1e3448;
   --bg-like-dot:#3a3b4a;--bg-modal:#22232d;--bg-input:#1e1f28;
@@ -49,7 +51,7 @@
   --border-tag:#2a5070;--border-event:#2a5038;--border-todo:#2a5070;
   --border-input:#3a3b4e;--border-tab:#3a3b4e;--border-likes:#32334a;
   --border-post:#32334a;--border-hr:#3a3b4e;
-  --announce-bg:#6a5800;--badge-bg:#bb2222;--bell-color:#ee4444;
+  --announce-bg:#6a5800;--badge-bg:#80868b;--bell-color:#80868b;
   --caret-color:#8090a8;--post-arrow:#5ab3e8;
   --toast-bg:#2a2b38;--toast-border:#5ab3e8;--toast-text:#5ab3e8;--toast-sub:#a0a4b8;--toast-icon-bg:#1a3048;
   --spirit-bg:#0f2236;--spirit-border:#1e4a70;--spirit-eye:#4a8ab0;
@@ -67,6 +69,8 @@ body.no-scroll{overflow:hidden;}
   min-height:100vh;background:var(--bg-page);
   transition:filter .22s ease,background .25s;
   position:relative;z-index:1;
+  transform:scale(var(--ui-scale));
+  transform-origin:top center;
 }
 #page-wrap.dimmed{
   filter:brightness(0.42) saturate(0.7);
@@ -74,10 +78,45 @@ body.no-scroll{overflow:hidden;}
 }
 
 /* NAV */
-.nav{background:var(--bg-nav);border-bottom:1px solid var(--border-nav);padding:0 80px;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:100;transition:background .25s,border-color .25s;}
+.nav{
+  background:var(--bg-nav);
+  border-bottom:1px solid var(--border-nav);
+  padding:0;
+  display:flex;
+  align-items:center;
+  height:56px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  transition:background .25s,border-color .25s;
+  transform:translateX(calc(-50vw * (1 - var(--ui-scale)) / var(--ui-scale))) scale(calc(1 / var(--ui-scale)));
+  transform-origin:top left;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+.nav-inner{
+  width:fit-content;
+  max-width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto;
+  position:relative;
+}
 .nav-logo{display:flex;align-items:center;gap:8px;border-right:1px solid var(--border-nav);padding-right:20px;text-decoration:none;cursor:pointer;}
 .nav-logo:hover .nav-brand{color:var(--text-link-h);}
-.nav-logo-p{font-size:32px;font-weight:900;color:#49a8e0;line-height:1;width:38px;height:38px;display:flex;align-items:center;justify-content:center;user-select:none;}
+.nav-logo-p{
+  font-size:32px;
+  font-weight:900;
+  color:#7ac8f5;
+  line-height:1;
+  width:38px;
+  height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  user-select:none;
+  -webkit-text-stroke:2px #7ac8f5;
+}
 .nav-logo-text{font-size:10px;color:var(--text-muted);line-height:1.5;}
 .nav-brand{font-size:16px;font-weight:700;color:var(--text-brand);letter-spacing:-.3px;transition:color .25s;}
 .nav-link{padding:0 14px;height:56px;display:flex;align-items:center;font-size:14px;color:var(--text-nav);cursor:pointer;border-bottom:2px solid transparent;gap:4px;text-decoration:none;transition:color .15s,background .15s,border-color .15s;position:relative;}
@@ -87,7 +126,7 @@ body.no-scroll{overflow:hidden;}
 .nav-dropdown.open{display:block;}
 .nav-dropdown-item{padding:10px 16px;font-size:14px;color:var(--text-primary);cursor:pointer;transition:background .12s,color .12s;}
 .nav-dropdown-item:hover{background:var(--bg-hover);color:var(--text-link);}
-.nav-right{margin-left:auto;display:flex;align-items:center;gap:18px;}
+.nav-right{display:flex;align-items:center;gap:18px;}
 .nav-icon{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);cursor:pointer;position:relative;transition:color .15s,transform .15s;}
 .nav-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .nav-icon.bell svg{stroke:var(--bell-color);}
@@ -121,7 +160,7 @@ body.no-scroll{overflow:hidden;}
 .most-recent:hover{color:var(--text-link-h);}
 
 /* POST */
-.post-item{background:var(--bg-card);border:1px solid var(--border-card);padding:18px;margin-bottom:14px;transition:background .25s,border-color .25s;}
+.post-item{background:var(--bg-card);border:1px solid var(--border-card);padding:18px;margin-bottom:14px;transition:background .25s,border-color .25s;box-shadow:0 2px 10px rgba(0,0,0,.08);}
 .post-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;}
 .avatar{width:42px;height:42px;flex-shrink:0;}
 .avatar svg{width:42px;height:42px;display:block;}
@@ -160,7 +199,7 @@ body.no-scroll{overflow:hidden;}
 .spirit-caption strong{font-size:17px;display:block;color:var(--spirit-title);}
 
 /* SIDEBAR */
-.sidebar-card{background:var(--bg-card);border:1px solid var(--border-card);padding:16px;margin-bottom:14px;transition:background .25s,border-color .25s;}
+.sidebar-card{background:var(--bg-card);border:1px solid var(--border-card);padding:16px;margin-bottom:14px;transition:background .25s,border-color .25s;box-shadow:0 2px 10px rgba(0,0,0,.08);}
 .sidebar-title{font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:10px;}
 .sidebar-section-label{font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;font-weight:600;}
 .todo-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-post);}
@@ -192,7 +231,12 @@ body.no-scroll{overflow:hidden;}
 /* RESOURCES */
 .resources-page{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:400;overflow:auto;background:transparent;}
 .resources-page.open{display:flex;align-items:center;justify-content:center;}
-.resources-inner{position:relative;padding:0;}
+.resources-inner{
+  position:relative;
+  padding:0;
+  transform:scale(var(--ui-scale));
+  transform-origin:center;
+}
 .game-container-iframe{width:85vw;height:85vh;border:3px solid var(--border-card);background:#000;display:block;}
 .game-card{background:var(--bg-card);border:1px solid var(--border-card);padding:18px 18px 16px;cursor:pointer;transition:border-color .15s,background .25s;}
 .game-card:hover{border-color:var(--text-link);}
@@ -218,47 +262,46 @@ body.no-scroll{overflow:hidden;}
 <div id="page-wrap">
 
   <nav class="nav">
-    <a class="nav-logo" href="#" onclick="closeResources();return false;">
-      <div class="nav-logo-p">P</div>
-      <div>
-        <div class="nav-brand">Schoolargy</div>
-        <div class="nav-logo-text">Lincoln Middle School</div>
-      </div>
-    </a>
-    <div style="width:20px;flex-shrink:0"></div>
-    <a class="nav-link" href="#">Courses <span class="caret">&#9660;</span></a>
-    <a class="nav-link" href="#">Groups <span class="caret">&#9660;</span></a>
-    <a class="nav-link" href="#" id="resources-btn">Resources <span class="caret">&#9660;</span>
-        <div class="nav-dropdown" id="resources-dropdown">
-          <div class="nav-dropdown-item" data-url="basketrandom/index.html">Basketball Random</div>
-          <div class="nav-dropdown-item" data-url="slope/index.html">Slope</div>
-          <div class="nav-dropdown-item" data-url="drivemad/index.html">Drive Mad</div>
-          <div class="nav-dropdown-item" data-url="retrobowl/index.html">Retro Bowl</div>
-          <div class="nav-dropdown-item" data-url="2048/index.html">2048</div>
-          <div class="nav-dropdown-item" data-url="bitlife/index.html">BitLife</div>
-          <div class="nav-dropdown-item" data-url="subwaysurferssingapore/index.html">Subway Surfers Singapore</div>
-          <div class="nav-dropdown-item" data-url="vex3/index.html">Vex 3</div>
-          <div class="nav-dropdown-item" data-url="vex4/index.html">Vex 4</div>
-          <div class="nav-dropdown-item" data-url="vex5/index.html">Vex 5</div>
-          <div class="nav-dropdown-item" data-url="vex6/index.html">Vex 6</div>
-          <div class="nav-dropdown-item" data-url="tetris/index.html">Tetris</div>
-          <div class="nav-dropdown-item" data-url="tinyfishing/index.html">Tiny Fishing</div>
-          <div class="nav-dropdown-item" data-url="eaglercraft/index.html">Eaglercraft</div>
-          <div class="nav-dropdown-item" data-url="clusterrush/index.html">Cluster Rush</div>
-          <div class="nav-dropdown-item" data-url="retrobowlcollege/index.html">Retro Bowl College</div>
-          <div class="nav-dropdown-item" data-url="tombofthemask/index.html">Tomb of the Mask</div>
-          <div class="nav-dropdown-item" data-url="chromedino/index.html">Chrome Dino</div>
+    <div class="nav-inner">
+      <a class="nav-logo" href="#" onclick="closeResources();return false;">
+        <div class="nav-logo-p">P</div>
+        <div>
+          <div class="nav-brand">schoolargy</div>
+          <div class="nav-logo-text">Jane Lathrop Standford</div>
         </div>
       </a>
-    <a class="nav-link" href="#">Grades <span class="caret">&#9660;</span></a>
-    <div class="nav-right">
-      <div class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg></div>
-      <div class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
-      <div class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-      <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-      <div class="nav-icon bell"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="badge">3</div></div>
-      <div class="user-avatar"><svg viewBox="0 0 32 32"><rect width="32" height="32" fill="#1a3a5c"/><circle cx="10" cy="10" r="6" fill="#4a9fd4"/><circle cx="22" cy="10" r="4" fill="#2a6496"/><circle cx="16" cy="22" r="7" fill="#2f7cbf"/><circle cx="16" cy="22" r="3" fill="#6bb8e8"/></svg></div>
-      <div class="user-name">Generic User <span class="caret">&#9660;</span></div>
+      <a class="nav-link" href="#" id="courses-btn">Courses <span class="caret">&#9660;</span></a>
+      <a class="nav-link" href="#" id="groups-btn">Groups <span class="caret">&#9660;</span></a>
+      <a class="nav-link" href="#" id="resources-btn">Resources <span class="caret">&#9660;</span></a>
+      <a class="nav-link" href="#" id="grades-btn">Grades <span class="caret">&#9660;</span></a>
+      <div class="nav-dropdown" id="resources-dropdown">
+        <div class="nav-dropdown-item" data-url="basketrandom/index.html">Basketball Random</div>
+        <div class="nav-dropdown-item" data-url="slope/index.html">Slope</div>
+        <div class="nav-dropdown-item" data-url="drivemad/index.html">Drive Mad</div>
+        <div class="nav-dropdown-item" data-url="retrobowl/index.html">Retro Bowl</div>
+        <div class="nav-dropdown-item" data-url="2048/index.html">2048</div>
+        <div class="nav-dropdown-item" data-url="bitlife/index.html">BitLife</div>
+        <div class="nav-dropdown-item" data-url="subwaysurferssingapore/index.html">Subway Surfers Singapore</div>
+        <div class="nav-dropdown-item" data-url="vex3/index.html">Vex 3</div>
+        <div class="nav-dropdown-item" data-url="vex4/index.html">Vex 4</div>
+        <div class="nav-dropdown-item" data-url="vex5/index.html">Vex 5</div>
+        <div class="nav-dropdown-item" data-url="vex6/index.html">Vex 6</div>
+        <div class="nav-dropdown-item" data-url="tetris/index.html">Tetris</div>
+        <div class="nav-dropdown-item" data-url="tinyfishing/index.html">Tiny Fishing</div>
+        <div class="nav-dropdown-item" data-url="eaglercraft/index.html">Eaglercraft</div>
+        <div class="nav-dropdown-item" data-url="clusterrush/index.html">Cluster Rush</div>
+        <div class="nav-dropdown-item" data-url="retrobowlcollege/index.html">Retro Bowl College</div>
+        <div class="nav-dropdown-item" data-url="tombofthemask/index.html">Tomb of the Mask</div>
+        <div class="nav-dropdown-item" data-url="chromedino/index.html">Chrome Dino</div>
+      </div>
+      <div class="nav-right">
+        <div class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg></div>
+        <div class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+        <div class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+        <div class="nav-icon bell"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+        <div class="user-avatar"><svg viewBox="0 0 32 32"><rect width="32" height="32" fill="#1a3a5c"/><circle cx="10" cy="10" r="6" fill="#4a9fd4"/><circle cx="22" cy="10" r="4" fill="#2a6496"/><circle cx="16" cy="22" r="7" fill="#2f7cbf"/><circle cx="16" cy="22" r="3" fill="#6bb8e8"/></svg></div>
+      </div>
     </div>
   </nav>
 
@@ -274,7 +317,7 @@ body.no-scroll{overflow:hidden;}
         <div class="post-header">
           <div class="avatar"><svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#2a5298"/><rect x="0" y="0" width="40" height="13" fill="#4a72c8"/><rect x="0" y="14" width="40" height="12" fill="#3a62b8"/><rect x="0" y="27" width="40" height="13" fill="#5b8dee"/></svg></div>
           <div class="post-meta">
-            <div><span class="post-author">Sandra Chen</span><span class="post-arrow"> &#9658; </span><span class="post-course">LMS: 7th Grade Users (Grade 07)</span></div>
+            <div><span class="post-author">Jane Lathrop Stanford (JLS)</span><span class="post-arrow"> &#9658; </span><span class="post-course">JLS: Panthers</span></div>
             <div class="announce-tag">PA Announcements today</div>
           </div>
         </div>
@@ -297,14 +340,14 @@ body.no-scroll{overflow:hidden;}
       <div class="post-item">
         <div class="post-header">
           <div class="avatar"><svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#7b3fa0"/><rect x="8" y="8" width="11" height="11" fill="#c07de0"/><rect x="21" y="8" width="11" height="11" fill="#9b5cc0"/><rect x="8" y="21" width="11" height="11" fill="#9b5cc0"/><rect x="21" y="21" width="11" height="11" fill="#c07de0"/><rect x="14" y="14" width="12" height="12" fill="#7b3fa0"/></svg></div>
-          <div class="post-meta"><div><span class="post-author">Tom Walsh</span><span class="post-arrow"> &#9658; </span><span class="post-course">LMS: Student Council</span></div></div>
+          <div class="post-meta">          <div><span class="post-author">Jane Lathrop Stanford (JLS)</span><span class="post-arrow"> &#9658; </span><span class="post-course">JLS: Panthers</span></div></div>
         </div>
         <div class="spirit-banner">
           <div class="spirit-eyebrow">— Upcoming Event —</div>
           <div class="spirit-title">Decades<br>Day</div>
           <div class="spirit-ribbon">SPIRIT DAY!</div>
           <div class="spirit-date">APRIL 18</div>
-          <div class="spirit-school">— LINCOLN MIDDLE SCHOOL —</div>
+          <div class="spirit-school">— PANTHERS —</div>
           <div class="spirit-caption">Dress from your favorite decade &amp;<strong>show your school pride!</strong></div>
         </div>
         <div class="post-footer" style="margin-top:12px"><span class="post-time">Yesterday at 2:40 pm</span><span class="dot-sep">·</span><span class="post-like">Like</span></div>
@@ -315,7 +358,7 @@ body.no-scroll{overflow:hidden;}
         <div class="post-header">
           <div class="avatar"><svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#2d6a3f"/><ellipse cx="20" cy="20" rx="14" ry="8" fill="#4caf72"/><ellipse cx="20" cy="20" rx="8" ry="14" fill="#3d8f5a"/><circle cx="20" cy="20" r="4" fill="#a8e6bc"/></svg></div>
           <div class="post-meta">
-            <div><span class="post-author">Lisa Brandt</span><span class="post-arrow"> &#9658; </span><span class="post-course">LMS: Library &amp; Media Center</span></div>
+            <div><span class="post-author">Jane Lathrop Stanford (JLS)</span><span class="post-arrow"> &#9658; </span><span class="post-course">JLS: Panthers</span></div>
             <div class="post-title">Library Closure — Monday April 6</div>
           </div>
         </div>
@@ -331,7 +374,7 @@ body.no-scroll{overflow:hidden;}
         <div class="post-header">
           <div class="avatar"><svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#0770a2"/><circle cx="20" cy="20" r="12" fill="#5ab3e8"/><text x="20" y="25" font-size="16" fill="#fff" text-anchor="middle" font-weight="bold">?</text></svg></div>
           <div class="post-meta">
-            <div><span class="post-author">Schoolargy Team</span><span class="post-arrow"> &#9658; </span><span class="post-course">LMS: Game Requests</span></div>
+            <div><span class="post-author">Jane Lathrop Stanford (JLS)</span><span class="post-arrow"> &#9658; </span><span class="post-course">JLS: Panthers</span></div>
             <div class="post-title">Recommend a New Game</div>
           </div>
         </div>
@@ -352,23 +395,15 @@ body.no-scroll{overflow:hidden;}
         <div class="sidebar-section-label">Upcoming</div>
         <div class="todo-item">
           <div class="todo-icon">Quiz</div>
-          <div class="todo-content"><div class="todo-name">Chapter 9 Reading Quiz</div><div class="todo-due">Due today, April 3, 2026 at 11:59 pm</div><div class="todo-course">English Language Arts 8B</div></div>
-          <div class="todo-clock"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="todo-content"><div class="todo-name">Chapter 9 Reading Quiz</div><div class="todo-due">Due today, April 3, 2026 at 11:59 pm</div></div>
         </div>
         <div class="todo-item">
           <div class="todo-icon">HW</div>
-          <div class="todo-content"><div class="todo-name">Equations Practice Set 4</div><div class="todo-due">Due Monday, April 6, 2026 at 8:00 am</div><div class="todo-course">Pre-Algebra Period 3</div></div>
-          <div class="todo-clock"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="todo-content"><div class="todo-name">Equations Practice Set 4</div><div class="todo-due">Due Monday, April 6, 2026 at 8:00 am</div></div>
         </div>
         <div class="todo-item">
           <div class="todo-icon">Lab</div>
-          <div class="todo-content"><div class="todo-name">Ecosystem Lab Report</div><div class="todo-due">Due Wednesday, April 8, 2026 at 11:59 pm</div><div class="todo-course">Life Science 8A</div></div>
-          <div class="todo-clock"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        </div>
-        <div class="todo-item secret-toggle" onclick="toggleTheme()">
-          <div class="todo-icon theme-icon" id="theme-icon">☀</div>
-          <div class="todo-content"><div class="todo-name" id="theme-name">Light Mode Active</div><div class="todo-due" id="theme-due">Tap to switch to dark mode</div><div class="todo-course" id="theme-course">Schoolargy Preferences · Auto</div></div>
-          <div class="todo-clock"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="todo-content"><div class="todo-name">Ecosystem Lab Report</div><div class="todo-due">Due Wednesday, April 8, 2026 at 11:59 pm</div></div>
         </div>
       </div>
 
@@ -388,6 +423,10 @@ body.no-scroll{overflow:hidden;}
       <div class="sidebar-card">
         <div class="sidebar-title">Recently Completed</div>
         <div class="recently-label">Recently Completed items are collapsed by default</div>
+        <div class="todo-item secret-toggle" onclick="toggleTheme()">
+          <div class="todo-icon theme-icon" id="theme-icon">☀</div>
+          <div class="todo-content"><div class="todo-name" id="theme-name">Light Mode Active</div></div>
+        </div>
         <a class="load-link" href="#"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Click here to load the Recently Completed items</a>
       </div>
     </aside>
@@ -411,10 +450,18 @@ function updateDim(){
   document.body.classList.add('no-scroll');
 }
 
-document.getElementById('resources-btn').addEventListener('click',function(e){
+function toggleResourcesDropdown(e){
   e.preventDefault();
   var dd=document.getElementById('resources-dropdown');
+  var navInner=document.querySelector('.nav-inner');
+  var btnRect=this.getBoundingClientRect();
+  var navRect=navInner.getBoundingClientRect();
+  dd.style.left=(btnRect.left-navRect.left)+'px';
   dd.classList.toggle('open');
+}
+
+['resources-btn','courses-btn','groups-btn','grades-btn'].forEach(function(id){
+  document.getElementById(id).addEventListener('click',toggleResourcesDropdown);
 });
 
 document.querySelectorAll('.nav-dropdown-item').forEach(function(item){
@@ -440,8 +487,14 @@ document.querySelectorAll('.nav-dropdown-item').forEach(function(item){
 
 document.addEventListener('click',function(e){
   var dd=document.getElementById('resources-dropdown');
-  var btn=document.getElementById('resources-btn');
-  if(!dd.contains(e.target)&&!btn.contains(e.target)){
+  var buttons=[
+    document.getElementById('resources-btn'),
+    document.getElementById('courses-btn'),
+    document.getElementById('groups-btn'),
+    document.getElementById('grades-btn')
+  ];
+  var clickedButton=buttons.some(function(btn){return btn.contains(e.target);});
+  if(!dd.contains(e.target)&&!clickedButton){
     dd.classList.remove('open');
   }
 });

@@ -22,93 +22,101 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-    // Navigate to pausd.schoology.com - let it auto-redirect to login if needed
+    // Navigate to pausd.schoology.com - will redirect to ClassLink
     console.log('Navigating to pausd.schoology.com...');
     await page.goto('https://pausd.schoology.com', { waitUntil: 'load', timeout: 60000 });
 
-    // Wait for CSS and page to fully render
+    // Wait for ClassLink Angular app to render
     await new Promise(r => setTimeout(r, 5000));
 
-    // Take debug screenshot
-    await page.screenshot({ path: '/tmp/initial-page.png' });
-    console.log('Screenshot saved: /tmp/initial-page.png');
-    console.log('Current URL:', page.url());
+    await page.screenshot({ path: '/tmp/step1-initial.png' });
+    console.log('Step 1 screenshot saved. URL:', page.url());
 
-    // Check if we're on a login page
+    // Check if we're on ClassLink login page
     const currentUrl = page.url();
-    if (currentUrl.includes('login') || currentUrl.includes('oauth')) {
-      console.log('On login page, filling credentials...');
+    console.log('Current URL:', currentUrl);
 
-      // Wait a bit more for login form to render with CSS
+    if (currentUrl.includes('classlink')) {
+      console.log('On ClassLink login page, waiting for form to render...');
+
+      // Wait for input fields to appear (ClassLink Angular app renders them dynamically)
+      await page.waitForSelector('input[type="text"], input[type="email"]', { timeout: 15000 }).catch(() => {
+        console.log('Warning: text input not found');
+      });
+
       await new Promise(r => setTimeout(r, 2000));
+      await page.screenshot({ path: '/tmp/step2-classlink-form.png' });
 
-      // PAUSD login: student ID (9 digits) + password
-      const idInput = await page.$('input[name="name"]') || await page.$('input[type="text"]') || await page.$('input#edit-name') || await page.$('input[type="email"]');
-      const passInput = await page.$('input[type="password"]') || await page.$('input[name="pass"]') || await page.$('input#edit-pass');
+      // Find username and password fields
+      const usernameInput = await page.$('input[type="text"]') || await page.$('input[type="email"]') || await page.$('input[name="username"]') || await page.$('input[name="email"]');
+      const passwordInput = await page.$('input[type="password"]');
 
-      if (idInput && passInput) {
-        console.log('Found login fields, filling credentials...');
-        await idInput.click({ clickCount: 3 });
-        await idInput.type(SCHOLOGY_EMAIL, { delay: 50 });
-        await passInput.click({ clickCount: 3 });
-        await passInput.type(SCHOLOGY_PASSWORD, { delay: 50 });
+      if (usernameInput && passwordInput) {
+        console.log('Found ClassLink login fields, filling credentials...');
 
-        // Click submit
-        const submitBtn = await page.$('input[type="submit"], button[type="submit"], .form-submit, button[type="button"]');
-        if (submitBtn) {
-          await Promise.all([
-            submitBtn.click(),
-            page.waitForNavigation({ waitUntil: 'load', timeout: 60000 }).catch(() => {})
-          ]);
+        await usernameInput.click({ clickCount: 3 });
+        await usernameInput.type(SCHOLOGY_EMAIL, { delay: 30 });
+        await passwordInput.click({ clickCount: 3 });
+        await passwordInput.type(SCHOLOGY_PASSWORD, { delay: 30 });
+
+        await new Promise(r => setTimeout(r, 1000));
+        await page.screenshot({ path: '/tmp/step3-filled.png' });
+
+        // Find and click login button
+        const loginBtn = await page.$('button[type="submit"]') ||
+          await page.$('button[data-cy="loginButton"]') ||
+          await page.$('button.cl-button') ||
+          await page.$('button');
+
+        if (loginBtn) {
+          console.log('Clicking login button...');
+          await loginBtn.click();
+
+          // Wait for navigation (ClassLink redirects to Schoology)
+          await page.waitForNavigation({ waitUntil: 'load', timeout: 60000 }).catch(() => {
+            console.log('Navigation timeout, checking current page...');
+          });
+
+          await new Promise(r => setTimeout(r, 5000));
+          await page.screenshot({ path: '/tmp/step4-after-login.png' });
+          console.log('After login URL:', page.url());
         } else {
-          await Promise.all([
-            passInput.press('Enter'),
-            page.waitForNavigation({ waitUntil: 'load', timeout: 60000 }).catch(() => {})
-          ]);
+          console.log('Login button not found, trying Enter key...');
+          await passwordInput.press('Enter');
+          await page.waitForNavigation({ waitUntil: 'load', timeout: 60000 }).catch(() => {});
+          await new Promise(r => setTimeout(r, 5000));
+          await page.screenshot({ path: '/tmp/step4-after-login.png' });
+          console.log('After login URL:', page.url());
         }
-
-        await new Promise(r => setTimeout(r, 5000));
-        await page.screenshot({ path: '/tmp/after-login.png' });
-        console.log('Screenshot saved: /tmp/after-login.png');
-        console.log('URL after login:', page.url());
       } else {
-        console.log('Login fields not found!');
-        // Dump page HTML for debugging
-        const pageHtml = await page.content();
-        fs.writeFileSync('/tmp/login-page-debug.html', pageHtml, 'utf8');
-        console.log('Saved login page HTML to /tmp/login-page-debug.html');
+        console.log('ClassLink login fields not found!');
+        // Dump HTML for debugging
+        const html = await page.content();
+        fs.writeFileSync('/tmp/classlink-debug.html', html, 'utf8');
+        console.log('Saved debug HTML to /tmp/classlink-debug.html');
       }
-    } else {
-      console.log('Already logged in, current URL:', currentUrl);
     }
 
-    // Navigate to home page
-    console.log('Navigating to home page...');
+    // Navigate to Schoology home
+    console.log('Navigating to Schoology home...');
     await page.goto('https://pausd.schoology.com/home', { waitUntil: 'load', timeout: 60000 });
 
-    // Wait for dynamic content to load
-    await new Promise(r => setTimeout(r, 8000));
+    // Wait for dynamic content
+    await new Promise(r => setTimeout(r, 10000));
 
-    // Wait for key elements
-    await page.waitForSelector('#home-feed-container, #content-wrapper', { timeout: 15000 }).catch(() => {
-      console.log('Warning: home-feed-container not found');
-    });
+    await page.screenshot({ path: '/tmp/step5-home.png' });
+    console.log('Home page screenshot saved. URL:', page.url());
 
-    await new Promise(r => setTimeout(r, 3000));
-    await page.screenshot({ path: '/tmp/home-page.png' });
-    console.log('Screenshot saved: /tmp/home-page.png');
-
-    // Check if content loaded
+    // Check content
     const bodyText = await page.evaluate(() => document.body.innerText);
     console.log('Page body length:', bodyText.length);
-    console.log('First 500 chars:', bodyText.substring(0, 500));
+    console.log('First 300 chars:', bodyText.substring(0, 300));
 
     console.log('Extracting page HTML...');
     const html = await page.content();
 
-    // Check if the scraped HTML has actual content
     if (bodyText.length < 1000) {
-      console.log('WARNING: Page content seems very short. The scrape may have failed.');
+      console.log('WARNING: Page content seems very short.');
     }
 
     const gameLauncherScript = `

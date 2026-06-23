@@ -22,15 +22,6 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-    // Intercept requests to track navigation
-    page.on('response', async (response) => {
-      try {
-        if (response.status() >= 400) {
-          console.log(`HTTP ${response.status()}: ${response.url()}`);
-        }
-      } catch(e) {}
-    });
-
     console.log('Navigating to pausd.schoology.com...');
     await page.goto('https://pausd.schoology.com', { waitUntil: 'load', timeout: 60000 });
 
@@ -38,27 +29,13 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
     await page.screenshot({ path: '/tmp/step1-initial.png', fullPage: true });
     console.log('Step 1 - URL:', page.url());
 
-    // Check if redirected to ClassLink
     if (page.url().includes('classlink')) {
       console.log('On ClassLink login page');
 
-      // Wait for Angular app to fully render
       await page.waitForSelector('input[type="text"], input[type="email"]', { timeout: 20000 }).catch(() => {});
       await new Promise(r => setTimeout(r, 3000));
 
       await page.screenshot({ path: '/tmp/step2-classlink.png', fullPage: true });
-
-      // Find username and password fields
-      const inputs = await page.$$('input');
-      console.log('Found', inputs.length, 'input elements');
-
-      // Get all inputs and their types
-      for (let i = 0; i < inputs.length; i++) {
-        const type = await inputs[i].evaluate(el => el.type);
-        const name = await inputs[i].evaluate(el => el.name || '');
-        const placeholder = await inputs[i].evaluate(el => el.placeholder || '');
-        console.log(`  Input ${i}: type="${type}" name="${name}" placeholder="${placeholder}"`);
-      }
 
       const usernameInput = await page.$('input[type="text"]') || await page.$('input[type="email"]');
       const passwordInput = await page.$('input[type="password"]');
@@ -73,63 +50,32 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
         await new Promise(r => setTimeout(r, 1000));
         await page.screenshot({ path: '/tmp/step3-filled.png', fullPage: true });
 
-        // Find login button
-        const buttons = await page.$$('button');
-        console.log('Found', buttons.length, 'button elements');
-        for (let i = 0; i < buttons.length; i++) {
-          const text = await buttons[i].evaluate(el => el.textContent?.trim() || '');
-          const type = await buttons[i].evaluate(el => el.type || '');
-          console.log(`  Button ${i}: type="${type}" text="${text}"`);
-        }
-
-        // Click the sign in button
-        const loginBtn = await page.$('button[type="submit"]') ||
-          await page.evaluateHandle(() => {
-            const btns = document.querySelectorAll('button');
-            for (const b of btns) {
-              if (b.textContent.trim().toLowerCase().includes('sign in') ||
-                  b.textContent.trim().toLowerCase().includes('login') ||
-                  b.textContent.trim().toLowerCase().includes('continue')) {
-                return b;
-              }
-            }
-            return btns[btns.length - 1]; // last button
-          });
-
+        // Find the Sign In button
+        const loginBtn = await page.$('button[type="submit"]');
         if (loginBtn) {
-          console.log('Clicking login button...');
+          console.log('Clicking Sign In button...');
 
-          // Wait for navigation away from login page
-          const loginUrl = page.url();
-          await loginBtn.click();
-
-          // Wait for URL to change
-          let waited = 0;
-          while (waited < 30000) {
-            await new Promise(r => setTimeout(r, 1000));
-            waited += 1000;
-            const newUrl = page.url();
-            if (newUrl !== loginUrl && !newUrl.includes('login.classlink.com')) {
-              console.log('Navigated away from login page to:', newUrl);
-              break;
-            }
-            // Check for error message
-            const errorText = await page.evaluate(() => {
-              const body = document.body.innerText;
-              if (body.includes('incorrect') || body.includes('invalid') || body.includes('wrong') || body.includes('error') || body.includes('failed')) {
-                return body.substring(0, 500);
-              }
-              return null;
-            });
-            if (errorText) {
-              console.log('Possible error detected:', errorText);
-              break;
-            }
+          // Handle navigation that destroys context
+          try {
+            await Promise.all([
+              loginBtn.click(),
+              page.waitForNavigation({ waitUntil: 'load', timeout: 30000 })
+            ]);
+          } catch (navErr) {
+            // Navigation may have happened but context was destroyed
+            console.log('Navigation error (expected):', navErr.message);
+            await new Promise(r => setTimeout(r, 5000));
           }
 
-          await new Promise(r => setTimeout(r, 5000));
-          await page.screenshot({ path: '/tmp/step4-after-login.png', fullPage: true });
+          await page.screenshot({ path: '/tmp/step4-after-login.png', fullPage: true }).catch(() => {});
           console.log('After login URL:', page.url());
+
+          // Check if still on login page (wrong credentials)
+          if (page.url().includes('login.classlink.com')) {
+            console.log('Still on ClassLink login page - credentials may be incorrect');
+            const bodyText = await page.evaluate(() => document.body.innerText);
+            console.log('Page text:', bodyText.substring(0, 300));
+          }
         }
       } else {
         console.log('Could not find username/password inputs!');
@@ -138,10 +84,14 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
 
     // Navigate to Schoology home
     console.log('Navigating to Schoology home...');
-    await page.goto('https://pausd.schoology.com/home', { waitUntil: 'load', timeout: 60000 });
+    try {
+      await page.goto('https://pausd.schoology.com/home', { waitUntil: 'load', timeout: 60000 });
+    } catch (navErr) {
+      console.log('Navigation error:', navErr.message);
+    }
 
     await new Promise(r => setTimeout(r, 10000));
-    await page.screenshot({ path: '/tmp/step5-home.png', fullPage: true });
+    await page.screenshot({ path: '/tmp/step5-home.png', fullPage: true }).catch(() => {});
     console.log('Home URL:', page.url());
 
     const bodyText = await page.evaluate(() => document.body.innerText);

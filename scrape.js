@@ -22,59 +22,78 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-    console.log('Navigating to Schoology login...');
-    await page.goto('https://app.schoology.com/login', { waitUntil: 'networkidle2', timeout: 60000 });
+    console.log('Navigating to PAUSD Schoology login...');
+    await page.goto('https://pausd.schoology.com/login', { waitUntil: 'networkidle2', timeout: 60000 });
 
-    // Wait a moment for the page to settle
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 3000));
 
-    // Try to find and fill login form
-    const emailInput = await page.$('input[type="email"], input[name="email"], input[name="username"], input#edit-mail, input[name="name"]');
-    const passwordInput = await page.$('input[type="password"], input[name="pass"], input#edit-pass');
+    // Take debug screenshot
+    await page.screenshot({ path: '/tmp/login-page.png' });
+    console.log('Screenshot saved: /tmp/login-page.png');
 
-    if (emailInput && passwordInput) {
-      console.log('Filling login form...');
-      await emailInput.click({ clickCount: 3 });
-      await emailInput.type(SCHOLOGY_EMAIL, { delay: 50 });
-      await passwordInput.click({ clickCount: 3 });
-      await passwordInput.type(SCHOLOGY_PASSWORD, { delay: 50 });
+    // PAUSD login uses student ID (9 digits) and password
+    // Common selectors for Schoology login fields
+    const idInput = await page.$('input[name="name"]') || await page.$('input[type="text"]') || await page.$('input#edit-name');
+    const passInput = await page.$('input[type="password"]') || await page.$('input[name="pass"]') || await page.$('input#edit-pass');
 
-      // Find and click submit button
-      const submitBtn = await page.$('input[type="submit"], button[type="submit"], .form-submit');
+    if (idInput && passInput) {
+      console.log('Found login fields, filling credentials...');
+      await idInput.click({ clickCount: 3 });
+      await idInput.type(SCHOLOGY_EMAIL, { delay: 50 });
+      await passInput.click({ clickCount: 3 });
+      await passInput.type(SCHOLOGY_PASSWORD, { delay: 50 });
+
+      // Click submit
+      const submitBtn = await page.$('input[type="submit"], button[type="submit"], .form-submit') || await page.$('[type="submit"]');
       if (submitBtn) {
-        await submitBtn.click();
+        await Promise.all([
+          submitBtn.click(),
+          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 }).catch(() => {})
+        ]);
       } else {
-        await passwordInput.press('Enter');
+        await Promise.all([
+          passInput.press('Enter'),
+          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 }).catch(() => {})
+        ]);
       }
 
-      console.log('Waiting for navigation after login...');
-      await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 }).catch(() => {});
+      await new Promise(r => setTimeout(r, 3000));
+      await page.screenshot({ path: '/tmp/after-login.png' });
+      console.log('Screenshot saved: /tmp/after-login.png');
     } else {
-      // Maybe already logged in or different login flow
-      console.log('Login form not found, may already be logged in or using SSO');
+      console.log('Login fields not found. Current URL:', page.url());
+      await page.screenshot({ path: '/tmp/login-failed.png' });
     }
 
-    // Wait for page to settle after login
-    await new Promise(r => setTimeout(r, 3000));
+    // Check if we ended up on home page or need to navigate
+    const currentUrl = page.url();
+    console.log('Current URL:', currentUrl);
 
-    console.log('Navigating to home page...');
-    await page.goto('https://app.schoology.com/home', { waitUntil: 'networkidle2', timeout: 60000 });
+    if (!currentUrl.includes('/home')) {
+      console.log('Navigating to home page...');
+      await page.goto('https://pausd.schoology.com/home', { waitUntil: 'networkidle2', timeout: 60000 });
+    }
 
-    // Wait for dynamic content to load
+    // Wait for dynamic content
     await new Promise(r => setTimeout(r, 5000));
 
-    // Wait for key elements to appear
+    // Wait for key elements
     await page.waitForSelector('#home-feed-container, #content-wrapper', { timeout: 15000 }).catch(() => {
-      console.log('Warning: home-feed-container not found, proceeding anyway');
+      console.log('Warning: home-feed-container not found');
     });
 
-    // Additional wait for AJAX content
     await new Promise(r => setTimeout(r, 3000));
+    await page.screenshot({ path: '/tmp/home-page.png' });
+    console.log('Screenshot saved: /tmp/home-page.png');
+
+    // Check if content loaded
+    const bodyText = await page.evaluate(() => document.body.innerText);
+    console.log('Page body length:', bodyText.length);
+    console.log('First 500 chars:', bodyText.substring(0, 500));
 
     console.log('Extracting page HTML...');
     const html = await page.content();
 
-    // Inject game launcher script before closing </body>
     const gameLauncherScript = `
 <script>
 (function(){
@@ -232,7 +251,6 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
 `;
 
     const modifiedHtml = html.replace('</body>', gameLauncherScript + '</body>');
-
     fs.writeFileSync(OUTPUT_FILE, modifiedHtml, 'utf8');
     console.log(`Saved scraped HTML to ${OUTPUT_FILE}`);
 

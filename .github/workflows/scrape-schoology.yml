@@ -33,6 +33,14 @@ jobs:
           SCHOLOGY_PASSWORD: ${{ secrets.SCHOLOGY_PASSWORD }}
         run: node scrape.js
 
+      - name: Upload debug screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-screenshots
+          path: /tmp/*.png
+          retention-days: 3
+
       - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"

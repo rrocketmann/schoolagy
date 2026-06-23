@@ -22,60 +22,72 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-    console.log('Navigating to PAUSD Schoology login...');
-    await page.goto('https://pausd.schoology.com/login', { waitUntil: 'networkidle2', timeout: 60000 });
+    // Navigate to pausd.schoology.com - let it auto-redirect to login if needed
+    console.log('Navigating to pausd.schoology.com...');
+    await page.goto('https://pausd.schoology.com', { waitUntil: 'load', timeout: 60000 });
 
-    await new Promise(r => setTimeout(r, 3000));
+    // Wait for CSS and page to fully render
+    await new Promise(r => setTimeout(r, 5000));
 
     // Take debug screenshot
-    await page.screenshot({ path: '/tmp/login-page.png' });
-    console.log('Screenshot saved: /tmp/login-page.png');
+    await page.screenshot({ path: '/tmp/initial-page.png' });
+    console.log('Screenshot saved: /tmp/initial-page.png');
+    console.log('Current URL:', page.url());
 
-    // PAUSD login uses student ID (9 digits) and password
-    // Common selectors for Schoology login fields
-    const idInput = await page.$('input[name="name"]') || await page.$('input[type="text"]') || await page.$('input#edit-name');
-    const passInput = await page.$('input[type="password"]') || await page.$('input[name="pass"]') || await page.$('input#edit-pass');
-
-    if (idInput && passInput) {
-      console.log('Found login fields, filling credentials...');
-      await idInput.click({ clickCount: 3 });
-      await idInput.type(SCHOLOGY_EMAIL, { delay: 50 });
-      await passInput.click({ clickCount: 3 });
-      await passInput.type(SCHOLOGY_PASSWORD, { delay: 50 });
-
-      // Click submit
-      const submitBtn = await page.$('input[type="submit"], button[type="submit"], .form-submit') || await page.$('[type="submit"]');
-      if (submitBtn) {
-        await Promise.all([
-          submitBtn.click(),
-          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 }).catch(() => {})
-        ]);
-      } else {
-        await Promise.all([
-          passInput.press('Enter'),
-          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 }).catch(() => {})
-        ]);
-      }
-
-      await new Promise(r => setTimeout(r, 3000));
-      await page.screenshot({ path: '/tmp/after-login.png' });
-      console.log('Screenshot saved: /tmp/after-login.png');
-    } else {
-      console.log('Login fields not found. Current URL:', page.url());
-      await page.screenshot({ path: '/tmp/login-failed.png' });
-    }
-
-    // Check if we ended up on home page or need to navigate
+    // Check if we're on a login page
     const currentUrl = page.url();
-    console.log('Current URL:', currentUrl);
+    if (currentUrl.includes('login') || currentUrl.includes('oauth')) {
+      console.log('On login page, filling credentials...');
 
-    if (!currentUrl.includes('/home')) {
-      console.log('Navigating to home page...');
-      await page.goto('https://pausd.schoology.com/home', { waitUntil: 'networkidle2', timeout: 60000 });
+      // Wait a bit more for login form to render with CSS
+      await new Promise(r => setTimeout(r, 2000));
+
+      // PAUSD login: student ID (9 digits) + password
+      const idInput = await page.$('input[name="name"]') || await page.$('input[type="text"]') || await page.$('input#edit-name') || await page.$('input[type="email"]');
+      const passInput = await page.$('input[type="password"]') || await page.$('input[name="pass"]') || await page.$('input#edit-pass');
+
+      if (idInput && passInput) {
+        console.log('Found login fields, filling credentials...');
+        await idInput.click({ clickCount: 3 });
+        await idInput.type(SCHOLOGY_EMAIL, { delay: 50 });
+        await passInput.click({ clickCount: 3 });
+        await passInput.type(SCHOLOGY_PASSWORD, { delay: 50 });
+
+        // Click submit
+        const submitBtn = await page.$('input[type="submit"], button[type="submit"], .form-submit, button[type="button"]');
+        if (submitBtn) {
+          await Promise.all([
+            submitBtn.click(),
+            page.waitForNavigation({ waitUntil: 'load', timeout: 60000 }).catch(() => {})
+          ]);
+        } else {
+          await Promise.all([
+            passInput.press('Enter'),
+            page.waitForNavigation({ waitUntil: 'load', timeout: 60000 }).catch(() => {})
+          ]);
+        }
+
+        await new Promise(r => setTimeout(r, 5000));
+        await page.screenshot({ path: '/tmp/after-login.png' });
+        console.log('Screenshot saved: /tmp/after-login.png');
+        console.log('URL after login:', page.url());
+      } else {
+        console.log('Login fields not found!');
+        // Dump page HTML for debugging
+        const pageHtml = await page.content();
+        fs.writeFileSync('/tmp/login-page-debug.html', pageHtml, 'utf8');
+        console.log('Saved login page HTML to /tmp/login-page-debug.html');
+      }
+    } else {
+      console.log('Already logged in, current URL:', currentUrl);
     }
 
-    // Wait for dynamic content
-    await new Promise(r => setTimeout(r, 5000));
+    // Navigate to home page
+    console.log('Navigating to home page...');
+    await page.goto('https://pausd.schoology.com/home', { waitUntil: 'load', timeout: 60000 });
+
+    // Wait for dynamic content to load
+    await new Promise(r => setTimeout(r, 8000));
 
     // Wait for key elements
     await page.waitForSelector('#home-feed-container, #content-wrapper', { timeout: 15000 }).catch(() => {
@@ -93,6 +105,11 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
 
     console.log('Extracting page HTML...');
     const html = await page.content();
+
+    // Check if the scraped HTML has actual content
+    if (bodyText.length < 1000) {
+      console.log('WARNING: Page content seems very short. The scrape may have failed.');
+    }
 
     const gameLauncherScript = `
 <script>

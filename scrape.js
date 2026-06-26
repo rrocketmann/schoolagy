@@ -50,10 +50,36 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
         await new Promise(r => setTimeout(r, 1000));
         await page.screenshot({ path: '/tmp/step3-filled.png', fullPage: true });
 
-        const loginBtn = await page.$('button[type="submit"]');
-        if (loginBtn) {
-          console.log('Clicking Sign In button...');
+        // Try multiple ways to find and click the login button
+        let loginBtn = null;
 
+        // Method 1: button[type="submit"]
+        loginBtn = await page.$('button[type="submit"]').catch(() => null);
+        if (loginBtn) console.log('Found login button via type=submit');
+
+        // Method 2: button with "Sign In" text
+        if (!loginBtn) {
+          loginBtn = await page.evaluateHandle(() => {
+            const btns = document.querySelectorAll('button');
+            for (const b of btns) {
+              if (b.textContent.trim().toLowerCase().includes('sign in')) return b;
+            }
+            return null;
+          });
+          if (loginBtn) console.log('Found login button via text "Sign In"');
+        }
+
+        // Method 3: last button on page
+        if (!loginBtn) {
+          loginBtn = await page.evaluateHandle(() => {
+            const btns = document.querySelectorAll('button');
+            return btns[btns.length - 1] || null;
+          });
+          if (loginBtn) console.log('Found login button as last button');
+        }
+
+        if (loginBtn) {
+          console.log('Clicking login button...');
           try {
             await Promise.all([
               loginBtn.click(),
@@ -72,6 +98,17 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
             const bodyText = await page.evaluate(() => document.body.innerText);
             console.log('Page text:', bodyText.substring(0, 300));
           }
+        } else {
+          console.log('ERROR: Could not find any login button!');
+          // Dump all buttons for debugging
+          const buttons = await page.evaluate(() => {
+            return Array.from(document.querySelectorAll('button')).map(b => ({
+              type: b.type,
+              text: b.textContent.trim().substring(0, 50),
+              class: b.className.substring(0, 100)
+            }));
+          });
+          console.log('All buttons:', JSON.stringify(buttons, null, 2));
         }
       } else {
         console.log('Could not find username/password inputs!');

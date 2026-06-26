@@ -238,20 +238,14 @@ async function screenshot(page, name) {
   iframe.src='basketrandom/index.html';
   iframe.allowFullscreen=true;
   iframe.setAttribute('allow','fullscreen; pointer-lock');
-  iframe.style.cssText='width:85vw;height:85vh;border:3px solid #ddd;background:#000;';
+  iframe.style.cssText='width:85vw;height:85vh;border:1px solid #ddd;background:#000;';
   overlay.appendChild(iframe);
   document.body.appendChild(overlay);
 
   function isGameOpen(){return overlay.style.display==='flex';}
-  function updateDim(){
-    var open=isGameOpen();
-    var bodyEl=document.getElementById('body');
-    if(bodyEl){bodyEl.style.filter=open?'brightness(0.42) saturate(0.7)':'';bodyEl.style.pointerEvents=open?'none':'';}
-    document.body.style.overflow=open?'hidden':'';
-  }
 
   overlay.addEventListener('click',function(e){
-    if(e.target===overlay){overlay.style.display='none';updateDim();}
+    if(e.target===overlay){overlay.style.display='none';document.body.style.overflow='';}
   });
 
   dd.querySelectorAll('.dropdown-item').forEach(function(item){
@@ -259,7 +253,7 @@ async function screenshot(page, name) {
       iframe.src=this.getAttribute('data-url');
       dd.style.display='none';
       overlay.style.display='flex';
-      updateDim();
+      document.body.style.overflow='hidden';
       setTimeout(function(){iframe.focus();},100);
     });
   });
@@ -278,7 +272,7 @@ async function screenshot(page, name) {
       else if(iframe.msRequestFullscreen){iframe.msRequestFullscreen();}
     }
     if(e.key==='Escape'&&isGameOpen()){
-      overlay.style.display='none';updateDim();
+      overlay.style.display='none';document.body.style.overflow='';
     }
   });
 

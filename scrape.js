@@ -101,31 +101,30 @@ function getTemplate() {
     const bodyText = await page.evaluate(() => document.body.innerText);
     console.log('Page body length:', bodyText.length);
 
-    // Extract dynamic sections
+    // Extract dynamic sections as plain text content
     console.log('Extracting dynamic sections...');
     const dynamicContent = await page.evaluate(() => {
       const sections = {};
 
+      // Feed container
       const feedContainer = document.querySelector('#home-feed-container');
-      if (feedContainer) sections.feed = feedContainer.outerHTML;
+      if (feedContainer) sections.feed = feedContainer.innerHTML;
 
+      // To Do section
       const todoSection = document.querySelector('#todo');
-      if (todoSection) sections.todo = todoSection.outerHTML;
+      if (todoSection) sections.todo = todoSection.innerHTML;
 
+      // Upcoming Events
       const eventsSection = document.querySelector('#upcoming-events');
-      if (eventsSection) sections.events = eventsSection.outerHTML;
+      if (eventsSection) sections.events = eventsSection.innerHTML;
 
+      // Recently Completed
       const recentlyCompleted = document.querySelector('.recently-completed-wrapper');
-      if (recentlyCompleted) sections.recentlyCompleted = recentlyCompleted.outerHTML;
+      if (recentlyCompleted) sections.recentlyCompleted = recentlyCompleted.innerHTML;
 
+      // Reminders
       const reminders = document.querySelector('.reminders-wrapper');
-      if (reminders) sections.reminders = reminders.outerHTML;
-
-      const edgeFilters = document.querySelector('#edge-filters');
-      if (edgeFilters) sections.edgeFilters = edgeFilters.outerHTML;
-
-      const smartBox = document.querySelector('#smart-box');
-      if (smartBox) sections.smartBox = smartBox.outerHTML;
+      if (reminders) sections.reminders = reminders.innerHTML;
 
       return sections;
     });
@@ -135,24 +134,35 @@ function getTemplate() {
     // Load template
     let template = getTemplate();
 
-    // Replace dynamic sections in template
-    const replacements = [
-      { key: 'feed', selector: /(<div id="home-feed-container"[^>]*>[\s\S]*?<\/div>\s*<\/div>)/ },
-      { key: 'todo', selector: /(<div id="todo"[^>]*>[\s\S]*?<\/aside>\s*<\/div>)/ },
-      { key: 'events', selector: /(<div id="upcoming-events"[^>]*>[\s\S]*?<\/aside>\s*<\/div>)/ },
-      { key: 'recentlyCompleted', selector: /(<div class="recently-completed-wrapper"[^>]*>[\s\S]*?<\/aside>\s*<\/div>)/ },
-      { key: 'reminders', selector: /(<div class="reminders-wrapper"[^>]*>[\s\S]*?<\/div>\s*<\/div>)/ },
-      { key: 'edgeFilters', selector: /(<div id='edge-filters'[^>]*>[\s\S]*?<\/div>\s*<\/div>)/ },
-      { key: 'smartBox', selector: /(<div id="smart-box"[^>]*>[\s\S]*?<\/div>\s*<\/div>)/ }
+    // Replace dynamic section contents in template
+    const sectionReplacements = [
+      { key: 'feed', id: 'home-feed-container' },
+      { key: 'todo', id: 'todo' },
+      { key: 'events', id: 'upcoming-events' },
+      { key: 'recentlyCompleted', class: 'recently-completed-wrapper' },
+      { key: 'reminders', class: 'reminders-wrapper' }
     ];
 
-    for (const { key, selector } of replacements) {
+    for (const { key, id, cls } of sectionReplacements) {
       if (dynamicContent[key]) {
-        const match = template.match(selector);
-        if (match) {
-          template = template.replace(match[0], dynamicContent[key]);
-          console.log(`Replaced ${key} section`);
-        } else {
+        let match;
+        if (id) {
+          // Match <div id="...">...</div> with nested content
+          const regex = new RegExp(`(<div\\s+id="${id}"[^>]*>)([\\s\\S]*?)(</div>)`, 'i');
+          match = template.match(regex);
+          if (match) {
+            template = template.replace(match[2], dynamicContent[key]);
+            console.log(`Replaced ${key} section content`);
+          }
+        } else if (cls) {
+          const regex = new RegExp(`(<div\\s+class="${cls}"[^>]*>)([\\s\\S]*?)(</div>)`, 'i');
+          match = template.match(regex);
+          if (match) {
+            template = template.replace(match[2], dynamicContent[key]);
+            console.log(`Replaced ${key} section content`);
+          }
+        }
+        if (!match) {
           console.log(`Could not find ${key} section in template`);
         }
       }

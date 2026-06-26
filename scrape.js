@@ -11,6 +11,11 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
   process.exit(1);
 }
 
+async function screenshot(page, name) {
+  await page.screenshot({ path: `/tmp/${name}.png`, fullPage: true });
+  console.log(`Screenshot: ${name}`);
+}
+
 (async () => {
   console.log('Launching browser...');
   const browser = await puppeteer.launch({
@@ -22,115 +27,152 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-    console.log('Navigating to pausd.schoology.com...');
-    await page.goto('https://pausd.schoology.com', { waitUntil: 'load', timeout: 60000 });
+    // Step 1: Go to pausd.schoology.com
+    console.log('Step 1: Navigating to pausd.schoology.com...');
+    await page.goto('https://pausd.schoology.com', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForSelector('body', { timeout: 10000 });
+    await new Promise(r => setTimeout(r, 8000));
+    await screenshot(page, 'step1-initial');
+    console.log('URL:', page.url());
 
-    await new Promise(r => setTimeout(r, 5000));
-    await page.screenshot({ path: '/tmp/step1-initial.png', fullPage: true });
-    console.log('Step 1 - URL:', page.url());
+    // Step 2: Wait for ClassLink to load and find login fields
+    console.log('Step 2: Waiting for login form...');
 
-    if (page.url().includes('classlink')) {
-      console.log('On ClassLink login page');
+    // Wait for any input to appear
+    await page.waitForSelector('input', { timeout: 20000 }).catch(() => {
+      console.log('No input found after 20s');
+    });
 
-      await page.waitForSelector('input[type="text"], input[type="email"]', { timeout: 20000 }).catch(() => {});
-      await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, 3000));
+    await screenshot(page, 'step2-waited');
 
-      await page.screenshot({ path: '/tmp/step2-classlink.png', fullPage: true });
+    // Get all inputs and buttons for debugging
+    const inputs = await page.$$('input');
+    const buttons = await page.$$('button');
+    console.log(`Found ${inputs.length} inputs, ${buttons.length} buttons`);
 
-      const usernameInput = await page.$('input[type="text"]') || await page.$('input[type="email"]');
-      const passwordInput = await page.$('input[type="password"]');
+    // Log input attributes
+    for (let i = 0; i < Math.min(inputs.length, 5); i++) {
+      const attrs = await inputs[i].evaluate(el => {
+        const a = {};
+        for (const attr of el.attributes) a[attr.name] = attr.value;
+        return a;
+      });
+      console.log(`Input ${i}:`, JSON.stringify(attrs));
+    }
 
-      if (usernameInput && passwordInput) {
-        console.log('Filling credentials...');
-        await usernameInput.click({ clickCount: 3 });
-        await usernameInput.type(SCHOLOGY_EMAIL, { delay: 30 });
-        await passwordInput.click({ clickCount: 3 });
-        await passwordInput.type(SCHOLOGY_PASSWORD, { delay: 30 });
+    // Find username field - try multiple selectors
+    let usernameInput = null;
+    let passwordInput = null;
 
-        await new Promise(r => setTimeout(r, 1000));
-        await page.screenshot({ path: '/tmp/step3-filled.png', fullPage: true });
+    // Try common ClassLink selectors
+    const usernameSelectors = [
+      'input[placeholder*="username" i]',
+      'input[placeholder*="email" i]',
+      'input[placeholder*="ID" i]',
+      'input[name="username"]',
+      'input[name="email"]',
+      'input[type="text"]',
+      'input[type="email"]',
+      'input[autocomplete="username"]',
+      'input'
+    ];
 
-        // Try multiple ways to find and click the login button
-        let loginBtn = null;
-
-        // Method 1: button[type="submit"]
-        loginBtn = await page.$('button[type="submit"]').catch(() => null);
-        if (loginBtn) console.log('Found login button via type=submit');
-
-        // Method 2: button with "Sign In" text
-        if (!loginBtn) {
-          loginBtn = await page.evaluateHandle(() => {
-            const btns = document.querySelectorAll('button');
-            for (const b of btns) {
-              if (b.textContent.trim().toLowerCase().includes('sign in')) return b;
-            }
-            return null;
-          });
-          if (loginBtn) console.log('Found login button via text "Sign In"');
-        }
-
-        // Method 3: last button on page
-        if (!loginBtn) {
-          loginBtn = await page.evaluateHandle(() => {
-            const btns = document.querySelectorAll('button');
-            return btns[btns.length - 1] || null;
-          });
-          if (loginBtn) console.log('Found login button as last button');
-        }
-
-        if (loginBtn) {
-          console.log('Clicking login button...');
-          try {
-            await Promise.all([
-              loginBtn.click(),
-              page.waitForNavigation({ waitUntil: 'load', timeout: 30000 })
-            ]);
-          } catch (navErr) {
-            console.log('Navigation error (expected):', navErr.message);
-            await new Promise(r => setTimeout(r, 5000));
-          }
-
-          await page.screenshot({ path: '/tmp/step4-after-login.png', fullPage: true }).catch(() => {});
-          console.log('After login URL:', page.url());
-
-          if (page.url().includes('login.classlink.com')) {
-            console.log('Still on ClassLink login page - credentials may be incorrect');
-            const bodyText = await page.evaluate(() => document.body.innerText);
-            console.log('Page text:', bodyText.substring(0, 300));
-          }
-        } else {
-          console.log('ERROR: Could not find any login button!');
-          // Dump all buttons for debugging
-          const buttons = await page.evaluate(() => {
-            return Array.from(document.querySelectorAll('button')).map(b => ({
-              type: b.type,
-              text: b.textContent.trim().substring(0, 50),
-              class: b.className.substring(0, 100)
-            }));
-          });
-          console.log('All buttons:', JSON.stringify(buttons, null, 2));
-        }
-      } else {
-        console.log('Could not find username/password inputs!');
+    for (const sel of usernameSelectors) {
+      usernameInput = await page.$(sel);
+      if (usernameInput) {
+        console.log(`Found username input with selector: ${sel}`);
+        break;
       }
     }
 
-    console.log('Navigating to Schoology home...');
-    try {
-      await page.goto('https://pausd.schoology.com/home', { waitUntil: 'load', timeout: 60000 });
-    } catch (navErr) {
-      console.log('Navigation error:', navErr.message);
+    const passwordSelectors = [
+      'input[type="password"]',
+      'input[name="password"]',
+      'input[autocomplete="current-password"]'
+    ];
+
+    for (const sel of passwordSelectors) {
+      passwordInput = await page.$(sel);
+      if (passwordInput) {
+        console.log(`Found password input with selector: ${sel}`);
+        break;
+      }
     }
 
-    await new Promise(r => setTimeout(r, 10000));
-    await page.screenshot({ path: '/tmp/step5-home.png', fullPage: true }).catch(() => {});
-    console.log('Home URL:', page.url());
+    if (usernameInput && passwordInput) {
+      console.log('Step 3: Filling credentials...');
 
+      // Click username field and type
+      await usernameInput.click({ clickCount: 3 });
+      await usernameInput.type(SCHOLOGY_EMAIL, { delay: 30 });
+
+      // Click password field and type
+      await passwordInput.click({ clickCount: 3 });
+      await passwordInput.type(SCHOLOGY_PASSWORD, { delay: 30 });
+
+      await new Promise(r => setTimeout(r, 1000));
+      await screenshot(page, 'step3-filled');
+
+      // Find login button
+      let loginBtn = null;
+      const loginBtnSelectors = [
+        'button[type="submit"]',
+        'button[data-cy="loginButton"]',
+        'button.cl-button-primary',
+        'button.cl-button',
+        'input[type="submit"]',
+        'button'
+      ];
+
+      for (const sel of loginBtnSelectors) {
+        loginBtn = await page.$(sel);
+        if (loginBtn) {
+          console.log(`Found login button with selector: ${sel}`);
+          break;
+        }
+      }
+
+      if (loginBtn) {
+        console.log('Clicking login button...');
+        await loginBtn.click();
+      } else {
+        console.log('No login button found, pressing Enter...');
+        await passwordInput.press('Enter');
+      }
+
+      // Wait for navigation and redirects
+      await new Promise(r => setTimeout(r, 10000));
+      await screenshot(page, 'step4-after-login');
+      console.log('URL after login:', page.url());
+
+      // If still on classlink, wait more
+      if (page.url().includes('classlink')) {
+        console.log('Still on ClassLink, waiting for redirect...');
+        await new Promise(r => setTimeout(r, 10000));
+        await screenshot(page, 'step4b-still-waiting');
+        console.log('URL after more wait:', page.url());
+      }
+    } else {
+      console.log('ERROR: Could not find login fields!');
+      console.log('Page title:', await page.title());
+      console.log('Page HTML (first 2000):', (await page.content()).substring(0, 2000));
+      await screenshot(page, 'step4-error-no-fields');
+    }
+
+    // Step 5: Navigate to Schoology home
+    console.log('Step 5: Navigating to Schoology home...');
+    await page.goto('https://pausd.schoology.com/home', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await new Promise(r => setTimeout(r, 10000));
+    await screenshot(page, 'step5-home');
+    console.log('Final URL:', page.url());
+
+    // Check content
     const bodyText = await page.evaluate(() => document.body.innerText);
-    console.log('Page body length:', bodyText.length);
+    console.log('Body text length:', bodyText.length);
     console.log('First 500 chars:', bodyText.substring(0, 500));
 
-    console.log('Extracting page HTML...');
+    console.log('Extracting HTML...');
     const html = await page.content();
 
     const gameLauncherScript = `
@@ -291,10 +333,10 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
 
     const modifiedHtml = html.replace('</body>', gameLauncherScript + '</body>');
     fs.writeFileSync(OUTPUT_FILE, modifiedHtml, 'utf8');
-    console.log(`Saved scraped HTML to ${OUTPUT_FILE}`);
+    console.log(`Saved to ${OUTPUT_FILE}`);
 
   } catch (err) {
-    console.error('Error during scraping:', err.message);
+    console.error('Error:', err.message);
     process.exit(1);
   } finally {
     await browser.close();

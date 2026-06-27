@@ -301,9 +301,8 @@ async function screenshot(page, name) {
         dd.style.display='none';
       }else{
         var rect=btn.getBoundingClientRect();
-        var ddWidth=dd.offsetWidth||200;
         dd.style.top=(rect.bottom+window.scrollY)+'px';
-        dd.style.left=(rect.left+rect.width/2-ddWidth/2+window.scrollX)+'px';
+        dd.style.left=(rect.left+window.scrollX)+'px';
         dd.style.display='block';
       }
     });

@@ -27,7 +27,6 @@ async function screenshot(page, name) {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-    // Step 1: Go to pausd.schoology.com
     console.log('Step 1: Navigating to pausd.schoology.com...');
     await page.goto('https://pausd.schoology.com', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.waitForSelector('body', { timeout: 10000 });
@@ -35,139 +34,90 @@ async function screenshot(page, name) {
     await screenshot(page, 'step1-initial');
     console.log('URL:', page.url());
 
-    // Step 2: Wait for ClassLink to load and find login fields
+    // Wait for ClassLink login form
     console.log('Step 2: Waiting for login form...');
-
-    // Wait for any input to appear
-    await page.waitForSelector('input', { timeout: 20000 }).catch(() => {
-      console.log('No input found after 20s');
+    await page.waitForSelector('#username, #password', { timeout: 20000 }).catch(() => {
+      console.log('Warning: username/password inputs not found');
     });
 
     await new Promise(r => setTimeout(r, 3000));
     await screenshot(page, 'step2-waited');
 
-    // Get all inputs and buttons for debugging
-    const inputs = await page.$$('input');
-    const buttons = await page.$$('button');
-    console.log(`Found ${inputs.length} inputs, ${buttons.length} buttons`);
-
-    // Log input attributes
-    for (let i = 0; i < Math.min(inputs.length, 5); i++) {
-      const attrs = await inputs[i].evaluate(el => {
-        const a = {};
-        for (const attr of el.attributes) a[attr.name] = attr.value;
-        return a;
-      });
-      console.log(`Input ${i}:`, JSON.stringify(attrs));
-    }
-
-    // Find username field - try multiple selectors
-    let usernameInput = null;
-    let passwordInput = null;
-
-    // Try common ClassLink selectors
-    const usernameSelectors = [
-      'input[placeholder*="username" i]',
-      'input[placeholder*="email" i]',
-      'input[placeholder*="ID" i]',
-      'input[name="username"]',
-      'input[name="email"]',
-      'input[type="text"]',
-      'input[type="email"]',
-      'input[autocomplete="username"]',
-      'input'
-    ];
-
-    for (const sel of usernameSelectors) {
-      usernameInput = await page.$(sel);
-      if (usernameInput) {
-        console.log(`Found username input with selector: ${sel}`);
-        break;
-      }
-    }
-
-    const passwordSelectors = [
-      'input[type="password"]',
-      'input[name="password"]',
-      'input[autocomplete="current-password"]'
-    ];
-
-    for (const sel of passwordSelectors) {
-      passwordInput = await page.$(sel);
-      if (passwordInput) {
-        console.log(`Found password input with selector: ${sel}`);
-        break;
-      }
-    }
+    const usernameInput = await page.$('#username');
+    const passwordInput = await page.$('#password');
 
     if (usernameInput && passwordInput) {
       console.log('Step 3: Filling credentials...');
 
-      // Click username field and type
       await usernameInput.click({ clickCount: 3 });
       await usernameInput.type(SCHOLOGY_EMAIL, { delay: 30 });
 
-      // Click password field and type
       await passwordInput.click({ clickCount: 3 });
       await passwordInput.type(SCHOLOGY_PASSWORD, { delay: 30 });
 
       await new Promise(r => setTimeout(r, 1000));
       await screenshot(page, 'step3-filled');
 
-      // Find login button
-      let loginBtn = null;
-      const loginBtnSelectors = [
-        'button[type="submit"]',
-        'button[data-cy="loginButton"]',
-        'button.cl-button-primary',
-        'button.cl-button',
-        'input[type="submit"]',
-        'button'
-      ];
+      // Find the login button specifically
+      const loginBtn = await page.$('button[data-cy="loginButton"]') ||
+        await page.$('button[type="submit"]') ||
+        await page.$('button.cl-button-primary') ||
+        await page.$('button');
 
-      for (const sel of loginBtnSelectors) {
-        loginBtn = await page.$(sel);
-        if (loginBtn) {
-          console.log(`Found login button with selector: ${sel}`);
+      if (loginBtn) {
+        console.log('Clicking login button...');
+        // Use evaluate to click for better reliability with Angular
+        await page.evaluate(btn => btn.click(), loginBtn);
+      } else {
+        console.log('No button found, pressing Enter...');
+        await passwordInput.press('Enter');
+      }
+
+      // Wait for redirect - ClassLink redirects after successful login
+      console.log('Waiting for redirect...');
+      let redirected = false;
+      for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        const url = page.url();
+        console.log(`  Check ${i+1}: ${url}`);
+        if (!url.includes('classlink') && !url.includes('login')) {
+          redirected = true;
+          break;
+        }
+        // Check for error messages
+        const errorText = await page.evaluate(() => {
+          const els = document.querySelectorAll('*');
+          for (const el of els) {
+            if (el.textContent && (el.textContent.includes('invalid') || el.textContent.includes('Incorrect') || el.textContent.includes('error'))) {
+              return el.textContent.trim();
+            }
+          }
+          return null;
+        });
+        if (errorText) {
+          console.log('Error detected:', errorText);
           break;
         }
       }
 
-      if (loginBtn) {
-        console.log('Clicking login button...');
-        await loginBtn.click();
-      } else {
-        console.log('No login button found, pressing Enter...');
-        await passwordInput.press('Enter');
-      }
-
-      // Wait for navigation and redirects
-      await new Promise(r => setTimeout(r, 10000));
       await screenshot(page, 'step4-after-login');
       console.log('URL after login:', page.url());
 
-      // If still on classlink, wait more
-      if (page.url().includes('classlink')) {
-        console.log('Still on ClassLink, waiting for redirect...');
-        await new Promise(r => setTimeout(r, 10000));
-        await screenshot(page, 'step4b-still-waiting');
-        console.log('URL after more wait:', page.url());
+      if (!redirected) {
+        console.log('WARNING: Did not redirect from ClassLink. Login may have failed.');
       }
     } else {
       console.log('ERROR: Could not find login fields!');
-      console.log('Page title:', await page.title());
-      console.log('Page HTML (first 2000):', (await page.content()).substring(0, 2000));
-      await screenshot(page, 'step4-error-no-fields');
+      await screenshot(page, 'step4-error');
     }
 
-    // Step 5: Navigate to Schoology home
+    // Navigate to Schoology home
     console.log('Step 5: Navigating to Schoology home...');
     await page.goto('https://pausd.schoology.com/home', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await new Promise(r => setTimeout(r, 10000));
     await screenshot(page, 'step5-home');
     console.log('Final URL:', page.url());
 
-    // Check content
     const bodyText = await page.evaluate(() => document.body.innerText);
     console.log('Body text length:', bodyText.length);
     console.log('First 500 chars:', bodyText.substring(0, 500));

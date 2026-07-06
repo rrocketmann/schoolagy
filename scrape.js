@@ -80,15 +80,15 @@ function extractDiv(html, id) {
 
     if (!page.url().includes('schoology.com/home')) {
       console.log('Navigating to /home...');
-      await page.goto('https://pausd.schoology.com/home', { waitUntil: 'networkidle2', timeout: 60000 });
+      await page.goto('https://pausd.schoology.com/home', { waitUntil: 'load', timeout: 90000 });
     }
 
-    await page.waitForFunction(() => {
-      const feed = document.querySelector('.s-edge-feed');
-      return feed && feed.children.length > 1;
-    }, { timeout: 15000 }).catch(() => console.log('Feed wait timed out, using whatever loaded'));
+    await new Promise(r => setTimeout(r, 8000));
 
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await new Promise(r => setTimeout(r, 3000));
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await new Promise(r => setTimeout(r, 2000));
 
     const freshHtml = await page.content();
     let cleaned = freshHtml.replace(/Martin Malyshau/g, '');

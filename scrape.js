@@ -114,12 +114,12 @@ function extractDiv(html, id) {
     const existingHtml = fs.existsSync(OUTPUT_FILE) ? fs.readFileSync(OUTPUT_FILE, 'utf8') : null;
 
     if (existingHtml) {
-      const freshSection = extractDiv(cleaned, 'content-wrapper');
-      const oldSection = extractDiv(existingHtml, 'content-wrapper');
+      const freshSection = extractDiv(cleaned, 'home-feed-container');
+      const oldSection = extractDiv(existingHtml, 'home-feed-container');
       if (freshSection && oldSection) {
         const result = existingHtml.replace(oldSection, freshSection);
         fs.writeFileSync(OUTPUT_FILE, result, 'utf8');
-        console.log('Updated content-wrapper (', freshSection.length, 'bytes)');
+        console.log('Updated home-feed-container (', freshSection.length, 'bytes)');
       } else {
         console.log('Extraction failed, saving full page');
         fs.writeFileSync(OUTPUT_FILE, cleaned, 'utf8');

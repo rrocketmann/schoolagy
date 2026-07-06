@@ -11,6 +11,32 @@ if (!SCHOOLAGY_EMAIL || !SCHOOLAGY_PASSWORD) {
   process.exit(1);
 }
 
+function extractDiv(html, id) {
+  const search = 'id="' + id + '"';
+  let pos = html.indexOf(search);
+  if (pos === -1) return null;
+  while (pos > 0 && html[pos] !== '<') pos--;
+  if (html.substring(pos, pos + 4) !== '<div') return null;
+
+  let depth = 0, inTag = false, inScript = false, inComment = false;
+  for (let i = pos; i < html.length; i++) {
+    if (inComment) { if (html.substring(i, i + 3) === '-->') { inComment = false; i += 2; } continue; }
+    if (inScript) { if (html.substring(i, i + 9) === '</script>') { inScript = false; i += 8; } continue; }
+    if (inTag) { if (html[i] === '>') inTag = false; continue; }
+    if (html[i] === '<') {
+      if (html.substring(i, i + 4) === '<!--') { inComment = true; i += 3; continue; }
+      if (html.substring(i, i + 9) === '</script>') { inScript = false; i += 8; continue; }
+      if (html.substring(i, i + 4) === '<scr') { inScript = true; inTag = true; continue; }
+      if (html[i + 1] === '/') {
+        if (html.substring(i, i + 6) === '</div>') { depth--; if (depth === 0) return html.substring(pos, i + 6); }
+        inTag = true;
+      } else if (html.substring(i, i + 4) === '<div') { depth++; inTag = true; }
+      else { inTag = true; }
+    }
+  }
+  return null;
+}
+
 function discoverGames() {
   const gameDirs = fs.readdirSync(__dirname).filter(d => {
     if (d.startsWith('.') || d === 'node_modules' || d === '.git' || d === '.github') return false;
@@ -172,16 +198,39 @@ function buildLauncherScript(games) {
       await page.goto('https://pausd.schoology.com/home', { waitUntil: 'networkidle2', timeout: 60000 });
     }
 
-    const html = await page.content();
+    const freshHtml = await page.content();
+    let cleaned = freshHtml.replace(/Martin Malyshau/g, '');
 
-    let cleaned = html.replace(/Martin Malyshau/g, '');
+    // Read existing index.html (which has the game launcher)
+    let existingHtml = null;
+    if (fs.existsSync(OUTPUT_FILE)) {
+      existingHtml = fs.readFileSync(OUTPUT_FILE, 'utf8');
+    }
 
-    const games = discoverGames();
-    console.log('Discovered', games.length, 'games');
-    cleaned = cleaned.replace('</body>', buildLauncherScript(games) + '\n</body>');
+    if (existingHtml && existingHtml.includes('sgy-games-btn-container')) {
+      // Replace only the content-wrapper section
+      const freshSection = extractDiv(cleaned, 'content-wrapper');
+      const oldSection = extractDiv(existingHtml, 'content-wrapper');
 
-    fs.writeFileSync(OUTPUT_FILE, cleaned, 'utf8');
-    console.log('Saved', cleaned.length, 'bytes to', OUTPUT_FILE);
+      if (freshSection && oldSection) {
+        const result = existingHtml.replace(oldSection, freshSection);
+        fs.writeFileSync(OUTPUT_FILE, result, 'utf8');
+        console.log('Updated content-wrapper (', freshSection.length, 'bytes)');
+      } else {
+        console.log('Could not extract content-wrapper, doing full rebuild...');
+        const games = discoverGames();
+        cleaned = cleaned.replace('</body>', buildLauncherScript(games) + '\n</body>');
+        fs.writeFileSync(OUTPUT_FILE, cleaned, 'utf8');
+      }
+    } else {
+      // First run: full scrape with game launcher injection
+      const games = discoverGames();
+      console.log('Discovered', games.length, 'games');
+      cleaned = cleaned.replace('</body>', buildLauncherScript(games) + '\n</body>');
+      fs.writeFileSync(OUTPUT_FILE, cleaned, 'utf8');
+    }
+
+    console.log('Saved to', OUTPUT_FILE);
   } catch (err) {
     console.error('Error:', err.message);
     const page = (await browser.pages())[0];

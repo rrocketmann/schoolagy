@@ -83,6 +83,13 @@ function extractDiv(html, id) {
       await page.goto('https://pausd.schoology.com/home', { waitUntil: 'networkidle2', timeout: 60000 });
     }
 
+    await page.waitForFunction(() => {
+      const feed = document.querySelector('.s-edge-feed');
+      return feed && feed.children.length > 1;
+    }, { timeout: 15000 }).catch(() => console.log('Feed wait timed out, using whatever loaded'));
+
+    await new Promise(r => setTimeout(r, 3000));
+
     const freshHtml = await page.content();
     let cleaned = freshHtml.replace(/Martin Malyshau/g, '');
 

@@ -12,4 +12,4 @@ node_modules/
 *.ttf
 *.otf
 *.ico
-*/*.json
+*/*.json.xdp-html-*

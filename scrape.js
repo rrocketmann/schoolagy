@@ -88,15 +88,25 @@ function extractDiv(html, id) {
 
     if (!page.url().includes('schoology.com/home')) {
       console.log('Navigating to /home...');
-      await page.goto('https://pausd.schoology.com/home', { waitUntil: 'load', timeout: 90000 });
+      await page.goto('https://pausd.schoology.com/home', { waitUntil: 'networkidle0', timeout: 120000 });
     }
 
-    await new Promise(r => setTimeout(r, 8000));
+    console.log('Waiting for feed to load...');
+    try {
+      await page.waitForSelector('.sEdgeFilterProcessed, .s-edge-feed > li:not(.s-edge-feed-more-link)', { timeout: 30000 });
+      console.log('Feed loaded');
+    } catch {
+      console.log('Feed selector timed out, trying reload...');
+      await page.goto('https://pausd.schoology.com/home', { waitUntil: 'networkidle0', timeout: 120000 });
+      try {
+        await page.waitForSelector('.sEdgeFilterProcessed, .s-edge-feed > li:not(.s-edge-feed-more-link)', { timeout: 30000 });
+        console.log('Feed loaded after reload');
+      } catch {
+        console.log('Feed still not loaded after reload');
+      }
+    }
 
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await new Promise(r => setTimeout(r, 3000));
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 5000));
 
     const freshHtml = await page.content();
     let cleaned = freshHtml.replace(/Martin Malyshau/g, '');

@@ -2,7 +2,7 @@ name: Scrape Schoology
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -32,14 +32,6 @@ jobs:
           SCHOLOGY_EMAIL: ${{ secrets.SCHOLOGY_EMAIL }}
           SCHOLOGY_PASSWORD: ${{ secrets.SCHOLOGY_PASSWORD }}
         run: node scrape.js
-
-      - name: Upload debug screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-screenshots
-          path: /tmp/*.png
-          retention-days: 3
 
       - name: Commit and push changes
         run: |

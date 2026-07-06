@@ -12,79 +12,58 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
 }
 
 (async () => {
-  console.log('Launching browser...');
   const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   });
 
   try {
     const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setViewport({ width: 1280, height: 800 });
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    );
 
-    console.log('Step 1: Navigate to pausd.schoology.com...');
-    await page.goto('https://pausd.schoology.com', { waitUntil: 'load', timeout: 60000 });
-    await new Promise(r => setTimeout(r, 5000));
-    await page.screenshot({ path: '/tmp/step1.png', fullPage: true });
-    console.log('URL:', page.url());
+    console.log('Navigating to pausd.schoology.com...');
+    await page.goto('https://pausd.schoology.com', { waitUntil: 'networkidle2', timeout: 60000 });
 
     if (page.url().includes('classlink')) {
-      console.log('Step 2: On ClassLink, waiting for form...');
-      await page.waitForSelector('input[type="text"], input[type="email"]', { timeout: 15000 }).catch(() => {});
-      await new Promise(r => setTimeout(r, 2000));
+      console.log('On ClassLink – logging in...');
 
-      const usernameInput = await page.$('input[type="text"]') || await page.$('input[type="email"]');
-      const passwordInput = await page.$('input[type="password"]');
+      const usernameInput = await page.waitForSelector('input[type="text"], input[type="email"]', { timeout: 15000 });
+      const passwordInput = await page.waitForSelector('input[type="password"]', { timeout: 15000 });
 
-      if (usernameInput && passwordInput) {
-        console.log('Step 3: Filling credentials...');
-        await usernameInput.click({ clickCount: 3 });
-        await usernameInput.type(SCHOLOGY_EMAIL, { delay: 30 });
-        await passwordInput.click({ clickCount: 3 });
-        await passwordInput.type(SCHOLOGY_PASSWORD, { delay: 30 });
+      await usernameInput.click({ clickCount: 3 });
+      await usernameInput.type(SCHOLOGY_EMAIL);
+      await passwordInput.click({ clickCount: 3 });
+      await passwordInput.type(SCHOLOGY_PASSWORD);
 
-        await new Promise(r => setTimeout(r, 1000));
-        await page.screenshot({ path: '/tmp/step3.png', fullPage: true });
+      const loginBtn =
+        (await page.$('button[data-cy="loginButton"]')) ||
+        (await page.$('button[type="submit"]'));
 
-        const loginBtn = await page.$('button[data-cy="loginButton"]') ||
-          await page.$('button[type="submit"]') ||
-          await page.$('button.cl-button-primary') ||
-          await page.evaluateHandle(() => {
-            const btns = Array.from(document.querySelectorAll('button'));
-            return btns.find(b => b.offsetParent !== null && b.textContent.trim().length > 0) || null;
-          });
-        if (loginBtn) {
-          console.log('Step 4: Clicking login...');
-          try {
-            await Promise.all([
-              loginBtn.click(),
-              page.waitForNavigation({ waitUntil: 'load', timeout: 30000 })
-            ]);
-          } catch (e) {
-            await new Promise(r => setTimeout(r, 5000));
-          }
-          await page.screenshot({ path: '/tmp/step4.png', fullPage: true });
-          console.log('After login URL:', page.url());
-        }
-      }
+      if (!loginBtn) throw new Error('Could not find login button');
+
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }),
+        loginBtn.click(),
+      ]);
+
+      console.log('Post-login URL:', page.url());
     }
 
-    console.log('Step 5: Navigate to home...');
-    await page.goto('https://pausd.schoology.com/home', { waitUntil: 'load', timeout: 60000 });
-    await new Promise(r => setTimeout(r, 10000));
-    await page.screenshot({ path: '/tmp/step5.png', fullPage: true });
-    console.log('Home URL:', page.url());
+    if (!page.url().includes('schoology.com/home')) {
+      console.log('Navigating to /home...');
+      await page.goto('https://pausd.schoology.com/home', { waitUntil: 'networkidle2', timeout: 60000 });
+    }
 
-    const bodyText = await page.evaluate(() => document.body.innerText);
-    console.log('Body length:', bodyText.length);
-
-    console.log('Step 6: Extracting full HTML...');
     const html = await page.content();
     fs.writeFileSync(OUTPUT_FILE, html, 'utf8');
-    console.log('Saved to', OUTPUT_FILE);
-
+    console.log('Saved', html.length, 'bytes to', OUTPUT_FILE);
   } catch (err) {
     console.error('Error:', err.message);
+    const page = (await browser.pages())[0];
+    if (page) await page.screenshot({ path: '/tmp/error.png' }).catch(() => {});
     process.exit(1);
   } finally {
     await browser.close();

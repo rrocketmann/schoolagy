@@ -64,9 +64,17 @@ function extractDiv(html, id) {
       await passwordInput.click({ clickCount: 3 });
       await passwordInput.type(SCHOLOGY_PASSWORD);
 
+      await new Promise(r => setTimeout(r, 1000));
+      await page.screenshot({ path: '/tmp/step3.png', fullPage: true });
+
       const loginBtn =
         (await page.$('button[data-cy="loginButton"]')) ||
-        (await page.$('button[type="submit"]'));
+        (await page.$('button[type="submit"]')) ||
+        (await page.$('button.cl-button-primary')) ||
+        (await page.evaluateHandle(() => {
+          const btns = Array.from(document.querySelectorAll('button'));
+          return btns.find(b => b.offsetParent !== null && b.textContent.trim().length > 0) || null;
+        }));
 
       if (!loginBtn) throw new Error('Could not find login button');
 

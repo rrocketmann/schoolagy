@@ -13,3 +13,4 @@ node_modules/
 *.otf
 *.ico
 */*.json.xdp-html-*
+.xdp-html-*

@@ -29,8 +29,8 @@ jobs:
 
       - name: Scrape Schoology
         env:
-          SCHOLOGY_EMAIL: ${{ secrets.SCHOLOGY_EMAIL }}
-          SCHOLOGY_PASSWORD: ${{ secrets.SCHOLOGY_PASSWORD }}
+          SCHOOLAGY_EMAIL: ${{ secrets.SCHOOLAGY_EMAIL }}
+          SCHOOLAGY_PASSWORD: ${{ secrets.SCHOOLAGY_PASSWORD }}
         run: node scrape.js
 
       - name: Commit and push changes

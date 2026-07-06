@@ -2,12 +2,12 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
-const SCHOLOGY_EMAIL = process.env.SCHOLOGY_EMAIL;
-const SCHOLOGY_PASSWORD = process.env.SCHOLOGY_PASSWORD;
+const SCHOOLAGY_EMAIL = process.env.SCHOOLAGY_EMAIL;
+const SCHOOLAGY_PASSWORD = process.env.SCHOOLAGY_PASSWORD;
 const OUTPUT_FILE = path.join(__dirname, 'index.html');
 
-if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
-  console.error('Error: SCHOLOGY_EMAIL and SCHOLOGY_PASSWORD environment variables required');
+if (!SCHOOLAGY_EMAIL || !SCHOOLAGY_PASSWORD) {
+  console.error('Error: SCHOOLAGY_EMAIL and SCHOOLAGY_PASSWORD environment variables required');
   process.exit(1);
 }
 
@@ -34,9 +34,9 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
       const passwordInput = await page.waitForSelector('input[type="password"]', { timeout: 15000 });
 
       await usernameInput.click({ clickCount: 3 });
-      await usernameInput.type(SCHOLOGY_EMAIL);
+      await usernameInput.type(SCHOOLAGY_EMAIL);
       await passwordInput.click({ clickCount: 3 });
-      await passwordInput.type(SCHOLOGY_PASSWORD);
+      await passwordInput.type(SCHOOLAGY_PASSWORD);
 
       const loginBtn =
         (await page.$('button[data-cy="loginButton"]')) ||

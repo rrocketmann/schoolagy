@@ -122,6 +122,7 @@ gtag('config', 'G-C7MHSFPRSE');
   window.openGame = function(name, url) {
     iframe.src = url;
     ov.classList.add('show');
+    gtag('event', 'play_game', { 'game_name': name, 'game_url': url });
   };
   ov.onclick = function(e) {
     if (e.target === ov) { ov.classList.remove('show'); iframe.src = ''; }
@@ -235,6 +236,10 @@ function extractDiv(html, id) {
     console.log('Discovered', games.length, 'games');
     const script = resourcesScript(games);
 
+    var seoMeta = '<meta name="description" content="Play ' + games.length + ' unblocked games including ' + games.slice(0, 5).map(function(g) { return g.name; }).join(', ') + ' and more. Free browser games.">\n';
+    seoMeta += '<meta name="keywords" content="unblocked games, school games, free online games, ' + games.map(function(g) { return g.name; }).join(', ') + '">\n';
+    cleaned = cleaned.replace('</head>', seoMeta + '</head>');
+
     const existingHtml = fs.existsSync(OUTPUT_FILE) ? fs.readFileSync(OUTPUT_FILE, 'utf8') : null;
 
     if (existingHtml) {
@@ -257,6 +262,13 @@ function extractDiv(html, id) {
       cleaned = cleaned.replace('</body>', script + '\n</body>');
       fs.writeFileSync(OUTPUT_FILE, cleaned, 'utf8');
     }
+
+    var sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+    sitemap += '  <url><loc>https://rrocketmann.github.io/schoolagy/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n';
+    games.forEach(function(g) { sitemap += '  <url><loc>https://rrocketmann.github.io/schoolagy/' + g.url + '</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>\n'; });
+    sitemap += '</urlset>';
+    fs.writeFileSync(path.join(__dirname, 'sitemap.xml'), sitemap, 'utf8');
+    console.log('Wrote sitemap.xml with', games.length, 'game entries');
 
     console.log('Saved to', OUTPUT_FILE);
   } catch (err) {

@@ -66,12 +66,10 @@ function resourcesScript(games) {
     '#sg-dropdown a{display:block;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
     '#sg-dropdown a:hover{background:#f5f5f5}',
     '#sg-dropdown a:last-child{border-bottom:none}',
-    '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:9999}',
+    '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer}',
     '#sg-overlay.show{display:block}',
-    '#sg-overlay .bar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:#1a1a1a;color:#fff;font-family:sans-serif;font-size:16px}',
-    '#sg-overlay .bar button{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px;border-radius:4px}',
-    '#sg-overlay .bar button:hover{background:rgba(255,255,255,.15)}',
-    '#sg-overlay iframe{width:100%;height:calc(100% - 42px);border:none;background:#000}'
+    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50vw;height:50vh;cursor:default}',
+    '#sg-overlay iframe{width:100%;height:100%;border:none;background:#000;border-radius:4px}'
   ].join('');
   document.head.appendChild(s);
 
@@ -104,39 +102,19 @@ function resourcesScript(games) {
 
   var ov = document.createElement('div');
   ov.id = 'sg-overlay';
-  var bar = document.createElement('div');
-  bar.className = 'bar';
-  var nameSpan = document.createElement('span');
-  nameSpan.className = 'name';
-  bar.appendChild(nameSpan);
-  var btnDiv = document.createElement('div');
-  var fsBtn = document.createElement('button');
-  fsBtn.textContent = '⛶';
-  var closeBtn = document.createElement('button');
-  closeBtn.textContent = '✕';
-  btnDiv.appendChild(fsBtn);
-  btnDiv.appendChild(closeBtn);
-  bar.appendChild(btnDiv);
-  ov.appendChild(bar);
+  var wrap = document.createElement('div');
+  wrap.className = 'wrap';
   var iframe = document.createElement('iframe');
   iframe.allowFullscreen = true;
   iframe.allow = 'autoplay; fullscreen';
   iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
-  ov.appendChild(iframe);
+  wrap.appendChild(iframe);
+  ov.appendChild(wrap);
   document.body.appendChild(ov);
 
   window.openGame = function(name, url) {
-    nameSpan.textContent = name;
     iframe.src = url;
     ov.classList.add('show');
-  };
-  fsBtn.onclick = function() {
-    if (iframe.requestFullscreen) iframe.requestFullscreen();
-    else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
-  };
-  closeBtn.onclick = function() {
-    ov.classList.remove('show');
-    iframe.src = '';
   };
   ov.onclick = function(e) {
     if (e.target === ov) { ov.classList.remove('show'); iframe.src = ''; }

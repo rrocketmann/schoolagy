@@ -115,7 +115,7 @@ gtag('config', 'G-C7MHSFPRSE');
   document.body.appendChild(dd);
 
   document.addEventListener('click', function(e) {
-    var link = e.target.closest ? e.target.closest('a[href*="/resources"]') : null;
+    var link = e.target.closest ? e.target.closest('a[href="/resources"]') : null;
     if (!link) { dd.classList.remove('show'); return; }
     e.preventDefault();
     e.stopPropagation();

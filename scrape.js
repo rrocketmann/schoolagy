@@ -70,7 +70,8 @@ gtag('config', 'G-C7MHSFPRSE');
       var h = a.getAttribute('href');
       if (h.startsWith('//')) return;
       if (h.startsWith('/home') || h === '/') { a.href = base; a.dataset.sgFixed = '1'; return; }
-      if (h.startsWith('/')) { a.href = '#'; a.dataset.sgFixed = '1'; }
+      if (h === '/resources') return;
+      if (h.startsWith('/')) { a.href = 'javascript:void(0)'; a.dataset.sgFixed = '1'; }
     });
   }
   fixLinks();

@@ -63,6 +63,19 @@ gtag('config', 'G-C7MHSFPRSE');
 </script>
 <script>
 (function(){
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a) return;
+    var h = a.getAttribute('href');
+    if (!h || h === '#' || h.startsWith('http') || h.startsWith('//') || h.startsWith('mailto') || h.startsWith('javascript')) return;
+    var base = window.location.pathname.replace(/[^/]*$/, '');
+    if (h === '/home' || h.startsWith('/home') || h === '/') { e.preventDefault(); window.location.href = base; return; }
+    if (h.startsWith('/')) { e.preventDefault(); }
+  }, true);
+})();
+</script>
+<script>
+(function(){
   var names = ${json_name};
   var urls = ${json_url};
 

@@ -11,6 +11,32 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
   process.exit(1);
 }
 
+function removeDiv(html, id) {
+  const search = 'id="' + id + '"';
+  let pos = html.indexOf(search);
+  if (pos === -1) return html;
+  while (pos > 0 && html[pos] !== '<') pos--;
+  if (html.substring(pos, pos + 4) !== '<div') return html;
+
+  let depth = 0, inTag = false, inScript = false, inComment = false;
+  for (let i = pos; i < html.length; i++) {
+    if (inComment) { if (html.substring(i, i + 3) === '-->') { inComment = false; i += 2; } continue; }
+    if (inScript) { if (html.substring(i, i + 9) === '</script>') { inScript = false; i += 8; } continue; }
+    if (inTag) { if (html[i] === '>') inTag = false; continue; }
+    if (html[i] === '<') {
+      if (html.substring(i, i + 4) === '<!--') { inComment = true; i += 3; continue; }
+      if (html.substring(i, i + 9) === '</script>') { inScript = false; i += 8; continue; }
+      if (html.substring(i, i + 4) === '<scr') { inScript = true; inTag = true; continue; }
+      if (html[i + 1] === '/') {
+        if (html.substring(i, i + 6) === '</div>') { depth--; if (depth === 0) return html.substring(0, pos) + html.substring(i + 6); }
+        inTag = true;
+      } else if (html.substring(i, i + 4) === '<div') { depth++; inTag = true; }
+      else { inTag = true; }
+    }
+  }
+  return html;
+}
+
 function extractDiv(html, id) {
   const search = 'id="' + id + '"';
   let pos = html.indexOf(search);
@@ -110,6 +136,7 @@ function extractDiv(html, id) {
 
     const freshHtml = await page.content();
     let cleaned = freshHtml.replace(/Martin Malyshau/g, '');
+    cleaned = removeDiv(removeDiv(cleaned, 'lightboxOverlay'), 'lightbox');
 
     const existingHtml = fs.existsSync(OUTPUT_FILE) ? fs.readFileSync(OUTPUT_FILE, 'utf8') : null;
 
@@ -118,16 +145,16 @@ function extractDiv(html, id) {
       const oldSection = extractDiv(existingHtml, 'home-feed-container');
       if (freshSection && oldSection) {
         var result = existingHtml.replace(oldSection, freshSection);
-        result = result.replace('</body>', '<style>#lightboxOverlay,#lightbox{display:none!important}</style>\n</body>');
+        result = removeDiv(removeDiv(result, 'lightboxOverlay'), 'lightbox');
         fs.writeFileSync(OUTPUT_FILE, result, 'utf8');
         console.log('Updated home-feed-container (', freshSection.length, 'bytes)');
       } else {
         console.log('Extraction failed, saving full page');
-        cleaned = cleaned.replace('</body>', '<style>#lightboxOverlay,#lightbox{display:none!important}</style>\n</body>');
+        cleaned = removeDiv(removeDiv(cleaned, 'lightboxOverlay'), 'lightbox');
         fs.writeFileSync(OUTPUT_FILE, cleaned, 'utf8');
       }
     } else {
-      cleaned = cleaned.replace('</body>', '<style>#lightboxOverlay,#lightbox{display:none!important}</style>\n</body>');
+      cleaned = removeDiv(removeDiv(cleaned, 'lightboxOverlay'), 'lightbox');
       fs.writeFileSync(OUTPUT_FILE, cleaned, 'utf8');
     }
 

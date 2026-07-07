@@ -63,15 +63,20 @@ gtag('config', 'G-C7MHSFPRSE');
 </script>
 <script>
 (function(){
-  document.addEventListener('click', function(e) {
-    var a = e.target.closest ? e.target.closest('a[href]') : null;
-    if (!a) return;
-    var h = a.getAttribute('href');
-    if (!h || h === '#' || h.startsWith('http') || h.startsWith('//') || h.startsWith('mailto') || h.startsWith('javascript')) return;
-    var base = window.location.pathname.replace(/[^/]*$/, '');
-    if (h === '/home' || h.startsWith('/home') || h === '/') { e.preventDefault(); window.location.href = base; return; }
-    if (h.startsWith('/')) { e.preventDefault(); }
-  }, true);
+  var base = window.location.pathname.replace(/[^/]*$/, '');
+  function fixLinks() {
+    document.querySelectorAll('a[href^="/"]').forEach(function(a) {
+      if (a.dataset.sgFixed) return;
+      var h = a.getAttribute('href');
+      if (h.startsWith('//')) return;
+      if (h.startsWith('/home') || h === '/') { a.href = base; a.dataset.sgFixed = '1'; return; }
+      if (h.startsWith('/')) { a.href = '#'; a.dataset.sgFixed = '1'; }
+    });
+  }
+  fixLinks();
+  var ob = new MutationObserver(fixLinks);
+  ob.observe(document.body, { childList: true, subtree: true });
+  setTimeout(function() { ob.disconnect(); }, 15000);
 })();
 </script>
 <script>

@@ -117,14 +117,17 @@ function extractDiv(html, id) {
       const freshSection = extractDiv(cleaned, 'home-feed-container');
       const oldSection = extractDiv(existingHtml, 'home-feed-container');
       if (freshSection && oldSection) {
-        const result = existingHtml.replace(oldSection, freshSection);
+        var result = existingHtml.replace(oldSection, freshSection);
+        result = result.replace('</body>', '<style>#lightboxOverlay,#lightbox{display:none!important}</style>\n</body>');
         fs.writeFileSync(OUTPUT_FILE, result, 'utf8');
         console.log('Updated home-feed-container (', freshSection.length, 'bytes)');
       } else {
         console.log('Extraction failed, saving full page');
+        cleaned = cleaned.replace('</body>', '<style>#lightboxOverlay,#lightbox{display:none!important}</style>\n</body>');
         fs.writeFileSync(OUTPUT_FILE, cleaned, 'utf8');
       }
     } else {
+      cleaned = cleaned.replace('</body>', '<style>#lightboxOverlay,#lightbox{display:none!important}</style>\n</body>');
       fs.writeFileSync(OUTPUT_FILE, cleaned, 'utf8');
     }
 

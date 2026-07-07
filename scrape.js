@@ -54,7 +54,14 @@ function resourcesScript(games) {
   var urls = games.map(function(g) { return g.url; });
   var json_name = JSON.stringify(names);
   var json_url = JSON.stringify(urls);
-  return `<script>
+  return `<script async src="https://www.googletagmanager.com/gtag/js?id=G-C7MHSFPRSE"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-C7MHSFPRSE');
+</script>
+<script>
 (function(){
   var names = ${json_name};
   var urls = ${json_url};

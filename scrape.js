@@ -50,13 +50,18 @@ function discoverGames() {
 }
 
 function resourcesScript(games) {
+  var names = games.map(function(g) { return g.name; });
+  var urls = games.map(function(g) { return g.url; });
+  var json_name = JSON.stringify(names);
+  var json_url = JSON.stringify(urls);
   return `<script>
 (function(){
-  var games = ${JSON.stringify(games)};
+  var names = ${json_name};
+  var urls = ${json_url};
 
   var s = document.createElement('style');
   s.textContent = [
-    '#sg-dropdown{display:none;position:absolute;top:48px;left:0;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:999;min-width:200px;max-height:400px;overflow-y:auto}',
+    '#sg-dropdown{display:none;position:fixed;z-index:999;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:200px;max-height:400px;overflow-y:auto}',
     '#sg-dropdown.show{display:block}',
     '#sg-dropdown a{display:block;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
     '#sg-dropdown a:hover{background:#f5f5f5}',
@@ -70,56 +75,71 @@ function resourcesScript(games) {
   ].join('');
   document.head.appendChild(s);
 
-  var ob = new MutationObserver(function() {
-    var link = document.querySelector('a[href="/resources"]');
-    if (!link || link.dataset.sgHijacked) return;
-    link.dataset.sgHijacked = '1';
-    link.removeAttribute('href');
-    link.style.cursor = 'pointer';
-
-    var li = link.parentElement;
-    li.style.position = 'relative';
-
-    var dd = document.createElement('div');
-    dd.id = 'sg-dropdown';
-    games.forEach(function(g) {
+  var dd = document.createElement('div');
+  dd.id = 'sg-dropdown';
+  for (var i = 0; i < names.length; i++) {
+    (function(idx) {
       var a = document.createElement('a');
-      a.textContent = g.name;
-      a.onclick = function(e) { e.preventDefault(); openGame(g); };
+      a.textContent = names[idx];
+      a.onclick = function(e) {
+        e.preventDefault();
+        openGame(names[idx], urls[idx]);
+      };
       dd.appendChild(a);
-    });
-    li.appendChild(dd);
+    })(i);
+  }
+  document.body.appendChild(dd);
 
-    link.onclick = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      dd.classList.toggle('show');
-    };
-    document.addEventListener('click', function() { dd.classList.remove('show'); });
-  });
-  ob.observe(document.body, { childList: true, subtree: true });
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest ? e.target.closest('a[href*="/resources"]') : null;
+    if (!link) { dd.classList.remove('show'); return; }
+    e.preventDefault();
+    e.stopPropagation();
+
+    var rect = link.getBoundingClientRect();
+    dd.style.top = (rect.bottom + window.scrollY) + 'px';
+    dd.style.left = (rect.left + window.scrollX) + 'px';
+    dd.classList.toggle('show');
+  }, true);
 
   var ov = document.createElement('div');
   ov.id = 'sg-overlay';
-  ov.innerHTML = '<div class="bar"><span class="name"></span><div><button id="sg-fs">⛶</button><button id="sg-close">✕</button></div></div><iframe allowfullscreen allow="autoplay; fullscreen"></iframe>';
+  var bar = document.createElement('div');
+  bar.className = 'bar';
+  var nameSpan = document.createElement('span');
+  nameSpan.className = 'name';
+  bar.appendChild(nameSpan);
+  var btnDiv = document.createElement('div');
+  var fsBtn = document.createElement('button');
+  fsBtn.textContent = '⛶';
+  var closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  btnDiv.appendChild(fsBtn);
+  btnDiv.appendChild(closeBtn);
+  bar.appendChild(btnDiv);
+  ov.appendChild(bar);
+  var iframe = document.createElement('iframe');
+  iframe.allowFullscreen = true;
+  iframe.allow = 'autoplay; fullscreen';
+  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+  ov.appendChild(iframe);
   document.body.appendChild(ov);
 
-  window.openGame = function(g) {
-    ov.querySelector('.name').textContent = g.name;
-    ov.querySelector('iframe').src = g.url;
+  window.openGame = function(name, url) {
+    nameSpan.textContent = name;
+    iframe.src = url;
     ov.classList.add('show');
   };
-  document.getElementById('sg-fs').onclick = function() {
-    var f = ov.querySelector('iframe');
-    if (f.requestFullscreen) f.requestFullscreen();
-    else if (f.webkitRequestFullscreen) f.webkitRequestFullscreen();
+  fsBtn.onclick = function() {
+    if (iframe.requestFullscreen) iframe.requestFullscreen();
+    else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
   };
-  document.getElementById('sg-close').onclick = function() {
+  closeBtn.onclick = function() {
     ov.classList.remove('show');
-    ov.querySelector('iframe').src = '';
+    iframe.src = '';
   };
   ov.onclick = function(e) {
-    if (e.target === ov) { ov.classList.remove('show'); ov.querySelector('iframe').src = ''; }
+    if (e.target === ov) { ov.classList.remove('show'); iframe.src = ''; }
   };
 })();
 </script>`;

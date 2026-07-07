@@ -263,13 +263,6 @@ function extractDiv(html, id) {
       fs.writeFileSync(OUTPUT_FILE, cleaned, 'utf8');
     }
 
-    var sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-    sitemap += '  <url><loc>https://rrocketmann.github.io/schoolagy/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n';
-    games.forEach(function(g) { sitemap += '  <url><loc>https://rrocketmann.github.io/schoolagy/' + g.url + '</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>\n'; });
-    sitemap += '</urlset>';
-    fs.writeFileSync(path.join(__dirname, 'sitemap.xml'), sitemap, 'utf8');
-    console.log('Wrote sitemap.xml with', games.length, 'game entries');
-
     console.log('Saved to', OUTPUT_FILE);
   } catch (err) {
     console.error('Error:', err.message);

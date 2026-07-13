@@ -1170,8 +1170,8 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-dropdown a:last-child{border-bottom:none}',
     '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
-    '#sg-overlay .wrap{position:absolute;top:0;left:0;width:100%;height:100%;cursor:default;display:flex;align-items:center;justify-content:center}',
-    '#sg-overlay iframe{width:100%;height:100%;border:none;background:#000;border-radius:4px;max-width:1280px;max-height:720px}'
+    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50vw;height:50vh;cursor:default}',
+    '#sg-overlay iframe{width:100%;height:100%;border:none;background:#000;border-radius:4px}'
   ].join('');
   document.head.appendChild(s);
 
@@ -1221,7 +1221,7 @@ gtag('config', 'G-C7MHSFPRSE');
     gtag('event', 'play_game', { 'game_name': name, 'game_url': url });
   };
   ov.onclick = function(e) {
-    if (e.target === ov) {
+    if (e.target === ov || e.target === wrap) {
       ov.classList.remove('show');
       iframe.src = '';
       document.body.style.overflow = '';

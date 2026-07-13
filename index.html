@@ -1170,7 +1170,7 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-dropdown a:last-child{border-bottom:none}',
     '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
-    '#sg-overlay .wrap{position:absolute;top:5%;left:5%;width:90%;height:90%;cursor:default}',
+    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50vw;height:50vh;cursor:default}',
     '#sg-overlay iframe{width:100%;height:100%;border:none;background:#000;border-radius:4px}'
   ].join('');
   document.head.appendChild(s);
@@ -1214,10 +1214,30 @@ gtag('config', 'G-C7MHSFPRSE');
   ov.appendChild(wrap);
   document.body.appendChild(ov);
 
+  function fitContent() {
+    try {
+      var doc = iframe.contentDocument || iframe.contentWindow.document;
+      if (!doc || !doc.head) return;
+      if (doc.getElementById('sg-fit')) return;
+      var s = doc.createElement('style');
+      s.id = 'sg-fit';
+      s.textContent = 'html,body{overflow:hidden!important;margin:0!important;padding:0!important;width:100%!important;height:100%!important}canvas,#unity-canvas,#unity-container{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important}';
+      doc.head.appendChild(s);
+      var obs = new MutationObserver(function(){
+        var e = doc.getElementById('sg-fit');
+        e && e.remove();
+        doc.head.appendChild(s.cloneNode());
+      });
+      if (doc.body) obs.observe(doc.body, { childList: true, subtree: true });
+      setTimeout(function(){ obs.disconnect(); }, 10000);
+    } catch(e) {}
+  }
+
   window.openGame = function(name, url) {
     iframe.src = url;
     ov.classList.add('show');
     document.body.style.overflow = 'hidden';
+    iframe.addEventListener('load', fitContent, { once: true });
     gtag('event', 'play_game', { 'game_name': name, 'game_url': url });
   };
   ov.onclick = function(e) {

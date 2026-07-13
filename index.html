@@ -1163,15 +1163,15 @@ gtag('config', 'G-C7MHSFPRSE');
 
   var s = document.createElement('style');
   s.textContent = [
-    '#sg-dropdown{display:none;position:fixed;z-index:999;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:200px;max-height:400px;overflow-y:auto}',
+    '#sg-dropdown{display:none;position:fixed;z-index:999;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:200px;max-height:400px;overflow-y:auto;overscroll-behavior:contain}',
     '#sg-dropdown.show{display:block}',
     '#sg-dropdown a{display:block;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
     '#sg-dropdown a:hover{background:#f5f5f5}',
     '#sg-dropdown a:last-child{border-bottom:none}',
-    '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer}',
+    '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
-    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50vw;height:50vh;cursor:default}',
-    '#sg-overlay iframe{width:100%;height:100%;border:none;background:#000;border-radius:4px}'
+    '#sg-overlay .wrap{position:absolute;top:0;left:0;width:100%;height:100%;cursor:default;display:flex;align-items:center;justify-content:center}',
+    '#sg-overlay iframe{width:100%;height:100%;border:none;background:#000;border-radius:4px;max-width:1280px;max-height:720px}'
   ].join('');
   document.head.appendChild(s);
 
@@ -1208,8 +1208,8 @@ gtag('config', 'G-C7MHSFPRSE');
   wrap.className = 'wrap';
   var iframe = document.createElement('iframe');
   iframe.allowFullscreen = true;
-  iframe.allow = 'autoplay; fullscreen';
-  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+  iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
+  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock');
   wrap.appendChild(iframe);
   ov.appendChild(wrap);
   document.body.appendChild(ov);
@@ -1217,10 +1217,15 @@ gtag('config', 'G-C7MHSFPRSE');
   window.openGame = function(name, url) {
     iframe.src = url;
     ov.classList.add('show');
+    document.body.style.overflow = 'hidden';
     gtag('event', 'play_game', { 'game_name': name, 'game_url': url });
   };
   ov.onclick = function(e) {
-    if (e.target === ov) { ov.classList.remove('show'); iframe.src = ''; }
+    if (e.target === ov) {
+      ov.classList.remove('show');
+      iframe.src = '';
+      document.body.style.overflow = '';
+    }
   };
 })();
 </script>

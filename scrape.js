@@ -87,12 +87,12 @@ gtag('config', 'G-C7MHSFPRSE');
 
   var s = document.createElement('style');
   s.textContent = [
-    '#sg-dropdown{display:none;position:fixed;z-index:999;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:200px;max-height:400px;overflow-y:auto}',
+    '#sg-dropdown{display:none;position:fixed;z-index:999;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:200px;max-height:400px;overflow-y:auto;overscroll-behavior:contain}',
     '#sg-dropdown.show{display:block}',
     '#sg-dropdown a{display:block;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
     '#sg-dropdown a:hover{background:#f5f5f5}',
     '#sg-dropdown a:last-child{border-bottom:none}',
-    '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer}',
+    '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
     '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50vw;height:50vh;cursor:default}',
     '#sg-overlay iframe{width:100%;height:100%;border:none;background:#000;border-radius:4px}'
@@ -132,19 +132,44 @@ gtag('config', 'G-C7MHSFPRSE');
   wrap.className = 'wrap';
   var iframe = document.createElement('iframe');
   iframe.allowFullscreen = true;
-  iframe.allow = 'autoplay; fullscreen';
+  iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
   iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
   wrap.appendChild(iframe);
   ov.appendChild(wrap);
   document.body.appendChild(ov);
 
+  function fitContent() {
+    try {
+      var doc = iframe.contentDocument || iframe.contentWindow.document;
+      if (!doc || !doc.head) return;
+      if (doc.getElementById('sg-fit')) return;
+      var s = doc.createElement('style');
+      s.id = 'sg-fit';
+      s.textContent = 'html,body{overflow:hidden!important;margin:0!important;padding:0!important;width:100%!important;height:100%!important}canvas,#unity-canvas,#unity-container{max-width:100%!important;max-height:100%!important;width:100%!important;height:100%!important;object-fit:contain!important}';
+      doc.head.appendChild(s);
+      var obs = new MutationObserver(function(){
+        var e = doc.getElementById('sg-fit');
+        e && e.remove();
+        doc.head.appendChild(s.cloneNode());
+      });
+      if (doc.body) obs.observe(doc.body, { childList: true, subtree: true });
+      setTimeout(function(){ obs.disconnect(); }, 10000);
+    } catch(e) {}
+  }
+
   window.openGame = function(name, url) {
     iframe.src = url;
     ov.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    iframe.addEventListener('load', fitContent, { once: true });
     gtag('event', 'play_game', { 'game_name': name, 'game_url': url });
   };
   ov.onclick = function(e) {
-    if (e.target === ov) { ov.classList.remove('show'); iframe.src = ''; }
+    if (e.target === ov || e.target === wrap) {
+      ov.classList.remove('show');
+      iframe.src = '';
+      document.body.style.overflow = '';
+    }
   };
 })();
 </script>`;

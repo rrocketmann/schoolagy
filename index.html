@@ -1221,7 +1221,7 @@ gtag('config', 'G-C7MHSFPRSE');
       if (doc.getElementById('sg-fit')) return;
       var s = doc.createElement('style');
       s.id = 'sg-fit';
-      s.textContent = 'html,body{overflow:hidden!important;margin:0!important;padding:0!important;width:100%!important;height:100%!important}canvas,#unity-canvas,#unity-container{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important}';
+      s.textContent = 'html,body{overflow:hidden!important;margin:0!important;padding:0!important;width:100%!important;height:100%!important}canvas,#unity-canvas,#unity-container{max-width:100%!important;max-height:100%!important;width:100%!important;height:100%!important;object-fit:contain!important}';
       doc.head.appendChild(s);
       var obs = new MutationObserver(function(){
         var e = doc.getElementById('sg-fit');

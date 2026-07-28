@@ -215,7 +215,13 @@ function extractDiv(html, id) {
     );
 
     console.log('Navigating to pausd.schoology.com...');
-    await page.goto('https://pausd.schoology.com', { waitUntil: 'networkidle2', timeout: 60000 });
+    try {
+      await page.goto('https://pausd.schoology.com', { waitUntil: 'networkidle2', timeout: 60000 });
+    } catch (err) {
+      if (!/Navigation timeout/i.test(err.message || '')) throw err;
+      console.log('Initial networkidle2 navigation timed out; retrying with domcontentloaded...');
+      await page.goto('https://pausd.schoology.com', { waitUntil: 'domcontentloaded', timeout: 120000 });
+    }
 
     if (page.url().includes('classlink')) {
       console.log('On ClassLink – logging in...');

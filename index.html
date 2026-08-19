@@ -783,8 +783,23 @@ gtag('config', 'G-C7MHSFPRSE');
 </script>
 <script>
 (function(){
-  var names = ["2048","A Palace For Fools","Basketrandom","Bitlife","Bobbysbugs","Chromedino","Clusterrush","Cookieclicker","Crossyroad","Doodlejump","Doom","Drivemad","Eaglercraft","Hollow Knight","Messages","Peggyspost","Pigeon Ascent","Pixelbrowl","Quadrilactic","Retrobowl","Retrobowlcollege","Slope","Sortthecourt","Space Dwarf","Starcatcher","Subwaysurferssingapore","Supertux Classic","Tetris","Tiny Tactics","Tinyfishing","Tombofthemask","Vex3","Vex4","Vex5","Vex6"];
-  var urls = ["2048/index.html","a-palace-for-fools/index.html","basketrandom/index.html","bitlife/index.html","bobbysbugs/index.html","chromedino/index.html","clusterrush/index.html","cookieclicker/index.html","crossyroad/index.html","doodlejump/index.html","doom/index.html","drivemad/index.html","eaglercraft/index.html","hollow-knight/index.html","messages/index.html","peggyspost/index.html","pigeon-ascent/index.html","pixelbrowl/index.html","quadrilactic/index.html","retrobowl/index.html","retrobowlcollege/index.html","slope/index.html","sortthecourt/index.html","space-dwarf/index.html","starcatcher/index.html","subwaysurferssingapore/index.html","supertux-classic/index.html","tetris/index.html","tiny-tactics/index.html","tinyfishing/index.html","tombofthemask/index.html","vex3/index.html","vex4/index.html","vex5/index.html","vex6/index.html"];
+  var names = ["2048","A Palace For Fools","Basketrandom","Bitlife","Bobbysbugs","Chromedino","Clusterrush","Cookieclicker","Crossyroad","Doodlejump","Doom","Drivemad","Eaglercraft","Hollow Knight","Messages","Peggyspost","Pixelbrowl","Quadrilactic","Retrobowl","Retrobowlcollege","Slope","Sortthecourt","Subwaysurferssingapore","Tetris","Tinyfishing","Tombofthemask","Vex3","Vex4","Vex5","Vex6"];
+  var urls = ["2048/index.html","a-palace-for-fools/index.html","basketrandom/index.html","bitlife/index.html","bobbysbugs/index.html","chromedino/index.html","clusterrush/index.html","cookieclicker/index.html","crossyroad/index.html","doodlejump/index.html","doom/index.html","drivemad/index.html","eaglercraft/index.html","hollow-knight/index.html","messages/index.html","peggyspost/index.html","pixelbrowl/index.html","quadrilactic/index.html","retrobowl/index.html","retrobowlcollege/index.html","slope/index.html","sortthecourt/index.html","subwaysurferssingapore/index.html","tetris/index.html","tinyfishing/index.html","tombofthemask/index.html","vex3/index.html","vex4/index.html","vex5/index.html","vex6/index.html"];
+  var sizes = {
+    "2048/index.html": [500, 680],
+    "doodlejump/index.html": [422, 552],
+    "quadrilactic/index.html": [480, 800],
+    "tetris/index.html": [900, 640],
+    "tinyfishing/index.html": [640, 360],
+    "retrobowl/index.html": [960, 540],
+    "retrobowlcollege/index.html": [853, 480],
+    "pixelbrowl/index.html": [960, 638],
+    "sortthecourt/index.html": [960, 540],
+    "bobbysbugs/index.html": [1280, 758],
+    "peggyspost/index.html": [1300, 788],
+    "clusterrush/index.html": [1106, 872],
+    "chromedino/index.html": [626, 176]
+  };
 
   var s = document.createElement('style');
   s.textContent = [
@@ -795,8 +810,8 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-dropdown a:last-child{border-bottom:none}',
     '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
-    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55vw;height:55vh;cursor:default}',
-    '#sg-overlay iframe{width:100%;height:100%;border:none;background:#000;border-radius:4px}'
+    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:66vw;height:66vh;cursor:default;box-shadow:0 12px 40px rgba(0,0,0,.45)}',
+    '#sg-overlay iframe{width:100%;height:100%;border:none;background:#000;border-radius:4px;display:block}'
   ].join('');
   document.head.appendChild(s);
 
@@ -833,32 +848,54 @@ gtag('config', 'G-C7MHSFPRSE');
   wrap.className = 'wrap';
   var iframe = document.createElement('iframe');
   iframe.allowFullscreen = true;
-  iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
-  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+  iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture; pointer-lock';
+  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock');
   wrap.appendChild(iframe);
   ov.appendChild(wrap);
   document.body.appendChild(ov);
+
+  var currentUrl = '';
+
+  function applySize(url) {
+    var maxW = Math.max(320, Math.round(window.innerWidth * 0.66));
+    var maxH = Math.max(240, Math.round(window.innerHeight * 0.66));
+    var spec = sizes[url];
+    var w, h;
+    if (!spec) {
+      w = maxW;
+      h = maxH;
+    } else {
+      var scale = Math.min(maxW / spec[0], maxH / spec[1], 1);
+      w = Math.max(1, Math.round(spec[0] * scale));
+      h = Math.max(1, Math.round(spec[1] * scale));
+    }
+    wrap.style.width = w + 'px';
+    wrap.style.height = h + 'px';
+  }
+
+  window.addEventListener('resize', function() {
+    if (currentUrl && ov.classList.contains('show')) applySize(currentUrl);
+  });
 
   function fitContent() {
     try {
       var doc = iframe.contentDocument || iframe.contentWindow.document;
       if (!doc || !doc.head) return;
       if (doc.getElementById('sg-fit')) return;
-      var s = doc.createElement('style');
-      s.id = 'sg-fit';
-      s.textContent = 'html,body{overflow:hidden!important;margin:0!important;padding:0!important;width:100%!important;height:100%!important}canvas,#unity-canvas,#unity-container{max-width:100%!important;max-height:100%!important;width:100%!important;height:100%!important;object-fit:contain!important}';
-      doc.head.appendChild(s);
-      var obs = new MutationObserver(function(){
-        var e = doc.getElementById('sg-fit');
-        e && e.remove();
-        doc.head.appendChild(s.cloneNode());
-      });
-      if (doc.body) obs.observe(doc.body, { childList: true, subtree: true });
-      setTimeout(function(){ obs.disconnect(); }, 10000);
-    } catch(e) {}
+      var style = doc.createElement('style');
+      style.id = 'sg-fit';
+      if (sizes[currentUrl]) {
+        style.textContent = 'html,body{margin:0!important;padding:0!important;overflow:auto!important}';
+      } else {
+        style.textContent = 'html,body{overflow:hidden!important;margin:0!important;padding:0!important;width:100%!important;height:100%!important}canvas,#unity-canvas,#unity-container,#gameContainer,#gm4html5_div_id{max-width:100%!important;max-height:100%!important}';
+      }
+      doc.head.appendChild(style);
+    } catch (e) {}
   }
 
   window.openGame = function(name, url) {
+    currentUrl = url;
+    applySize(url);
     iframe.src = url;
     ov.classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -869,6 +906,7 @@ gtag('config', 'G-C7MHSFPRSE');
     if (e.target === ov || e.target === wrap) {
       ov.classList.remove('show');
       iframe.src = '';
+      currentUrl = '';
       document.body.style.overflow = '';
     }
   };

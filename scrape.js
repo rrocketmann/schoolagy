@@ -43,10 +43,17 @@ function discoverGames() {
     try { return fs.statSync(path.join(__dirname, d)).isDirectory() && fs.existsSync(path.join(__dirname, d, 'index.html')); }
     catch { return false; }
   }).sort();
-  return dirs.map(d => ({
+  const local = dirs.map(d => ({
     url: d + '/index.html',
     name: d.replace(/[-_]/g, ' ').replace(/(\d)v(\d)/gi, '$1v$2').replace(/\b\w/g, c => c.toUpperCase()).trim()
   }));
+  const extra = [
+    { name: 'Drawcall', url: 'https://drawcall.grok.me/' },
+    { name: 'Raycer', url: 'https://rrocketmann.github.io/raycer/' },
+    { name: 'Trainything', url: 'https://trainything.ai/' },
+    { name: 'Traktion', url: 'https://rrocketmann.github.io/traktion/' },
+  ];
+  return local.concat(extra).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 }
 
 function resourcesScript(games) {

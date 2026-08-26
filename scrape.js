@@ -53,6 +53,7 @@ function discoverGames() {
     { name: 'Raycer', url: 'https://rrocketmann.github.io/raycer/' },
     { name: 'Trainything', url: 'https://trainything.ai/' },
     { name: 'Traktion', url: 'https://rrocketmann.github.io/traktion/' },
+    { name: 'Vangers', url: 'https://vange.rs/' },
   ];
   return local.concat(extra).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 }
@@ -64,6 +65,7 @@ const NEW_GAMES = [
   'Raycer',
   'Trainything',
   'Traktion',
+  'Vangers',
 ];
 
 function resourcesScript(games) {
@@ -161,7 +163,7 @@ gtag('config', 'G-C7MHSFPRSE');
   var iframe = document.createElement('iframe');
   iframe.allowFullscreen = true;
   iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
-  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock');
   wrap.appendChild(iframe);
   ov.appendChild(wrap);
   document.body.appendChild(ov);
@@ -190,7 +192,19 @@ gtag('config', 'G-C7MHSFPRSE');
     ov.classList.add('show');
     document.body.style.overflow = 'hidden';
     iframe.addEventListener('load', fitContent, { once: true });
-    gtag('event', 'play_game', { 'game_name': name, 'game_url': url });
+    var path = '/play/' + encodeURIComponent(name);
+    gtag('event', 'play_game', {
+      game_name: name,
+      game_url: url,
+      content_type: 'game',
+      item_id: name,
+      item_name: name
+    });
+    gtag('event', 'page_view', {
+      page_title: 'Play ' + name,
+      page_location: window.location.origin + path,
+      page_path: path
+    });
   };
   ov.onclick = function(e) {
     if (e.target === ov || e.target === wrap) {

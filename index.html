@@ -710,9 +710,9 @@ gtag('config', 'G-C7MHSFPRSE');
 </script>
 <script>
 (function(){
-  var names = ["2048","A Palace For Fools","Basketrandom","Bitlife","Bobbysbugs","Chromedino","Clusterrush","Cookieclicker","Crossyroad","Doodlejump","Doom","Drawcall","Drivemad","Eaglercraft","Gunn Student Simulator","Hollow Knight","Messages","Peggyspost","Pigeon Ascent","Pixelbrowl","Polytrack","Quadrilactic","Raycer","Retrobowl","Retrobowlcollege","Slope","Sortthecourt","Space Dwarf","Starcatcher","Subwaysurferssingapore","Supertux Classic","Tetris","Tiny Tactics","Tinyfishing","Tombofthemask","Trainything","Traktion","Vex3","Vex4","Vex5","Vex6"];
-  var urls = ["2048/index.html","a-palace-for-fools/index.html","basketrandom/index.html","bitlife/index.html","bobbysbugs/index.html","chromedino/index.html","clusterrush/index.html","cookieclicker/index.html","crossyroad/index.html","doodlejump/index.html","doom/index.html","https://drawcall.grok.me/","drivemad/index.html","eaglercraft/index.html","https://sheeptester.github.io/gunn-student-sim/","hollow-knight/index.html","messages/index.html","peggyspost/index.html","pigeon-ascent/index.html","pixelbrowl/index.html","polytrack/index.html","quadrilactic/index.html","https://rrocketmann.github.io/raycer/","retrobowl/index.html","retrobowlcollege/index.html","slope/index.html","sortthecourt/index.html","space-dwarf/index.html","starcatcher/index.html","subwaysurferssingapore/index.html","supertux-classic/index.html","tetris/index.html","tiny-tactics/index.html","tinyfishing/index.html","tombofthemask/index.html","https://trainything.ai/","https://rrocketmann.github.io/traktion/","vex3/index.html","vex4/index.html","vex5/index.html","vex6/index.html"];
-  var isNew = ["Drawcall","Gunn Student Simulator","Polytrack","Raycer","Trainything","Traktion"];
+  var names = ["2048","A Palace For Fools","Basketrandom","Bitlife","Bobbysbugs","Chromedino","Clusterrush","Cookieclicker","Crossyroad","Doodlejump","Doom","Drawcall","Drivemad","Eaglercraft","Gunn Student Simulator","Hollow Knight","Messages","Peggyspost","Pigeon Ascent","Pixelbrowl","Polytrack","Quadrilactic","Raycer","Retrobowl","Retrobowlcollege","Slope","Sortthecourt","Space Dwarf","Starcatcher","Subwaysurferssingapore","Supertux Classic","Tetris","Tiny Tactics","Tinyfishing","Tombofthemask","Trainything","Traktion","Vangers","Vex3","Vex4","Vex5","Vex6"];
+  var urls = ["2048/index.html","a-palace-for-fools/index.html","basketrandom/index.html","bitlife/index.html","bobbysbugs/index.html","chromedino/index.html","clusterrush/index.html","cookieclicker/index.html","crossyroad/index.html","doodlejump/index.html","doom/index.html","https://drawcall.grok.me/","drivemad/index.html","eaglercraft/index.html","https://sheeptester.github.io/gunn-student-sim/","hollow-knight/index.html","messages/index.html","peggyspost/index.html","pigeon-ascent/index.html","pixelbrowl/index.html","polytrack/index.html","quadrilactic/index.html","https://rrocketmann.github.io/raycer/","retrobowl/index.html","retrobowlcollege/index.html","slope/index.html","sortthecourt/index.html","space-dwarf/index.html","starcatcher/index.html","subwaysurferssingapore/index.html","supertux-classic/index.html","tetris/index.html","tiny-tactics/index.html","tinyfishing/index.html","tombofthemask/index.html","https://trainything.ai/","https://rrocketmann.github.io/traktion/","https://vange.rs/","vex3/index.html","vex4/index.html","vex5/index.html","vex6/index.html"];
+  var isNew = ["Drawcall","Gunn Student Simulator","Polytrack","Raycer","Trainything","Traktion","Vangers"];
 
   var s = document.createElement('style');
   s.textContent = [
@@ -771,7 +771,7 @@ gtag('config', 'G-C7MHSFPRSE');
   var iframe = document.createElement('iframe');
   iframe.allowFullscreen = true;
   iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
-  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock');
   wrap.appendChild(iframe);
   ov.appendChild(wrap);
   document.body.appendChild(ov);
@@ -800,7 +800,19 @@ gtag('config', 'G-C7MHSFPRSE');
     ov.classList.add('show');
     document.body.style.overflow = 'hidden';
     iframe.addEventListener('load', fitContent, { once: true });
-    gtag('event', 'play_game', { 'game_name': name, 'game_url': url });
+    var path = '/play/' + encodeURIComponent(name);
+    gtag('event', 'play_game', {
+      game_name: name,
+      game_url: url,
+      content_type: 'game',
+      item_id: name,
+      item_name: name
+    });
+    gtag('event', 'page_view', {
+      page_title: 'Play ' + name,
+      page_location: window.location.origin + path,
+      page_path: path
+    });
   };
   ov.onclick = function(e) {
     if (e.target === ov || e.target === wrap) {

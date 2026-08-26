@@ -49,6 +49,7 @@ function discoverGames() {
   }));
   const extra = [
     { name: 'Drawcall', url: 'https://drawcall.grok.me/' },
+    { name: 'Gunn Student Simulator', url: 'https://sheeptester.github.io/gunn-student-sim/' },
     { name: 'Raycer', url: 'https://rrocketmann.github.io/raycer/' },
     { name: 'Trainything', url: 'https://trainything.ai/' },
     { name: 'Traktion', url: 'https://rrocketmann.github.io/traktion/' },
@@ -56,11 +57,21 @@ function discoverGames() {
   return local.concat(extra).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 }
 
+const NEW_GAMES = [
+  'Drawcall',
+  'Gunn Student Simulator',
+  'Polytrack',
+  'Raycer',
+  'Trainything',
+  'Traktion',
+];
+
 function resourcesScript(games) {
   var names = games.map(function(g) { return g.name; });
   var urls = games.map(function(g) { return g.url; });
   var json_name = JSON.stringify(names);
   var json_url = JSON.stringify(urls);
+  var json_new = JSON.stringify(NEW_GAMES);
   return `<script async src="https://www.googletagmanager.com/gtag/js?id=G-C7MHSFPRSE"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
@@ -91,14 +102,16 @@ gtag('config', 'G-C7MHSFPRSE');
 (function(){
   var names = ${json_name};
   var urls = ${json_url};
+  var isNew = ${json_new};
 
   var s = document.createElement('style');
   s.textContent = [
-    '#sg-dropdown{display:none;position:fixed;z-index:999;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:200px;max-height:400px;overflow-y:auto;overscroll-behavior:contain}',
+    '#sg-dropdown{display:none;position:fixed;z-index:999;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:240px;max-height:400px;overflow-y:auto;overscroll-behavior:contain}',
     '#sg-dropdown.show{display:block}',
-    '#sg-dropdown a{display:block;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
+    '#sg-dropdown a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
     '#sg-dropdown a:hover{background:#f5f5f5}',
     '#sg-dropdown a:last-child{border-bottom:none}',
+    '#sg-dropdown .sg-new{flex-shrink:0;font-size:10px;font-weight:700;letter-spacing:.04em;color:#fff;background:#0677ba;border-radius:3px;padding:2px 6px;line-height:1.2}',
     '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
     '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55vw;height:55vh;cursor:default}',
@@ -111,7 +124,15 @@ gtag('config', 'G-C7MHSFPRSE');
   for (var i = 0; i < names.length; i++) {
     (function(idx) {
       var a = document.createElement('a');
-      a.textContent = names[idx];
+      var label = document.createElement('span');
+      label.textContent = names[idx];
+      a.appendChild(label);
+      if (isNew.indexOf(names[idx]) !== -1) {
+        var badge = document.createElement('span');
+        badge.className = 'sg-new';
+        badge.textContent = 'NEW';
+        a.appendChild(badge);
+      }
       a.onclick = function(e) {
         e.preventDefault();
         openGame(names[idx], urls[idx]);

@@ -130,16 +130,16 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-dropdown .sg-new{flex-shrink:0;font-size:10px;font-weight:700;letter-spacing:.04em;color:#fff;background:#0677ba;border-radius:3px;padding:2px 6px;line-height:1.2}',
     '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
-    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55vw;height:55vh;cursor:default}',
-    '#sg-overlay iframe{width:100%;height:100%;border:none;background:#000;border-radius:4px}',
-    '#sg-overlay .sg-bar{position:absolute;top:-40px;right:0;display:flex;gap:6px;z-index:2}',
-    '#sg-overlay .sg-bar button{width:32px;height:32px;border:0;border-radius:4px;background:rgba(0,0,0,.72);color:#fff;cursor:pointer;padding:6px;line-height:0}',
+    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55vw;height:55vh;cursor:default;display:flex;flex-direction:column;overflow:hidden;border-radius:4px}',
+    '#sg-overlay iframe{flex:1;width:100%;height:auto;border:none;background:#000;min-height:0}',
+    '#sg-overlay .sg-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;height:40px;padding:0 8px;background:rgba(0,0,0,.82);color:#fff;z-index:2}',
+    '#sg-overlay .sg-title{flex:1;min-width:0;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '#sg-overlay .sg-actions{display:flex;gap:6px;flex-shrink:0}',
+    '#sg-overlay .sg-bar button{width:32px;height:32px;border:0;border-radius:4px;background:transparent;color:#fff;cursor:pointer;padding:6px;line-height:0}',
     '#sg-overlay .sg-bar button:hover{background:#0677ba}',
     '#sg-overlay .sg-bar svg{width:20px;height:20px;fill:currentColor;pointer-events:none}',
     '#sg-overlay.sg-fs{background:#000;cursor:default}',
-    '#sg-overlay.sg-fs .wrap{top:0;left:0;transform:none;width:100%;height:100%}',
-    '#sg-overlay.sg-fs iframe{border-radius:0}',
-    '#sg-overlay.sg-fs .sg-bar{top:8px;right:8px}'
+    '#sg-overlay.sg-fs .wrap{top:0;left:0;transform:none;width:100%;height:100%;border-radius:0}'
   ].join('');
   document.head.appendChild(s);
 
@@ -194,6 +194,10 @@ gtag('config', 'G-C7MHSFPRSE');
   iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-fullscreen');
   var bar = document.createElement('div');
   bar.className = 'sg-bar';
+  var titleEl = document.createElement('div');
+  titleEl.className = 'sg-title';
+  var actions = document.createElement('div');
+  actions.className = 'sg-actions';
   var fsBtn = document.createElement('button');
   fsBtn.type = 'button';
   fsBtn.title = 'Fullscreen';
@@ -206,10 +210,12 @@ gtag('config', 'G-C7MHSFPRSE');
   var ICON_CLOSE = 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
   fsBtn.innerHTML = svg(ICON_FS);
   closeBtn.innerHTML = svg(ICON_CLOSE);
-  bar.appendChild(fsBtn);
-  bar.appendChild(closeBtn);
-  wrap.appendChild(iframe);
+  actions.appendChild(fsBtn);
+  actions.appendChild(closeBtn);
+  bar.appendChild(titleEl);
+  bar.appendChild(actions);
   wrap.appendChild(bar);
+  wrap.appendChild(iframe);
   ov.appendChild(wrap);
   document.body.appendChild(ov);
 
@@ -278,6 +284,7 @@ gtag('config', 'G-C7MHSFPRSE');
   }
 
   window.openGame = function(name, url) {
+    titleEl.textContent = name || '';
     iframe.src = gameHref(url);
     ov.classList.add('show');
     document.body.style.overflow = 'hidden';

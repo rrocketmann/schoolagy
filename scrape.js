@@ -5,9 +5,7 @@ const path = require('path');
 const SCHOLOGY_EMAIL = process.env.SCHOLOGY_EMAIL;
 const SCHOLOGY_PASSWORD = process.env.SCHOLOGY_PASSWORD;
 const HOME_FILE = path.join(__dirname, 'index.html');
-const RESOURCES_FILE = path.join(__dirname, 'resources', 'index.html');
 const HOME_URL = 'https://pausd.schoology.com/home';
-const RESOURCES_URL = 'https://pausd.schoology.com/resources';
 
 if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
   console.error('Error: SCHOLOGY_EMAIL and SCHOLOGY_PASSWORD environment variables required');
@@ -93,7 +91,6 @@ gtag('config', 'G-C7MHSFPRSE');
 
   function siteRoot() {
     var p = location.pathname.replace(/index\\.html$/, '');
-    p = p.replace(/\\/resources\\/?$/, '/');
     if (!p.endsWith('/')) p = p.replace(/[^/]+$/, '');
     return p;
   }
@@ -112,11 +109,7 @@ gtag('config', 'G-C7MHSFPRSE');
       if (h.startsWith('//') || /^https?:/i.test(h)) return;
       if (h.startsWith('/home') || h === '/') { a.href = root; a.dataset.sgFixed = '1'; return; }
       var path = h.split('?')[0];
-      if (path === '/resources' || path === '/resources/') {
-        a.href = root + 'resources/';
-        a.dataset.sgFixed = '1';
-        return;
-      }
+      if (path === '/resources' || path === '/resources/') return;
       if (h.startsWith('/')) { a.href = 'javascript:void(0)'; a.dataset.sgFixed = '1'; }
     });
   }
@@ -128,31 +121,152 @@ gtag('config', 'G-C7MHSFPRSE');
   var s = document.createElement('style');
   s.textContent = [
     '#todo .upcoming-event,#todo .date-header,.recently-completed-wrapper{display:none!important}',
-    '#sg-game-resources{background:#fff;min-height:240px}',
-    '#sg-game-resources table{width:100%;border-collapse:collapse}',
-    '#sg-game-resources .sg-game-row{cursor:pointer}',
-    '#sg-game-resources .sg-game-row:hover{background:#f5f8fb}',
-    '#sg-game-resources td{padding:10px 12px;border-bottom:1px solid #e6e6e6;vertical-align:middle}',
-    '#sg-game-resources .collection-title{color:#0677ba;text-decoration:none;font-size:14px}',
-    '#sg-game-resources .collection-title:hover{text-decoration:underline}',
-    '#sg-game-resources .sg-new{margin-left:8px;font-size:10px;font-weight:700;letter-spacing:.04em;color:#fff;background:#0677ba;border-radius:3px;padding:2px 6px}',
-    '#library-main.active-loader .loading-overlay,#library-main.active-loader .loading-image{display:none!important}',
-    '#sg-sgy-player{display:flex;flex-direction:column;height:100%;min-height:70vh;background:#fff}',
-    '#sg-sgy-player .popups-title{display:flex;align-items:center;gap:10px;background:#333;color:#fff;padding:8px 12px;font-size:14px;font-weight:700}',
-    '#sg-sgy-player .popups-title-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-    '#sg-sgy-player .popups-title button{background:transparent;border:0;color:#fff;cursor:pointer;font-size:13px;padding:4px 8px}',
-    '#sg-sgy-player .popups-title button:hover{text-decoration:underline}',
-    '#sg-sgy-player .popups-body{flex:1;min-height:0;background:#000}',
-    '#sg-sgy-player iframe{width:100%;height:100%;border:0;background:#000}',
-    '#sg-sgy-player.sg-fs{position:fixed;inset:0;z-index:10000;min-height:100%}',
-    '#popups-overlay.sg-sgy-player-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998}',
-    '#popups-overlay.sg-sgy-player-overlay.show{display:block}',
-    '.popups-box.sg-sgy-player-box{display:none;position:fixed;z-index:9999;top:4%;left:4%;width:92%;height:92%;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.4);flex-direction:column}',
-    '.popups-box.sg-sgy-player-box.show{display:flex}'
+    '#lightbox,#lightboxOverlay,#popups-overlay,.popups-box,.s-lightbox,#s-lightbox{display:none!important}',
+    '#sg-dropdown{display:none;position:fixed;z-index:999;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:240px;max-height:400px;overflow-y:auto;overscroll-behavior:contain}',
+    '#sg-dropdown.show{display:block}',
+    '#sg-dropdown a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
+    '#sg-dropdown a:hover{background:#f5f5f5}',
+    '#sg-dropdown a:last-child{border-bottom:none}',
+    '#sg-dropdown .sg-new{flex-shrink:0;font-size:10px;font-weight:700;letter-spacing:.04em;color:#fff;background:#0677ba;border-radius:3px;padding:2px 6px;line-height:1.2}',
+    '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
+    '#sg-overlay.show{display:block}',
+    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55vw;height:55vh;cursor:default}',
+    '#sg-overlay iframe{width:100%;height:100%;border:none;background:#000;border-radius:4px}',
+    '#sg-overlay .sg-bar{position:absolute;top:-40px;right:0;display:flex;gap:6px;z-index:2}',
+    '#sg-overlay .sg-bar button{width:32px;height:32px;border:0;border-radius:4px;background:rgba(0,0,0,.72);color:#fff;cursor:pointer;padding:6px;line-height:0}',
+    '#sg-overlay .sg-bar button:hover{background:#0677ba}',
+    '#sg-overlay .sg-bar svg{width:20px;height:20px;fill:currentColor;pointer-events:none}',
+    '#sg-overlay.sg-fs{background:#000;cursor:default}',
+    '#sg-overlay.sg-fs .wrap{top:0;left:0;transform:none;width:100%;height:100%}',
+    '#sg-overlay.sg-fs iframe{border-radius:0}',
+    '#sg-overlay.sg-fs .sg-bar{top:8px;right:8px}'
   ].join('');
   document.head.appendChild(s);
 
-  function fitGameFrame(iframe) {
+  var dd = document.createElement('div');
+  dd.id = 'sg-dropdown';
+  for (var i = 0; i < names.length; i++) {
+    (function(idx) {
+      var a = document.createElement('a');
+      var label = document.createElement('span');
+      label.textContent = names[idx];
+      a.appendChild(label);
+      if (isNew.indexOf(names[idx]) !== -1) {
+        var badge = document.createElement('span');
+        badge.className = 'sg-new';
+        badge.textContent = 'NEW';
+        a.appendChild(badge);
+      }
+      a.href = gameHref(urls[idx]);
+      a.onclick = function(e) {
+        e.preventDefault();
+        openGame(names[idx], urls[idx]);
+      };
+      dd.appendChild(a);
+    })(i);
+  }
+  document.body.appendChild(dd);
+
+  function isResourcesLink(el) {
+    var a = el.closest ? el.closest('a') : null;
+    if (!a) return false;
+    var h = (a.getAttribute('href') || '').split('?')[0];
+    return h === '/resources' || h === '/resources/' || /\\/resources\\/?$/.test(h);
+  }
+  document.addEventListener('click', function(e) {
+    if (!isResourcesLink(e.target)) { dd.classList.remove('show'); return; }
+    e.preventDefault();
+    e.stopPropagation();
+    var link = e.target.closest('a');
+    var rect = link.getBoundingClientRect();
+    dd.style.top = (rect.bottom + window.scrollY) + 'px';
+    dd.style.left = (rect.left + window.scrollX) + 'px';
+    dd.classList.toggle('show');
+  }, true);
+
+  var ov = document.createElement('div');
+  ov.id = 'sg-overlay';
+  var wrap = document.createElement('div');
+  wrap.className = 'wrap';
+  var iframe = document.createElement('iframe');
+  iframe.allowFullscreen = true;
+  iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
+  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-fullscreen');
+  var bar = document.createElement('div');
+  bar.className = 'sg-bar';
+  var fsBtn = document.createElement('button');
+  fsBtn.type = 'button';
+  fsBtn.title = 'Fullscreen';
+  var closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.title = 'Close';
+  function svg(path) { return '<svg viewBox="0 0 24 24"><path d="' + path + '"/></svg>'; }
+  var ICON_FS = 'M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z';
+  var ICON_EXIT = 'M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z';
+  var ICON_CLOSE = 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
+  fsBtn.innerHTML = svg(ICON_FS);
+  closeBtn.innerHTML = svg(ICON_CLOSE);
+  bar.appendChild(fsBtn);
+  bar.appendChild(closeBtn);
+  wrap.appendChild(iframe);
+  wrap.appendChild(bar);
+  ov.appendChild(wrap);
+  document.body.appendChild(ov);
+
+  function nativeFsEl() {
+    return document.fullscreenElement || document.webkitFullscreenElement || null;
+  }
+  var nativeOn = false;
+  function isFs() { return ov.classList.contains('sg-fs') || nativeFsEl() === wrap; }
+  function syncFsBtn() {
+    var on = isFs();
+    fsBtn.innerHTML = svg(on ? ICON_EXIT : ICON_FS);
+    fsBtn.title = on ? 'Exit fullscreen' : 'Fullscreen';
+  }
+  function pingResize() {
+    setTimeout(function() {
+      try { var w = iframe.contentWindow; if (w) w.dispatchEvent(new Event('resize')); } catch (e) {}
+      window.dispatchEvent(new Event('resize'));
+    }, 50);
+  }
+  function enterFs() {
+    ov.classList.add('sg-fs');
+    var req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+    if (req) try { var p = req.call(wrap); if (p && p.catch) p.catch(function(){}); } catch (e) {}
+    syncFsBtn();
+    pingResize();
+  }
+  function exitFs() {
+    nativeOn = false;
+    ov.classList.remove('sg-fs');
+    if (nativeFsEl()) {
+      var ex = document.exitFullscreen || document.webkitExitFullscreen;
+      if (ex) try { var p = ex.call(document); if (p && p.catch) p.catch(function(){}); } catch (e) {}
+    }
+    syncFsBtn();
+    pingResize();
+  }
+  function closeGame() {
+    exitFs();
+    ov.classList.remove('show');
+    iframe.src = '';
+    document.body.style.overflow = '';
+  }
+  fsBtn.onclick = function(e) { e.stopPropagation(); if (isFs()) exitFs(); else enterFs(); };
+  closeBtn.onclick = function(e) { e.stopPropagation(); closeGame(); };
+  document.addEventListener('fullscreenchange', function() {
+    var el = nativeFsEl();
+    if (el === wrap) { nativeOn = true; ov.classList.add('sg-fs'); }
+    else if (!el && nativeOn) { nativeOn = false; ov.classList.remove('sg-fs'); }
+    syncFsBtn();
+    pingResize();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape' || !ov.classList.contains('show')) return;
+    if (ov.classList.contains('sg-fs') && !nativeFsEl()) exitFs();
+  });
+
+  function fitContent() {
     try {
       var doc = iframe.contentDocument || iframe.contentWindow.document;
       if (!doc || !doc.head || doc.getElementById('sg-fit')) return;
@@ -163,170 +277,17 @@ gtag('config', 'G-C7MHSFPRSE');
     } catch (e) {}
   }
 
-  function playerChrome(name, href, onClose) {
-    var wrap = document.createElement('div');
-    wrap.id = 'sg-sgy-player';
-    wrap.className = 's-library-player';
-    var title = document.createElement('div');
-    title.className = 'popups-title';
-    var back = document.createElement('button');
-    back.type = 'button';
-    back.textContent = 'Back';
-    var label = document.createElement('span');
-    label.className = 'popups-title-text';
-    label.textContent = name;
-    var fs = document.createElement('button');
-    fs.type = 'button';
-    fs.textContent = 'Fullscreen';
-    var close = document.createElement('button');
-    close.type = 'button';
-    close.className = 'popups-close';
-    close.textContent = 'Close';
-    title.appendChild(back);
-    title.appendChild(label);
-    title.appendChild(fs);
-    title.appendChild(close);
-    var body = document.createElement('div');
-    body.className = 'popups-body';
-    var iframe = document.createElement('iframe');
-    iframe.allowFullscreen = true;
-    iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
-    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-fullscreen');
-    iframe.src = href;
-    iframe.addEventListener('load', function(){ fitGameFrame(iframe); });
-    body.appendChild(iframe);
-    wrap.appendChild(title);
-    wrap.appendChild(body);
-    function exitFs() {
-      wrap.classList.remove('sg-fs');
-      fs.textContent = 'Fullscreen';
-      var el = document.fullscreenElement || document.webkitFullscreenElement;
-      if (el) {
-        var ex = document.exitFullscreen || document.webkitExitFullscreen;
-        if (ex) try { ex.call(document); } catch (e) {}
-      }
-    }
-    back.onclick = close.onclick = function(e) {
-      e.preventDefault();
-      exitFs();
-      onClose();
-    };
-    fs.onclick = function(e) {
-      e.preventDefault();
-      if (wrap.classList.contains('sg-fs')) exitFs();
-      else {
-        wrap.classList.add('sg-fs');
-        fs.textContent = 'Exit fullscreen';
-        var req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
-        if (req) try { var p = req.call(wrap); if (p && p.catch) p.catch(function(){}); } catch (err) {}
-      }
-    };
-    return wrap;
-  }
-
-  function showPopupPlayer(name, href) {
-    var overlay = document.getElementById('popups-overlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'popups-overlay';
-      document.body.appendChild(overlay);
-    }
-    overlay.classList.add('sg-sgy-player-overlay', 'show');
-    var box = document.querySelector('.popups-box.sg-sgy-player-box');
-    if (!box) {
-      box = document.createElement('div');
-      box.className = 'popups-box popups-large sg-sgy-player-box';
-      document.body.appendChild(box);
-    }
-    box.innerHTML = '';
-    box.appendChild(playerChrome(name, href, function() {
-      overlay.classList.remove('show');
-      box.classList.remove('show');
-      box.innerHTML = '';
-    }));
-    box.classList.add('show');
-  }
-
   window.openGame = function(name, url) {
-    var href = gameHref(url);
-    var main = document.getElementById('library-main');
-    if (main) {
-      main.innerHTML = '';
-      main.appendChild(playerChrome(name, href, function() {
-        var existing = document.getElementById('sg-game-resources');
-        if (existing) existing.remove();
-        fillResources();
-      }));
-    } else {
-      showPopupPlayer(name, href);
-    }
+    iframe.src = gameHref(url);
+    ov.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    iframe.addEventListener('load', fitContent, { once: true });
+    dd.classList.remove('show');
     try {
-      gtag('event', 'play_game', { game_name: name, game_url: href, item_id: name, item_name: name });
+      gtag('event', 'play_game', { game_name: name, game_url: gameHref(url), item_id: name, item_name: name });
     } catch (e) {}
   };
-
-  function isResourcesPage() {
-    var p = location.pathname.replace(/index\\.html$/, '').replace(/\\/$/, '');
-    return /\\/resources$/.test(p) || !!document.getElementById('library-wrapper');
-  }
-
-  function gameRow(name, url) {
-    var tr = document.createElement('tr');
-    tr.className = 'library-collection sg-game-row';
-    var tdIcon = document.createElement('td');
-    var icon = document.createElement('span');
-    icon.className = 'folder-icon inline-icon';
-    tdIcon.appendChild(icon);
-    var tdName = document.createElement('td');
-    var a = document.createElement('a');
-    a.className = 'collection-title';
-    a.href = gameHref(url);
-    a.textContent = name;
-    a.onclick = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      openGame(name, url);
-    };
-    tdName.appendChild(a);
-    if (isNew.indexOf(name) !== -1) {
-      var badge = document.createElement('span');
-      badge.className = 'sg-new';
-      badge.textContent = 'NEW';
-      tdName.appendChild(badge);
-    }
-    tr.appendChild(tdIcon);
-    tr.appendChild(tdName);
-    tr.onclick = function(e) {
-      if (e.target.closest && e.target.closest('a')) return;
-      openGame(name, url);
-    };
-    return tr;
-  }
-
-  function fillResources() {
-    if (!isResourcesPage()) return;
-    if (document.getElementById('sg-sgy-player')) return;
-    var main = document.getElementById('library-main');
-    if (!main || main.querySelector('#sg-game-resources')) return;
-    main.classList.remove('active-loader');
-    var panel = document.createElement('div');
-    panel.id = 'sg-game-resources';
-    var table = document.createElement('table');
-    var body = document.createElement('tbody');
-    for (var i = 0; i < names.length; i++) body.appendChild(gameRow(names[i], urls[i]));
-    table.appendChild(body);
-    panel.appendChild(table);
-    main.textContent = '';
-    main.appendChild(panel);
-  }
-
-  fillResources();
-  var fillTimer;
-  var resOb = new MutationObserver(function() {
-    clearTimeout(fillTimer);
-    fillTimer = setTimeout(fillResources, 50);
-  });
-  resOb.observe(document.documentElement, { childList: true, subtree: true });
+  ov.onclick = function(e) { if (e.target === ov) closeGame(); };
 })();
 </script>`;
 }
@@ -335,7 +296,7 @@ function cleanHtml(html, profileName) {
   let out = html;
   if (profileName) out = out.split(profileName).join('');
   out = out.replace(/Martin Malyshau/g, '');
-  ['lightboxOverlay'].forEach((id) => {
+  ['lightboxOverlay', 'lightbox', 'popups-overlay'].forEach((id) => {
     out = removeDiv(out, id);
   });
   return out;
@@ -349,6 +310,7 @@ async function sanitizePage(page) {
     const events = document.querySelector('#upcoming-events .upcoming-list');
     if (events) events.innerHTML = '<div class="empty">No upcoming events</div>';
     document.querySelectorAll('.recently-completed-wrapper').forEach((el) => { el.style.display = 'none'; });
+    document.querySelectorAll('#lightbox, #lightboxOverlay, #popups-overlay, .popups-box, .s-lightbox').forEach((el) => el.remove());
 
     document.querySelectorAll('button[aria-label*="unread notifications"]').forEach((btn) => {
       btn.setAttribute('aria-label', '0 unread notifications');
@@ -372,7 +334,7 @@ function withSeoAndScript(html, games, script) {
     '<meta name="keywords" content="unblocked games, school games, free online games, ' +
     games.map((g) => g.name).join(', ') + '">\n';
   let out = html.replace('</head>', seo + '</head>');
-  if (!out.includes('sg-game-resources')) out = out.replace('</body>', script + '\n</body>');
+  if (!out.includes('sg-dropdown')) out = out.replace('</body>', script + '\n</body>');
   return out;
 }
 
@@ -472,21 +434,9 @@ async function scrape(page, url, waitSelector, label) {
     const profileName = await readProfileName(page);
     if (profileName) console.log('Stripping profile name');
 
-    const resourcesHtml = await scrape(
-      page,
-      RESOURCES_URL,
-      '#library-wrapper, #library-main, .library-collections',
-      'Resources'
-    );
-
     const homeOut = withSeoAndScript(cleanHtml(homeHtml, profileName), games, script);
     fs.writeFileSync(HOME_FILE, homeOut, 'utf8');
     console.log('Saved', HOME_FILE);
-
-    fs.mkdirSync(path.dirname(RESOURCES_FILE), { recursive: true });
-    const resourcesOut = withSeoAndScript(cleanHtml(resourcesHtml, profileName), games, script);
-    fs.writeFileSync(RESOURCES_FILE, resourcesOut, 'utf8');
-    console.log('Saved', RESOURCES_FILE);
   } catch (err) {
     console.error('Error:', err.message);
     if (err.stack) console.error(err.stack);

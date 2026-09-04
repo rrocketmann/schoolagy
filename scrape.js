@@ -12,16 +12,6 @@ if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
   process.exit(1);
 }
 
-const NEW_GAMES = [
-  'Drawcall',
-  'Gunn Student Simulator',
-  'Polytrack',
-  'Raycer',
-  'Trainything',
-  'Traktion',
-  'Vangers',
-];
-
 function removeDiv(html, id) {
   const search = 'id="' + id + '"';
   let pos = html.indexOf(search);
@@ -75,7 +65,6 @@ function discoverGames() {
 function clientScript(games) {
   const names = JSON.stringify(games.map((g) => g.name));
   const urls = JSON.stringify(games.map((g) => g.url));
-  const isNew = JSON.stringify(NEW_GAMES);
   return `<script async src="https://www.googletagmanager.com/gtag/js?id=G-C7MHSFPRSE"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
@@ -87,7 +76,6 @@ gtag('config', 'G-C7MHSFPRSE');
 (function(){
   var names = ${names};
   var urls = ${urls};
-  var isNew = ${isNew};
 
   function siteRoot() {
     var p = location.pathname.replace(/index\\.html$/, '');
@@ -128,7 +116,6 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-dropdown a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
     '#sg-dropdown a:hover{background:#f5f5f5}',
     '#sg-dropdown a:last-child{border-bottom:none}',
-    '#sg-dropdown .sg-new{flex-shrink:0;font-size:10px;font-weight:700;letter-spacing:.04em;color:#fff;background:#0677ba;border-radius:3px;padding:2px 6px;line-height:1.2}',
     '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
     '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55vw;height:55vh;cursor:default;display:flex;flex-direction:column;overflow:hidden;border-radius:4px}',
@@ -152,12 +139,6 @@ gtag('config', 'G-C7MHSFPRSE');
       var label = document.createElement('span');
       label.textContent = names[idx];
       a.appendChild(label);
-      if (isNew.indexOf(names[idx]) !== -1) {
-        var badge = document.createElement('span');
-        badge.className = 'sg-new';
-        badge.textContent = 'NEW';
-        a.appendChild(badge);
-      }
       a.href = gameHref(urls[idx]);
       a.onclick = function(e) {
         e.preventDefault();

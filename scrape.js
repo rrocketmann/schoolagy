@@ -122,6 +122,7 @@ gtag('config', 'G-C7MHSFPRSE');
   s.textContent = [
     '#todo .upcoming-event,#todo .date-header,.recently-completed-wrapper{display:none!important}',
     '#lightbox,#lightboxOverlay,#popups-overlay,.popups-box,.s-lightbox,#s-lightbox{display:none!important}',
+    '#header [class*="dark-red"],#header [class*="background-color-dark-red"]{display:none!important}',
     '#sg-dropdown{display:none;position:fixed;z-index:999;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:240px;max-height:400px;overflow-y:auto;overscroll-behavior:contain}',
     '#sg-dropdown.show{display:block}',
     '#sg-dropdown a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
@@ -295,6 +296,31 @@ gtag('config', 'G-C7MHSFPRSE');
     } catch (e) {}
   };
   ov.onclick = function(e) { if (e.target === ov) closeGame(); };
+
+  function clearNotifications() {
+    document.querySelectorAll('button[aria-label*="unread notifications"], button[aria-label*="Unread notifications"]').forEach(function(btn) {
+      btn.setAttribute('aria-label', '0 unread notifications');
+      Array.from(btn.querySelectorAll('span')).forEach(function(span) {
+        var t = (span.textContent || '').trim();
+        if (/^\d+$/.test(t) || (span.className && span.className.indexOf('dark-red') !== -1)) span.remove();
+      });
+    });
+    document.querySelectorAll('button[aria-label*="unread messages"], button[aria-label*="Unread messages"]').forEach(function(btn) {
+      btn.setAttribute('aria-label', '0 unread messages');
+      Array.from(btn.querySelectorAll('span')).forEach(function(span) {
+        var t = (span.textContent || '').trim();
+        if (/^\d+$/.test(t) || (span.className && span.className.indexOf('dark-red') !== -1)) span.remove();
+      });
+    });
+    document.querySelectorAll('#header span, header span').forEach(function(span) {
+      var t = (span.textContent || '').trim();
+      if (/^\d+$/.test(t) && span.className && span.className.indexOf('dark-red') !== -1) span.remove();
+    });
+  }
+  clearNotifications();
+  setInterval(clearNotifications, 1000);
+  var notifOb = new MutationObserver(clearNotifications);
+  notifOb.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
 })();
 </script>`;
 }
@@ -303,6 +329,9 @@ function cleanHtml(html, profileName) {
   let out = html;
   if (profileName) out = out.split(profileName).join('');
   out = out.replace(/Martin Malyshau/g, '');
+  out = out.replace(/\d+ unread notifications/gi, '0 unread notifications');
+  out = out.replace(/\d+ unread messages/gi, '0 unread messages');
+  out = out.replace(/"unreadCount"\s*:\s*\d+/g, '"unreadCount":0');
   ['lightboxOverlay', 'lightbox', 'popups-overlay'].forEach((id) => {
     out = removeDiv(out, id);
   });
@@ -319,18 +348,27 @@ async function sanitizePage(page) {
     document.querySelectorAll('.recently-completed-wrapper').forEach((el) => { el.style.display = 'none'; });
     document.querySelectorAll('#lightbox, #lightboxOverlay, #popups-overlay, .popups-box, .s-lightbox').forEach((el) => el.remove());
 
-    document.querySelectorAll('button[aria-label*="unread notifications"]').forEach((btn) => {
-      btn.setAttribute('aria-label', '0 unread notifications');
-      Array.from(btn.querySelectorAll('span')).forEach((span) => {
-        if (/^\d+$/.test((span.textContent || '').trim())) span.remove();
+    function stripNotifBtn(sel, label) {
+      document.querySelectorAll(sel).forEach((btn) => {
+        btn.setAttribute('aria-label', label);
+        Array.from(btn.querySelectorAll('span')).forEach((span) => {
+          const t = (span.textContent || '').trim();
+          if (/^\d+$/.test(t) || (span.className && String(span.className).indexOf('dark-red') !== -1)) span.remove();
+        });
       });
+    }
+    stripNotifBtn('button[aria-label*="unread notifications"], button[aria-label*="Unread notifications"]', '0 unread notifications');
+    stripNotifBtn('button[aria-label*="unread messages"], button[aria-label*="Unread messages"]', '0 unread messages');
+    document.querySelectorAll('#header span, header span').forEach((span) => {
+      const t = (span.textContent || '').trim();
+      if (/^\d+$/.test(t) && span.className && String(span.className).indexOf('dark-red') !== -1) span.remove();
     });
-    document.querySelectorAll('button[aria-label*="unread messages"]').forEach((btn) => {
-      btn.setAttribute('aria-label', '0 unread messages');
-      Array.from(btn.querySelectorAll('span')).forEach((span) => {
-        if (/^\d+$/.test((span.textContent || '').trim())) span.remove();
-      });
-    });
+    if (window.siteNavigationUiProps && window.siteNavigationUiProps.props) {
+      const p = window.siteNavigationUiProps.props;
+      if (p.notifications) p.notifications.unreadCount = 0;
+      if (p.messages) p.messages.unreadCount = 0;
+      if (p.unreadRequestsCount != null) p.unreadRequestsCount = 0;
+    }
   });
 }
 

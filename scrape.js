@@ -54,9 +54,6 @@ function discoverGames() {
   const extra = [
     { name: 'Drawcall', url: 'https://drawcall.grok.me/' },
     { name: 'Gunn Student Simulator', url: 'https://sheeptester.github.io/gunn-student-sim/' },
-    { name: 'Raycer', url: 'https://rrocketmann.github.io/raycer/' },
-    { name: 'Trainything', url: 'https://trainything.ai/' },
-    { name: 'Traktion', url: 'https://rrocketmann.github.io/traktion/' },
     { name: 'Vangers', url: 'https://vange.rs/' },
   ];
   return local.concat(extra).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));

@@ -120,7 +120,7 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-overlay.show{display:block}',
     '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55vw;height:55vh;cursor:default;display:flex;flex-direction:column;overflow:hidden;border-radius:4px}',
     '#sg-overlay iframe{flex:1;width:100%;height:auto;border:none;background:#000;min-height:0}',
-    '#sg-overlay .sg-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;height:40px;padding:0 8px;background:rgba(0,0,0,.82);color:#fff;z-index:2}',
+    '#sg-overlay .sg-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;height:40px;padding:0 8px;background:#111;color:#fff;z-index:2}',
     '#sg-overlay .sg-title{flex:1;min-width:0;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '#sg-overlay .sg-actions{display:flex;gap:6px;flex-shrink:0}',
     '#sg-overlay .sg-bar button{width:32px;height:32px;border:0;border-radius:4px;background:transparent;color:#fff;cursor:pointer;padding:6px;line-height:0}',

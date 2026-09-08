@@ -153,6 +153,14 @@ gtag('config', 'G-C7MHSFPRSE');
     return h === '/resources' || h === '/resources/' || /\\/resources\\/?$/.test(h);
   }
   document.addEventListener('click', function(e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+    if (t.closest('.recently-completed-wrapper .refresh-button') || t.closest('.recently-completed-list .refresh-wrapper')) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+  document.addEventListener('click', function(e) {
     if (!isResourcesLink(e.target)) { dd.classList.remove('show'); return; }
     e.preventDefault();
     e.stopPropagation();
@@ -310,6 +318,7 @@ function cleanHtml(html, profileName) {
   out = out.replace(/\d+ unread notifications/gi, '0 unread notifications');
   out = out.replace(/\d+ unread messages/gi, '0 unread messages');
   out = out.replace(/"unreadCount"\s*:\s*\d+/g, '"unreadCount":0');
+  out = out.replace(/"recentlyCompleted"\s*:\s*"defer"/g, '"recentlyCompleted":"disable"');
   ['lightboxOverlay', 'lightbox', 'popups-overlay'].forEach((id) => {
     out = removeDiv(out, id);
   });
@@ -323,6 +332,23 @@ async function sanitizePage(page) {
     document.querySelectorAll('#overdue-submissions .overdue-submissions-list').forEach((list) => { list.innerHTML = ''; });
     const events = document.querySelector('#upcoming-events .upcoming-list');
     if (events) events.innerHTML = '<div class="empty">No upcoming events</div>';
+    document.querySelectorAll('.recently-completed-wrapper').forEach((el) => {
+      el.style.display = 'block';
+      const list = el.querySelector('.recently-completed-list');
+      if (list) {
+        list.innerHTML =
+          '<div class="refresh-wrapper">' +
+          '<p class="more-loading" style="display: none;"><img src="/sites/all/themes/schoology_theme/images/ajax-loader.gif" alt="Loading"></p>' +
+          '<p class="refresh-message">Recently Completed items are collapsed by default</p>' +
+          '<p><button type="button" class="button-reset clickable refresh-button" role="button">' +
+          '<img class="refresh-icon" src="/sites/all/themes/schoology_theme/images/refresh.svg" alt="Click here to load the Recently Completed items">' +
+          'Click here to load the Recently Completed items</button></p>' +
+          '</div>';
+      }
+    });
+    if (window.Drupal && Drupal.settings && Drupal.settings.s_home) {
+      Drupal.settings.s_home.recentlyCompleted = 'disable';
+    }
     document.querySelectorAll('#lightbox, #lightboxOverlay, #popups-overlay, .popups-box, .s-lightbox').forEach((el) => el.remove());
 
     function stripNotifBtn(sel, label) {
@@ -410,46 +436,6 @@ async function readProfileName(page) {
   }).catch(() => '');
 }
 
-async function expandRecentlyCompleted(page) {
-  try {
-    await page.waitForSelector('.recently-completed-wrapper .refresh-button', { timeout: 15000 });
-  } catch {
-    console.log('Recently Completed load button not found');
-    return;
-  }
-
-  const started = await page.evaluate(() => {
-    const wrapper = document.querySelector('.recently-completed-wrapper');
-    if (!wrapper) return false;
-    wrapper.classList.remove('hidden');
-    wrapper.style.display = 'block';
-    if (typeof loadRecentlyCompleted === 'function' && window.jQuery) {
-      loadRecentlyCompleted(window.jQuery(wrapper), false);
-      return true;
-    }
-    const btn = wrapper.querySelector('.refresh-button');
-    if (!btn) return false;
-    btn.click();
-    return true;
-  });
-  if (!started) {
-    console.log('Recently Completed load button not found');
-    return;
-  }
-
-  try {
-    await page.waitForFunction(() => {
-      const list = document.querySelector('.recently-completed-list');
-      if (!list) return false;
-      if (list.querySelector('.refresh-wrapper')) return false;
-      return list.children.length > 0;
-    }, { timeout: 30000 });
-    console.log('Recently Completed loaded');
-  } catch {
-    console.log('Recently Completed load timed out');
-  }
-}
-
 async function scrape(page, url, waitSelector, label) {
   console.log('Opening', url);
   await gotoPage(page, url, 120000);
@@ -462,7 +448,6 @@ async function scrape(page, url, waitSelector, label) {
     }
   }
   await new Promise((r) => setTimeout(r, 5000));
-  await expandRecentlyCompleted(page);
   await sanitizePage(page);
   return page.content();
 }

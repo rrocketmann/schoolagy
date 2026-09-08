@@ -105,7 +105,7 @@ gtag('config', 'G-C7MHSFPRSE');
 
   var s = document.createElement('style');
   s.textContent = [
-    '#todo .upcoming-event,#todo .date-header,.recently-completed-wrapper{display:none!important}',
+    '#todo .upcoming-event,#todo .date-header{display:none!important}',
     '#lightbox,#lightboxOverlay,#popups-overlay,.popups-box,.s-lightbox,#s-lightbox{display:none!important}',
     '#header [class*="dark-red"],#header [class*="background-color-dark-red"]{display:none!important}',
     '#sg-dropdown{display:none;position:fixed;z-index:999;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:240px;max-height:400px;overflow-y:auto;overscroll-behavior:contain}',
@@ -323,7 +323,6 @@ async function sanitizePage(page) {
     document.querySelectorAll('#overdue-submissions .overdue-submissions-list').forEach((list) => { list.innerHTML = ''; });
     const events = document.querySelector('#upcoming-events .upcoming-list');
     if (events) events.innerHTML = '<div class="empty">No upcoming events</div>';
-    document.querySelectorAll('.recently-completed-wrapper').forEach((el) => { el.style.display = 'none'; });
     document.querySelectorAll('#lightbox, #lightboxOverlay, #popups-overlay, .popups-box, .s-lightbox').forEach((el) => el.remove());
 
     function stripNotifBtn(sel, label) {
@@ -411,6 +410,46 @@ async function readProfileName(page) {
   }).catch(() => '');
 }
 
+async function expandRecentlyCompleted(page) {
+  try {
+    await page.waitForSelector('.recently-completed-wrapper .refresh-button', { timeout: 15000 });
+  } catch {
+    console.log('Recently Completed load button not found');
+    return;
+  }
+
+  const started = await page.evaluate(() => {
+    const wrapper = document.querySelector('.recently-completed-wrapper');
+    if (!wrapper) return false;
+    wrapper.classList.remove('hidden');
+    wrapper.style.display = 'block';
+    if (typeof loadRecentlyCompleted === 'function' && window.jQuery) {
+      loadRecentlyCompleted(window.jQuery(wrapper), false);
+      return true;
+    }
+    const btn = wrapper.querySelector('.refresh-button');
+    if (!btn) return false;
+    btn.click();
+    return true;
+  });
+  if (!started) {
+    console.log('Recently Completed load button not found');
+    return;
+  }
+
+  try {
+    await page.waitForFunction(() => {
+      const list = document.querySelector('.recently-completed-list');
+      if (!list) return false;
+      if (list.querySelector('.refresh-wrapper')) return false;
+      return list.children.length > 0;
+    }, { timeout: 30000 });
+    console.log('Recently Completed loaded');
+  } catch {
+    console.log('Recently Completed load timed out');
+  }
+}
+
 async function scrape(page, url, waitSelector, label) {
   console.log('Opening', url);
   await gotoPage(page, url, 120000);
@@ -423,6 +462,7 @@ async function scrape(page, url, waitSelector, label) {
     }
   }
   await new Promise((r) => setTimeout(r, 5000));
+  await expandRecentlyCompleted(page);
   await sanitizePage(page);
   return page.content();
 }

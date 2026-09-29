@@ -432,20 +432,8 @@ gtag('config', 'G-C7MHSFPRSE');
   var s = document.createElement('style');
   s.textContent = [
     '#todo .upcoming-event,#todo .date-header,.recently-completed-wrapper{display:none!important}',
-    '#sg-game-resources{background:#f4f6f8;min-height:70vh;padding:12px 14px 24px}',
-    '#sg-game-resources .sg-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}',
-    '#sg-game-resources input{flex:1;min-width:180px;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px}',
-    '#sg-game-resources .sg-chips{display:flex;gap:6px;flex-wrap:wrap}',
-    '#sg-game-resources .sg-chips button{border:1px solid #d0d0d0;background:#fff;border-radius:14px;padding:4px 10px;cursor:pointer;font-size:12px}',
-    '#sg-game-resources .sg-chips button.on{background:#0677ba;color:#fff;border-color:#0677ba}',
-    '#sg-game-resources .sg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}',
-    '#sg-game-resources .sg-card{display:flex;flex-direction:column;text-align:left;background:#fff;border:0;border-radius:8px;overflow:hidden;padding:0;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12)}',
-    '#sg-game-resources .sg-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.18)}',
-    '#sg-game-resources .sg-card img{width:100%;height:110px;object-fit:cover;background:#111;display:block}',
-    '#sg-game-resources .sg-card-name{font-weight:700;color:#0677ba;font-size:14px;padding:8px 10px 0}',
-    '#sg-game-resources .sg-card-cat{font-size:11px;color:#777;padding:2px 10px 10px}',
     '#library-main.active-loader .loading-overlay,#library-main.active-loader .loading-image{display:none!important}',
-    '#sg-sgy-player{display:flex;flex-direction:column;height:100%;min-height:70vh;background:#fff}',
+    '#sg-sgy-player{display:flex;flex-direction:column;height:100%;min-height:0;background:#fff}',
     '#sg-sgy-player .popups-title{display:flex;align-items:center;gap:10px;background:#333;color:#fff;padding:8px 12px;font-size:14px;font-weight:700}',
     '#sg-sgy-player .popups-title-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '#sg-sgy-player .popups-title button{background:transparent;border:0;color:#fff;cursor:pointer;font-size:13px;padding:4px 8px}',
@@ -455,7 +443,7 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-sgy-player.sg-fs{position:fixed;inset:0;z-index:10000;min-height:100%}',
     '#popups-overlay.sg-sgy-player-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998}',
     '#popups-overlay.sg-sgy-player-overlay.show{display:block}',
-    '.popups-box.sg-sgy-player-box{display:none;position:fixed;z-index:9999;top:4%;left:4%;width:92%;height:92%;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.4);flex-direction:column}',
+    '.popups-box.sg-sgy-player-box{display:none;position:fixed;z-index:9999;top:27%;left:27%;width:46%;height:46%;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.4);flex-direction:column}',
     '.popups-box.sg-sgy-player-box.show{display:flex}'
   ].join('');
   document.head.appendChild(s);
@@ -600,17 +588,7 @@ gtag('config', 'G-C7MHSFPRSE');
 
   window.openGame = function(name, url) {
     var href = gameHref(url);
-    var main = document.getElementById('library-main');
-    if (main) {
-      main.innerHTML = '';
-      main.appendChild(playerChrome(name, href, function() {
-        var existing = document.getElementById('sg-game-resources');
-        if (existing) existing.remove();
-        fillResources();
-      }));
-    } else {
-      showPopupPlayer(name, href);
-    }
+    showPopupPlayer(name, href);
     try {
       gtag('event', 'play_game', { game_name: name, game_url: href, item_id: name, item_name: name });
     } catch (e) {}
@@ -621,79 +599,51 @@ gtag('config', 'G-C7MHSFPRSE');
     return /\/resources$/.test(p) || !!document.getElementById('library-wrapper');
   }
 
-  var activeCat = 'All';
-  function thumbSrc(url) {
-    return root + 'resources/thumbs/' + String(url || '').split('/')[0] + '.jpg';
-  }
-  function paintGrid(grid, search) {
-    var q = (search.value || '').trim().toLowerCase();
-    grid.textContent = '';
-    games.forEach(function(g) {
-      if (activeCat !== 'All' && g.cat !== activeCat) return;
-      if (q && g.name.toLowerCase().indexOf(q) === -1 && String(g.cat || '').toLowerCase().indexOf(q) === -1) return;
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'sg-card';
-      var img = document.createElement('img');
-      img.alt = '';
-      img.src = thumbSrc(g.url);
-      img.onerror = function() { img.remove(); };
-      var nm = document.createElement('span');
-      nm.className = 'sg-card-name';
-      nm.textContent = g.name;
-      var ct = document.createElement('span');
-      ct.className = 'sg-card-cat';
-      ct.textContent = g.cat || '';
-      b.appendChild(img);
-      b.appendChild(nm);
-      b.appendChild(ct);
-      b.onclick = function(e) {
-        e.preventDefault();
-        openGame(g.name, g.url);
-      };
-      grid.appendChild(b);
-    });
-  }
-
   function fillResources() {
     if (!isResourcesPage()) return;
-    if (document.getElementById('sg-sgy-player')) return;
-    var main = document.getElementById('library-main');
-    if (!main || main.querySelector('#sg-game-resources')) return;
-    main.classList.remove('active-loader');
-    var panel = document.createElement('div');
-    panel.id = 'sg-game-resources';
-    var tools = document.createElement('div');
-    tools.className = 'sg-tools';
-    var search = document.createElement('input');
-    search.type = 'search';
-    search.placeholder = 'Search games';
-    var chips = document.createElement('div');
-    chips.className = 'sg-chips';
-    var grid = document.createElement('div');
-    grid.className = 'sg-grid';
-    tools.appendChild(search);
-    tools.appendChild(chips);
-    panel.appendChild(tools);
-    panel.appendChild(grid);
-    var catNames = ['All'];
-    games.forEach(function(g) { if (catNames.indexOf(g.cat) === -1) catNames.push(g.cat); });
-    catNames.forEach(function(cat) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = cat;
-      if (cat === 'All') b.className = 'on';
-      b.onclick = function() {
-        activeCat = cat;
-        Array.prototype.forEach.call(chips.children, function(el) { el.classList.toggle('on', el.textContent === cat); });
-        paintGrid(grid, search);
+    var tbody = document.querySelector('#collection-view-contents tbody');
+    if (!tbody || document.getElementById('sg-game-rows')) return;
+    var y = window.scrollY;
+    var marker = document.createElement('tr');
+    marker.id = 'sg-game-rows';
+    marker.style.display = 'none';
+    tbody.appendChild(marker);
+    games.forEach(function(g, i) {
+      var tr = document.createElement('tr');
+      tr.className = 'collection-template-item-row ' + (i % 2 ? 'even' : 'odd');
+      var box = document.createElement('td');
+      box.className = 'collection-item-checkbox';
+      var icon = document.createElement('td');
+      icon.className = 'collection-item-icon';
+      icon.innerHTML = '<span class="inline-icon generic-post-icon"><span></span></span>';
+      var title = document.createElement('td');
+      title.className = 'collection-item-title';
+      title.colSpan = 2;
+      var a = document.createElement('a');
+      a.href = '#';
+      a.className = 'item-title';
+      a.textContent = g.name;
+      a.onclick = function(e) {
+        e.preventDefault();
+        window.openGame(g.name, g.url);
       };
-      chips.appendChild(b);
+      var info = document.createElement('span');
+      info.className = 'resource-info-wrapper';
+      var details = document.createElement('p');
+      details.className = 'resource-details';
+      var created = document.createElement('span');
+      created.className = 'created-on';
+      created.textContent = g.cat || 'Game';
+      details.appendChild(created);
+      info.appendChild(details);
+      title.appendChild(a);
+      title.appendChild(info);
+      tr.appendChild(box);
+      tr.appendChild(icon);
+      tr.appendChild(title);
+      tbody.appendChild(tr);
     });
-    search.oninput = function() { paintGrid(grid, search); };
-    paintGrid(grid, search);
-    main.textContent = '';
-    main.appendChild(panel);
+    if (window.scrollY !== y) window.scrollTo(0, y);
   }
 
   fillResources();

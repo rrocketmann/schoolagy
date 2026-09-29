@@ -617,6 +617,13 @@ function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-C7MHSFPRSE');
 </script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C7MHSFPRSE"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-C7MHSFPRSE');
+</script>
 <script>
 (function(){
   var games = [{"url":"2048/index.html","name":"2048","cat":"Puzzle","fresh":false},{"url":"basketrandom/index.html","name":"Basket Random","cat":"Sports","fresh":false},{"url":"bitlife/index.html","name":"BitLife","cat":"Sim","fresh":false},{"url":"bobbysbugs/index.html","name":"Bobby's Bugs","cat":"Sim","fresh":false},{"url":"chromedino/index.html","name":"Chrome Dino","cat":"Arcade","fresh":false},{"url":"clumsy-bird/index.html","name":"Clumsy Bird","cat":"Arcade","fresh":false},{"url":"clusterrush/index.html","name":"Cluster Rush","cat":"Racing","fresh":false},{"url":"cookieclicker/index.html","name":"Cookie Clicker","cat":"Idle","fresh":false},{"url":"crossyroad/index.html","name":"Crossy Road","cat":"Arcade","fresh":false},{"url":"doodlejump/index.html","name":"Doodle Jump","cat":"Arcade","fresh":false},{"url":"doom/index.html","name":"Doom","cat":"Action","fresh":false},{"url":"drivemad/index.html","name":"Drive Mad","cat":"Racing","fresh":false},{"url":"eaglercraft/index.html","name":"Eaglercraft","cat":"Action","fresh":false},{"url":"elevator-saga/index.html","name":"Elevator Saga","cat":"Puzzle","fresh":false},{"url":"hexgl/index.html","name":"HexGL","cat":"Racing","fresh":false},{"url":"hextris/index.html","name":"Hextris","cat":"Puzzle","fresh":false},{"url":"hollow-knight/index.html","name":"Hollow Knight","cat":"Action","fresh":false},{"url":"peggyspost/index.html","name":"Peggy's Post","cat":"Sim","fresh":false},{"url":"polytrack/index.html","name":"Polytrack","cat":"Racing","fresh":false},{"url":"retrobowl/index.html","name":"Retro Bowl","cat":"Sports","fresh":false},{"url":"retrobowlcollege/index.html","name":"Retro Bowl College","cat":"Sports","fresh":false},{"url":"slope/index.html","name":"Slope","cat":"Racing","fresh":false},{"url":"sortthecourt/index.html","name":"Sort the Court","cat":"Sim","fresh":false},{"url":"subwaysurferssingapore/index.html","name":"Subway Surfers","cat":"Arcade","fresh":false},{"url":"supertux-classic/index.html","name":"SuperTux","cat":"Action","fresh":false},{"url":"tetris/index.html","name":"Tetris","cat":"Puzzle","fresh":false},{"url":"tinyfishing/index.html","name":"Tiny Fishing","cat":"Arcade","fresh":false},{"url":"tombofthemask/index.html","name":"Tomb of the Mask","cat":"Arcade","fresh":false},{"url":"vex3/index.html","name":"Vex 3","cat":"Action","fresh":false},{"url":"vex4/index.html","name":"Vex 4","cat":"Action","fresh":false},{"url":"vex5/index.html","name":"Vex 5","cat":"Action","fresh":false},{"url":"vex6/index.html","name":"Vex 6","cat":"Action","fresh":false}];
@@ -657,22 +664,11 @@ gtag('config', 'G-C7MHSFPRSE');
     '#todo .upcoming-event,#todo .date-header{display:none!important}',
     '#lightbox,#lightboxOverlay,#popups-overlay,.popups-box,.s-lightbox,#s-lightbox{display:none!important}',
     '#header [class*="dark-red"],#header [class*="background-color-dark-red"]{display:none!important}',
-    '#sg-dropdown{display:none;position:fixed;z-index:1000;top:6vh;left:50%;transform:translateX(-50%);width:min(960px,94vw);height:min(680px,86vh);background:#f4f6f8;border-radius:10px;box-shadow:0 16px 48px rgba(0,0,0,.3);overflow:hidden;flex-direction:column}',
-    '#sg-dropdown.show{display:flex}',
-    '#sg-dropdown .sg-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px;background:#fff;border-bottom:1px solid #e6e6e6}',
-    '#sg-dropdown input{flex:1;min-width:160px;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px}',
-    '#sg-dropdown .sg-chips{display:flex;gap:6px;flex-wrap:wrap}',
-    '#sg-dropdown .sg-chips button{border:1px solid #d0d0d0;background:#fff;border-radius:14px;padding:4px 10px;cursor:pointer;font-size:12px}',
-    '#sg-dropdown .sg-chips button.on{background:#0677ba;color:#fff;border-color:#0677ba}',
-    '#sg-dropdown .sg-grid{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:12px;align-content:start}',
-    '#sg-dropdown .sg-card{display:flex;flex-direction:column;text-align:left;border:0;padding:0;background:#fff;border-radius:8px;overflow:hidden;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12)}',
-    '#sg-dropdown .sg-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.18)}',
-    '#sg-dropdown .sg-card img{width:100%;height:96px;object-fit:cover;background:#111;display:block}',
-    '#sg-dropdown .sg-card-name{font-weight:700;color:#0677ba;font-size:13px;padding:8px 8px 0}',
-    '#sg-dropdown .sg-card-cat{font-size:11px;color:#777;padding:2px 8px 8px}',
+    '#sg-games-update .update-body p{margin:0 0 6px}',
+    '#sg-games-update .update-body a{cursor:pointer}',
     '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
-    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:94vw;height:92vh;cursor:default;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;background:#000}',
+    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:47vw;height:46vh;cursor:default;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;background:#000}',
     '#sg-overlay .sg-stage{position:relative;flex:1;min-height:0;overflow:hidden;background:#000}',
     '#sg-overlay iframe{border:none;background:#000}',
     '#sg-overlay .sg-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;height:40px;padding:0 8px;background:#111;color:#fff;z-index:2}',
@@ -686,83 +682,56 @@ gtag('config', 'G-C7MHSFPRSE');
   ].join('');
   document.head.appendChild(s);
 
-  var dd = document.createElement('div');
-  dd.id = 'sg-dropdown';
-  var tools = document.createElement('div');
-  tools.className = 'sg-tools';
-  var search = document.createElement('input');
-  search.type = 'search';
-  search.placeholder = 'Search games';
-  var chips = document.createElement('div');
-  chips.className = 'sg-chips';
-  var grid = document.createElement('div');
-  grid.className = 'sg-grid';
-  tools.appendChild(search);
-  tools.appendChild(chips);
-  dd.appendChild(tools);
-  dd.appendChild(grid);
-  document.body.appendChild(dd);
-  var activeCat = 'All';
-  function thumbSrc(url) {
-    var slug = String(url || '').split('/')[0];
-    return root + 'resources/thumbs/' + slug + '.jpg';
-  }
-  function paintGames() {
-    var q = (search.value || '').trim().toLowerCase();
-    grid.textContent = '';
+  function placeFeedGames() {
+    var feed = document.querySelector('ul.s-edge-feed');
+    if (!feed || document.getElementById('sg-games-update')) return;
+    var y = window.scrollY;
+    var li = document.createElement('li');
+    li.id = 'sg-games-update';
+    li.className = 's-edge-type-update-post';
+    var sentence = document.createElement('div');
+    sentence.className = 'update-sentence-inner';
+    var who = document.createElement('span');
+    who.className = 'long-username';
+    who.textContent = 'Resources';
+    var body = document.createElement('span');
+    body.className = 'update-body s-rte';
     games.forEach(function(g) {
-      if (activeCat !== 'All' && g.cat !== activeCat) return;
-      if (q && g.name.toLowerCase().indexOf(q) === -1 && String(g.cat || '').toLowerCase().indexOf(q) === -1) return;
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'sg-card';
-      var img = document.createElement('img');
-      img.alt = '';
-      img.src = thumbSrc(g.url);
-      img.onerror = function() { img.remove(); };
-      var nm = document.createElement('span');
-      nm.className = 'sg-card-name';
-      nm.textContent = g.name;
-      var ct = document.createElement('span');
-      ct.className = 'sg-card-cat';
-      ct.textContent = g.cat || '';
-      b.appendChild(img);
-      b.appendChild(nm);
-      b.appendChild(ct);
-      b.onclick = function(e) {
+      var p = document.createElement('p');
+      var a = document.createElement('a');
+      a.href = '#';
+      a.textContent = g.name;
+      a.onclick = function(e) {
         e.preventDefault();
-        e.stopPropagation();
-        openGame(g.name, g.url);
+        window.openGame(g.name, g.url);
       };
-      grid.appendChild(b);
+      var meta = document.createElement('span');
+      meta.className = 'small gray';
+      meta.textContent = g.cat ? ' · ' + g.cat : '';
+      p.appendChild(a);
+      p.appendChild(meta);
+      body.appendChild(p);
     });
+    sentence.appendChild(who);
+    sentence.appendChild(document.createTextNode(' '));
+    sentence.appendChild(body);
+    var footer = document.createElement('div');
+    footer.className = 'edge-footer';
+    var created = document.createElement('div');
+    created.className = 'created';
+    var when = document.createElement('span');
+    when.className = 'small gray';
+    when.textContent = 'Games';
+    created.appendChild(when);
+    footer.appendChild(created);
+    li.appendChild(sentence);
+    li.appendChild(footer);
+    var more = feed.querySelector('.s-edge-feed-more-link');
+    if (more) feed.insertBefore(li, more);
+    else feed.appendChild(li);
+    if (window.scrollY !== y) window.scrollTo(0, y);
   }
-  var catNames = ['All'];
-  games.forEach(function(g) { if (catNames.indexOf(g.cat) === -1) catNames.push(g.cat); });
-  catNames.forEach(function(cat) {
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = cat;
-    if (cat === 'All') b.className = 'on';
-    b.onclick = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      activeCat = cat;
-      Array.prototype.forEach.call(chips.children, function(el) { el.classList.toggle('on', el.textContent === cat); });
-      paintGames();
-    };
-    chips.appendChild(b);
-  });
-  search.oninput = paintGames;
-  search.onclick = function(e) { e.stopPropagation(); };
-  paintGames();
-
-  function isResourcesLink(el) {
-    var a = el.closest ? el.closest('a') : null;
-    if (!a) return false;
-    var h = (a.getAttribute('href') || '').split('?')[0];
-    return h === '/resources' || h === '/resources/' || /\/resources\/?$/.test(h);
-  }
+  placeFeedGames();
   document.addEventListener('click', function(e) {
     var t = e.target;
     if (!t || !t.closest) return;
@@ -770,12 +739,6 @@ gtag('config', 'G-C7MHSFPRSE');
       e.preventDefault();
       e.stopPropagation();
     }
-  }, true);
-  document.addEventListener('click', function(e) {
-    if (!isResourcesLink(e.target)) { dd.classList.remove('show'); return; }
-    e.preventDefault();
-    e.stopPropagation();
-    dd.classList.toggle('show');
   }, true);
 
   var ov = document.createElement('div');
@@ -917,7 +880,6 @@ gtag('config', 'G-C7MHSFPRSE');
     document.body.style.overflow = 'hidden';
     fitFrame();
     iframe.addEventListener('load', fitFrame, { once: true });
-    dd.classList.remove('show');
     try {
       gtag('event', 'play_game', { game_name: name, game_url: gameHref(url), item_id: name, item_name: name });
     } catch (e) {}
@@ -949,5 +911,6 @@ gtag('config', 'G-C7MHSFPRSE');
   var notifOb = new MutationObserver(clearNotifications);
   notifOb.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
 })();
+</script>
 </script>
 </body></html>

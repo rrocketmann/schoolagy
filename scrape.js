@@ -47,6 +47,7 @@ const GAME_META = {
   'clumsy-bird': ['Clumsy Bird', 'Arcade'],
   clusterrush: ['Cluster Rush', 'Racing'],
   cookieclicker: ['Cookie Clicker', 'Idle'],
+  'cosmic-sim': ['Cosmic Sim', 'Sim'],
   crossyroad: ['Crossy Road', 'Arcade'],
   doodlejump: ['Doodle Jump', 'Arcade'],
   doom: ['Doom', 'Action'],
@@ -143,7 +144,8 @@ gtag('config', 'G-C7MHSFPRSE');
     '#header [class*="dark-red"],#header [class*="background-color-dark-red"]{display:none!important}',
     '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
-    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:28vw;height:30vh;cursor:default;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;background:#000}',
+    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40vw;height:44vh;cursor:default;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;background:#000}',
+    '.sg-game-update .sg-shot{display:block;width:100%;max-width:440px;height:auto;margin-top:8px;cursor:pointer;border:1px solid #e6e6e6;background:#111}',
     '#sg-overlay .sg-stage{position:relative;flex:1;min-height:0;overflow:hidden;background:#000}',
     '#sg-overlay iframe{border:none;background:#000}',
     '#sg-overlay .sg-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;height:40px;padding:0 8px;background:#111;color:#fff;z-index:2}',
@@ -214,23 +216,22 @@ gtag('config', 'G-C7MHSFPRSE');
         e.preventDefault();
         window.openGame(g.name, g.url);
       };
-      var body = document.createElement('span');
-      body.className = 'update-body s-rte';
-      var p = document.createElement('p');
-      p.textContent = g.cat || 'Game';
-      body.appendChild(p);
       inner.appendChild(who);
       inner.appendChild(document.createTextNode(' '));
       inner.appendChild(arrow);
       inner.appendChild(document.createTextNode(' '));
       inner.appendChild(where);
-      inner.appendChild(document.createTextNode(' '));
-      inner.appendChild(body);
       sentence.appendChild(inner);
       var edgeMain = document.createElement('span');
       edgeMain.className = 'edge-main';
       var postBody = document.createElement('div');
       postBody.className = 'post-body';
+      var shot = document.createElement('img');
+      shot.className = 'sg-shot';
+      shot.alt = '';
+      shot.src = img.src;
+      shot.onclick = function() { window.openGame(g.name, g.url); };
+      postBody.appendChild(shot);
       edgeMain.appendChild(postBody);
       var footer = document.createElement('div');
       footer.className = 'edge-footer';
@@ -238,7 +239,7 @@ gtag('config', 'G-C7MHSFPRSE');
       created.className = 'created';
       var when = document.createElement('span');
       when.className = 'small gray';
-      when.textContent = 'Game';
+      when.textContent = g.cat || 'Game';
       created.appendChild(when);
       footer.appendChild(created);
       main.appendChild(sentence);
@@ -271,6 +272,7 @@ gtag('config', 'G-C7MHSFPRSE');
   iframe.allowFullscreen = true;
   iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
   iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-fullscreen');
+  iframe.setAttribute('scrolling', 'no');
   var bar = document.createElement('div');
   bar.className = 'sg-bar';
   var titleEl = document.createElement('div');
@@ -311,9 +313,13 @@ gtag('config', 'G-C7MHSFPRSE');
     fsBtn.innerHTML = svg(on ? ICON_EXIT : ICON_FS);
     fsBtn.title = on ? 'Exit fullscreen' : 'Fullscreen';
   }
+  var fitted = '';
   function fitFrame() {
     var aw = stage.clientWidth || 1;
     var ah = stage.clientHeight || 1;
+    var key = aw + 'x' + ah;
+    if (fitted === key) return;
+    fitted = key;
     var lw = 1280, lh = 800;
     var scale = Math.min(aw / lw, ah / lh);
     iframe.style.width = lw + 'px';

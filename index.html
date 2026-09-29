@@ -682,7 +682,11 @@ gtag('config', 'G-C7MHSFPRSE');
       if (h.startsWith('//') || /^https?:/i.test(h)) return;
       if (h.startsWith('/home') || h === '/') { a.href = root; a.dataset.sgFixed = '1'; return; }
       var path = h.split('?')[0];
-      if (path === '/resources' || path === '/resources/') return;
+      if (path === '/resources' || path === '/resources/') {
+        a.href = root + 'resources/';
+        a.dataset.sgFixed = '1';
+        return;
+      }
       if (h.startsWith('/')) { a.href = 'javascript:void(0)'; a.dataset.sgFixed = '1'; }
     });
   }

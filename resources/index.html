@@ -391,9 +391,9 @@ gtag('config', 'G-C7MHSFPRSE');
 </script>
 <script>
 (function(){
-  var names = ["2048","A Palace For Fools","Basketrandom","Bitlife","Bobbysbugs","Chromedino","Clusterrush","Cookieclicker","Crossyroad","Doodlejump","Doom","Drawcall","Drivemad","Eaglercraft","Gunn Student Simulator","Hollow Knight","Messages","Peggyspost","Pigeon Ascent","Pixelbrowl","Polytrack","Quadrilactic","Raycer","Retrobowl","Retrobowlcollege","Slope","Sortthecourt","Space Dwarf","Starcatcher","Subwaysurferssingapore","Supertux Classic","Tetris","Tiny Tactics","Tinyfishing","Tombofthemask","Trainything","Traktion","Vangers","Vex3","Vex4","Vex5","Vex6"];
-  var urls = ["2048/index.html","a-palace-for-fools/index.html","basketrandom/index.html","bitlife/index.html","bobbysbugs/index.html","chromedino/index.html","clusterrush/index.html","cookieclicker/index.html","crossyroad/index.html","doodlejump/index.html","doom/index.html","https://drawcall.grok.me/","drivemad/index.html","eaglercraft/index.html","https://sheeptester.github.io/gunn-student-sim/","hollow-knight/index.html","messages/index.html","peggyspost/index.html","pigeon-ascent/index.html","pixelbrowl/index.html","polytrack/index.html","quadrilactic/index.html","https://rrocketmann.github.io/raycer/","retrobowl/index.html","retrobowlcollege/index.html","slope/index.html","sortthecourt/index.html","space-dwarf/index.html","starcatcher/index.html","subwaysurferssingapore/index.html","supertux-classic/index.html","tetris/index.html","tiny-tactics/index.html","tinyfishing/index.html","tombofthemask/index.html","https://trainything.ai/","https://rrocketmann.github.io/traktion/","https://vange.rs/","vex3/index.html","vex4/index.html","vex5/index.html","vex6/index.html"];
-  var isNew = ["Drawcall","Gunn Student Simulator","Polytrack","Raycer","Trainything","Traktion","Vangers"];
+  var games = [{"url":"2048/index.html","name":"2048","cat":"Puzzle","fresh":false},{"url":"basketrandom/index.html","name":"Basket Random","cat":"Sports","fresh":false},{"url":"bitlife/index.html","name":"BitLife","cat":"Sim","fresh":false},{"url":"bobbysbugs/index.html","name":"Bobby's Bugs","cat":"Sim","fresh":false},{"url":"chromedino/index.html","name":"Chrome Dino","cat":"Arcade","fresh":false},{"url":"clumsy-bird/index.html","name":"Clumsy Bird","cat":"Arcade","fresh":true},{"url":"clusterrush/index.html","name":"Cluster Rush","cat":"Racing","fresh":false},{"url":"cookieclicker/index.html","name":"Cookie Clicker","cat":"Idle","fresh":false},{"url":"crossyroad/index.html","name":"Crossy Road","cat":"Arcade","fresh":false},{"url":"doodlejump/index.html","name":"Doodle Jump","cat":"Arcade","fresh":false},{"url":"doom/index.html","name":"Doom","cat":"Action","fresh":false},{"url":"drivemad/index.html","name":"Drive Mad","cat":"Racing","fresh":false},{"url":"eaglercraft/index.html","name":"Eaglercraft","cat":"Action","fresh":false},{"url":"elevator-saga/index.html","name":"Elevator Saga","cat":"Puzzle","fresh":true},{"url":"hexgl/index.html","name":"HexGL","cat":"Racing","fresh":true},{"url":"hextris/index.html","name":"Hextris","cat":"Puzzle","fresh":true},{"url":"hollow-knight/index.html","name":"Hollow Knight","cat":"Action","fresh":false},{"url":"peggyspost/index.html","name":"Peggy's Post","cat":"Sim","fresh":false},{"url":"polytrack/index.html","name":"Polytrack","cat":"Racing","fresh":false},{"url":"retrobowl/index.html","name":"Retro Bowl","cat":"Sports","fresh":false},{"url":"retrobowlcollege/index.html","name":"Retro Bowl College","cat":"Sports","fresh":false},{"url":"slope/index.html","name":"Slope","cat":"Racing","fresh":false},{"url":"sortthecourt/index.html","name":"Sort the Court","cat":"Sim","fresh":false},{"url":"subwaysurferssingapore/index.html","name":"Subway Surfers","cat":"Arcade","fresh":false},{"url":"supertux-classic/index.html","name":"SuperTux","cat":"Action","fresh":false},{"url":"tetris/index.html","name":"Tetris","cat":"Puzzle","fresh":false},{"url":"tinyfishing/index.html","name":"Tiny Fishing","cat":"Arcade","fresh":false},{"url":"tombofthemask/index.html","name":"Tomb of the Mask","cat":"Arcade","fresh":false},{"url":"vex3/index.html","name":"Vex 3","cat":"Action","fresh":false},{"url":"vex4/index.html","name":"Vex 4","cat":"Action","fresh":false},{"url":"vex5/index.html","name":"Vex 5","cat":"Action","fresh":false},{"url":"vex6/index.html","name":"Vex 6","cat":"Action","fresh":false}];
+  var names = games.map(function(g){ return g.name; });
+  var urls = games.map(function(g){ return g.url; });
 
   function siteRoot() {
     var p = location.pathname.replace(/index\.html$/, '');
@@ -432,22 +432,26 @@ gtag('config', 'G-C7MHSFPRSE');
   var s = document.createElement('style');
   s.textContent = [
     '#todo .upcoming-event,#todo .date-header,.recently-completed-wrapper{display:none!important}',
-    '#sg-game-resources{background:#fff;min-height:240px}',
-    '#sg-game-resources table{width:100%;border-collapse:collapse}',
-    '#sg-game-resources .sg-game-row{cursor:pointer}',
-    '#sg-game-resources .sg-game-row:hover{background:#f5f8fb}',
-    '#sg-game-resources td{padding:10px 12px;border-bottom:1px solid #e6e6e6;vertical-align:middle}',
-    '#sg-game-resources .collection-title{color:#0677ba;text-decoration:none;font-size:14px}',
-    '#sg-game-resources .collection-title:hover{text-decoration:underline}',
-    '#sg-game-resources .sg-new{margin-left:8px;font-size:10px;font-weight:700;letter-spacing:.04em;color:#fff;background:#0677ba;border-radius:3px;padding:2px 6px}',
+    '#sg-game-resources{background:#f4f6f8;min-height:70vh;padding:12px 14px 24px}',
+    '#sg-game-resources .sg-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}',
+    '#sg-game-resources input{flex:1;min-width:180px;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px}',
+    '#sg-game-resources .sg-chips{display:flex;gap:6px;flex-wrap:wrap}',
+    '#sg-game-resources .sg-chips button{border:1px solid #d0d0d0;background:#fff;border-radius:14px;padding:4px 10px;cursor:pointer;font-size:12px}',
+    '#sg-game-resources .sg-chips button.on{background:#0677ba;color:#fff;border-color:#0677ba}',
+    '#sg-game-resources .sg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}',
+    '#sg-game-resources .sg-card{display:flex;flex-direction:column;text-align:left;background:#fff;border:0;border-radius:8px;overflow:hidden;padding:0;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12)}',
+    '#sg-game-resources .sg-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.18)}',
+    '#sg-game-resources .sg-card img{width:100%;height:110px;object-fit:cover;background:#111;display:block}',
+    '#sg-game-resources .sg-card-name{font-weight:700;color:#0677ba;font-size:14px;padding:8px 10px 0}',
+    '#sg-game-resources .sg-card-cat{font-size:11px;color:#777;padding:2px 10px 10px}',
     '#library-main.active-loader .loading-overlay,#library-main.active-loader .loading-image{display:none!important}',
     '#sg-sgy-player{display:flex;flex-direction:column;height:100%;min-height:70vh;background:#fff}',
     '#sg-sgy-player .popups-title{display:flex;align-items:center;gap:10px;background:#333;color:#fff;padding:8px 12px;font-size:14px;font-weight:700}',
     '#sg-sgy-player .popups-title-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '#sg-sgy-player .popups-title button{background:transparent;border:0;color:#fff;cursor:pointer;font-size:13px;padding:4px 8px}',
     '#sg-sgy-player .popups-title button:hover{text-decoration:underline}',
-    '#sg-sgy-player .popups-body{flex:1;min-height:0;background:#000}',
-    '#sg-sgy-player iframe{width:100%;height:100%;border:0;background:#000}',
+    '#sg-sgy-player .popups-body{flex:1;min-height:0;background:#000;position:relative;overflow:hidden}',
+    '#sg-sgy-player iframe{border:0;background:#000}',
     '#sg-sgy-player.sg-fs{position:fixed;inset:0;z-index:10000;min-height:100%}',
     '#popups-overlay.sg-sgy-player-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998}',
     '#popups-overlay.sg-sgy-player-overlay.show{display:block}',
@@ -457,15 +461,25 @@ gtag('config', 'G-C7MHSFPRSE');
   document.head.appendChild(s);
 
   function fitGameFrame(iframe) {
-    try {
-      var doc = iframe.contentDocument || iframe.contentWindow.document;
-      if (!doc || !doc.head || doc.getElementById('sg-fit')) return;
-      var st = doc.createElement('style');
-      st.id = 'sg-fit';
-      st.textContent = 'html,body{overflow:hidden!important;margin:0!important;padding:0!important;width:100%!important;height:100%!important}canvas,#unity-canvas,#unity-container{max-width:100%!important;max-height:100%!important;width:100%!important;height:100%!important;object-fit:contain!important}';
-      doc.head.appendChild(st);
-    } catch (e) {}
+    var stage = iframe.parentElement;
+    if (!stage) return;
+    var aw = stage.clientWidth || 1;
+    var ah = stage.clientHeight || 1;
+    var scale = Math.min(aw / 1280, ah / 800);
+    iframe.style.width = '1280px';
+    iframe.style.height = '800px';
+    iframe.style.position = 'absolute';
+    iframe.style.transformOrigin = '0 0';
+    iframe.style.transform = 'scale(' + scale + ')';
+    iframe.style.left = Math.max(0, (aw - 1280 * scale) / 2) + 'px';
+    iframe.style.top = Math.max(0, (ah - 800 * scale) / 2) + 'px';
+    setTimeout(function() {
+      try { var w = iframe.contentWindow; if (w) w.dispatchEvent(new Event('resize')); } catch (e) {}
+    }, 60);
   }
+  window.addEventListener('resize', function() {
+    document.querySelectorAll('#sg-sgy-player iframe').forEach(fitGameFrame);
+  });
 
   function playerChrome(name, href, onClose) {
     var wrap = document.createElement('div');
@@ -499,6 +513,7 @@ gtag('config', 'G-C7MHSFPRSE');
     iframe.src = href;
     iframe.addEventListener('load', function(){ fitGameFrame(iframe); });
     body.appendChild(iframe);
+    setTimeout(function(){ fitGameFrame(iframe); }, 0);
     wrap.appendChild(title);
     wrap.appendChild(body);
     function exitFs() {
@@ -509,6 +524,7 @@ gtag('config', 'G-C7MHSFPRSE');
         var ex = document.exitFullscreen || document.webkitExitFullscreen;
         if (ex) try { ex.call(document); } catch (e) {}
       }
+      setTimeout(function(){ fitGameFrame(iframe); }, 50);
     }
     back.onclick = close.onclick = function(e) {
       e.preventDefault();
@@ -524,6 +540,7 @@ gtag('config', 'G-C7MHSFPRSE');
         var req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
         if (req) try { var p = req.call(wrap); if (p && p.catch) p.catch(function(){}); } catch (err) {}
       }
+      setTimeout(function(){ fitGameFrame(iframe); }, 50);
     };
     return wrap;
   }
@@ -574,37 +591,38 @@ gtag('config', 'G-C7MHSFPRSE');
     return /\/resources$/.test(p) || !!document.getElementById('library-wrapper');
   }
 
-  function gameRow(name, url) {
-    var tr = document.createElement('tr');
-    tr.className = 'library-collection sg-game-row';
-    var tdIcon = document.createElement('td');
-    var icon = document.createElement('span');
-    icon.className = 'folder-icon inline-icon';
-    tdIcon.appendChild(icon);
-    var tdName = document.createElement('td');
-    var a = document.createElement('a');
-    a.className = 'collection-title';
-    a.href = gameHref(url);
-    a.textContent = name;
-    a.onclick = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      openGame(name, url);
-    };
-    tdName.appendChild(a);
-    if (isNew.indexOf(name) !== -1) {
-      var badge = document.createElement('span');
-      badge.className = 'sg-new';
-      badge.textContent = 'NEW';
-      tdName.appendChild(badge);
-    }
-    tr.appendChild(tdIcon);
-    tr.appendChild(tdName);
-    tr.onclick = function(e) {
-      if (e.target.closest && e.target.closest('a')) return;
-      openGame(name, url);
-    };
-    return tr;
+  var activeCat = 'All';
+  function thumbSrc(url) {
+    return root + 'resources/thumbs/' + String(url || '').split('/')[0] + '.jpg';
+  }
+  function paintGrid(grid, search) {
+    var q = (search.value || '').trim().toLowerCase();
+    grid.textContent = '';
+    games.forEach(function(g) {
+      if (activeCat !== 'All' && g.cat !== activeCat) return;
+      if (q && g.name.toLowerCase().indexOf(q) === -1 && String(g.cat || '').toLowerCase().indexOf(q) === -1) return;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sg-card';
+      var img = document.createElement('img');
+      img.alt = '';
+      img.src = thumbSrc(g.url);
+      img.onerror = function() { img.remove(); };
+      var nm = document.createElement('span');
+      nm.className = 'sg-card-name';
+      nm.textContent = g.name;
+      var ct = document.createElement('span');
+      ct.className = 'sg-card-cat';
+      ct.textContent = g.cat || '';
+      b.appendChild(img);
+      b.appendChild(nm);
+      b.appendChild(ct);
+      b.onclick = function(e) {
+        e.preventDefault();
+        openGame(g.name, g.url);
+      };
+      grid.appendChild(b);
+    });
   }
 
   function fillResources() {
@@ -615,11 +633,35 @@ gtag('config', 'G-C7MHSFPRSE');
     main.classList.remove('active-loader');
     var panel = document.createElement('div');
     panel.id = 'sg-game-resources';
-    var table = document.createElement('table');
-    var body = document.createElement('tbody');
-    for (var i = 0; i < names.length; i++) body.appendChild(gameRow(names[i], urls[i]));
-    table.appendChild(body);
-    panel.appendChild(table);
+    var tools = document.createElement('div');
+    tools.className = 'sg-tools';
+    var search = document.createElement('input');
+    search.type = 'search';
+    search.placeholder = 'Search games';
+    var chips = document.createElement('div');
+    chips.className = 'sg-chips';
+    var grid = document.createElement('div');
+    grid.className = 'sg-grid';
+    tools.appendChild(search);
+    tools.appendChild(chips);
+    panel.appendChild(tools);
+    panel.appendChild(grid);
+    var catNames = ['All'];
+    games.forEach(function(g) { if (catNames.indexOf(g.cat) === -1) catNames.push(g.cat); });
+    catNames.forEach(function(cat) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = cat;
+      if (cat === 'All') b.className = 'on';
+      b.onclick = function() {
+        activeCat = cat;
+        Array.prototype.forEach.call(chips.children, function(el) { el.classList.toggle('on', el.textContent === cat); });
+        paintGrid(grid, search);
+      };
+      chips.appendChild(b);
+    });
+    search.oninput = function() { paintGrid(grid, search); };
+    paintGrid(grid, search);
     main.textContent = '';
     main.appendChild(panel);
   }

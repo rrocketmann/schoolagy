@@ -32,18 +32,14 @@ Game Bootstrapper
         <link rel="stylesheet" href="style.css" />
         <link rel="stylesheet" async href="app-store-interstitial.css" />
 
-        <script>
-            var origOpen = XMLHttpRequest.prototype.open;
-            XMLHttpRequest.prototype.open = function (...args) {
-                args[1] = /^https?:/.test(args[1]) && !args[1].includes(window.location.host) ? "https://onebigstatic-tmm.tbt.mx/static/" + args[1] : args[1];
-                origOpen.apply(this, args);
-            };
-        </script>
         <script src="scripts/poki-sdk.js"></script>
 
         <script src="scripts/extra.min.js"></script>
     </head>
     <body>
+        <script src="scripts/three.min.js"></script>
+        <script src="scripts/tween.min.js"></script>
+        <script src="scripts/asset-loader.min.js"></script>
         <script src="scripts/bootstrap.min.js"></script>
     </body>
 </html>

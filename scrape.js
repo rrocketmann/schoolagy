@@ -38,30 +38,62 @@ function removeDiv(html, id) {
   return html;
 }
 
+const GAME_META = {
+  '2048': ['2048', 'Puzzle'],
+  basketrandom: ['Basket Random', 'Sports'],
+  bitlife: ['BitLife', 'Sim'],
+  bobbysbugs: ["Bobby's Bugs", 'Sim'],
+  chromedino: ['Chrome Dino', 'Arcade'],
+  'clumsy-bird': ['Clumsy Bird', 'Arcade'],
+  clusterrush: ['Cluster Rush', 'Racing'],
+  cookieclicker: ['Cookie Clicker', 'Idle'],
+  crossyroad: ['Crossy Road', 'Arcade'],
+  doodlejump: ['Doodle Jump', 'Arcade'],
+  doom: ['Doom', 'Action'],
+  drivemad: ['Drive Mad', 'Racing'],
+  eaglercraft: ['Eaglercraft', 'Action'],
+  'elevator-saga': ['Elevator Saga', 'Puzzle'],
+  hexgl: ['HexGL', 'Racing'],
+  hextris: ['Hextris', 'Puzzle'],
+  'hollow-knight': ['Hollow Knight', 'Action'],
+  peggyspost: ["Peggy's Post", 'Sim'],
+  polytrack: ['Polytrack', 'Racing'],
+  retrobowl: ['Retro Bowl', 'Sports'],
+  retrobowlcollege: ['Retro Bowl College', 'Sports'],
+  slope: ['Slope', 'Racing'],
+  sortthecourt: ['Sort the Court', 'Sim'],
+  subwaysurferssingapore: ['Subway Surfers', 'Arcade'],
+  'supertux-classic': ['SuperTux', 'Action'],
+  tetris: ['Tetris', 'Puzzle'],
+  tinyfishing: ['Tiny Fishing', 'Arcade'],
+  tombofthemask: ['Tomb of the Mask', 'Arcade'],
+  vex3: ['Vex 3', 'Action'],
+  vex4: ['Vex 4', 'Action'],
+  vex5: ['Vex 5', 'Action'],
+  vex6: ['Vex 6', 'Action'],
+};
+
 function discoverGames() {
   const dirs = fs.readdirSync(__dirname).filter((d) => {
-    if (d.startsWith('.') || d === 'node_modules' || d === '.git' || d === '.github' || d === 'resources') return false;
+    if (d.startsWith('.') || d === 'node_modules' || d === '.git' || d === '.github' || d === 'resources' || d === 'js') return false;
     try {
       return fs.statSync(path.join(__dirname, d)).isDirectory() && fs.existsSync(path.join(__dirname, d, 'index.html'));
     } catch {
       return false;
     }
   }).sort();
-  const local = dirs.map((d) => ({
-    url: d + '/index.html',
-    name: d.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()).trim(),
-  }));
-  const extra = [
-    { name: 'Drawcall', url: 'https://drawcall.grok.me/' },
-    { name: 'Gunn Student Simulator', url: 'https://sheeptester.github.io/gunn-student-sim/' },
-    { name: 'Vangers', url: 'https://vange.rs/' },
-  ];
-  return local.concat(extra).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  return dirs.map((d) => {
+    const meta = GAME_META[d];
+    return {
+      url: d + '/index.html',
+      name: meta ? meta[0] : d.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()).trim(),
+      cat: meta ? meta[1] : 'Arcade',
+      fresh: meta == null,
+    };
+  }).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 }
 
 function clientScript(games) {
-  const names = JSON.stringify(games.map((g) => g.name));
-  const urls = JSON.stringify(games.map((g) => g.url));
   return `<script async src="https://www.googletagmanager.com/gtag/js?id=G-C7MHSFPRSE"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
@@ -71,8 +103,9 @@ gtag('config', 'G-C7MHSFPRSE');
 </script>
 <script>
 (function(){
-  var names = ${names};
-  var urls = ${urls};
+  var games = ${JSON.stringify(games)};
+  var names = games.map(function(g){ return g.name; });
+  var urls = games.map(function(g){ return g.url; });
 
   function siteRoot() {
     var p = location.pathname.replace(/index\\.html$/, '');
@@ -108,15 +141,24 @@ gtag('config', 'G-C7MHSFPRSE');
     '#todo .upcoming-event,#todo .date-header{display:none!important}',
     '#lightbox,#lightboxOverlay,#popups-overlay,.popups-box,.s-lightbox,#s-lightbox{display:none!important}',
     '#header [class*="dark-red"],#header [class*="background-color-dark-red"]{display:none!important}',
-    '#sg-dropdown{display:none;position:fixed;z-index:999;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:240px;max-height:400px;overflow-y:auto;overscroll-behavior:contain}',
-    '#sg-dropdown.show{display:block}',
-    '#sg-dropdown a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
-    '#sg-dropdown a:hover{background:#f5f5f5}',
-    '#sg-dropdown a:last-child{border-bottom:none}',
+    '#sg-dropdown{display:none;position:fixed;z-index:1000;top:6vh;left:50%;transform:translateX(-50%);width:min(960px,94vw);height:min(680px,86vh);background:#f4f6f8;border-radius:10px;box-shadow:0 16px 48px rgba(0,0,0,.3);overflow:hidden;flex-direction:column}',
+    '#sg-dropdown.show{display:flex}',
+    '#sg-dropdown .sg-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px;background:#fff;border-bottom:1px solid #e6e6e6}',
+    '#sg-dropdown input{flex:1;min-width:160px;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px}',
+    '#sg-dropdown .sg-chips{display:flex;gap:6px;flex-wrap:wrap}',
+    '#sg-dropdown .sg-chips button{border:1px solid #d0d0d0;background:#fff;border-radius:14px;padding:4px 10px;cursor:pointer;font-size:12px}',
+    '#sg-dropdown .sg-chips button.on{background:#0677ba;color:#fff;border-color:#0677ba}',
+    '#sg-dropdown .sg-grid{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:12px;align-content:start}',
+    '#sg-dropdown .sg-card{display:flex;flex-direction:column;text-align:left;border:0;padding:0;background:#fff;border-radius:8px;overflow:hidden;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12)}',
+    '#sg-dropdown .sg-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.18)}',
+    '#sg-dropdown .sg-card img{width:100%;height:96px;object-fit:cover;background:#111;display:block}',
+    '#sg-dropdown .sg-card-name{font-weight:700;color:#0677ba;font-size:13px;padding:8px 8px 0}',
+    '#sg-dropdown .sg-card-cat{font-size:11px;color:#777;padding:2px 8px 8px}',
     '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
-    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55vw;height:55vh;cursor:default;display:flex;flex-direction:column;overflow:hidden;border-radius:4px}',
-    '#sg-overlay iframe{flex:1;width:100%;height:auto;border:none;background:#000;min-height:0}',
+    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:94vw;height:92vh;cursor:default;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;background:#000}',
+    '#sg-overlay .sg-stage{position:relative;flex:1;min-height:0;overflow:hidden;background:#000}',
+    '#sg-overlay iframe{border:none;background:#000}',
     '#sg-overlay .sg-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;height:40px;padding:0 8px;background:#111;color:#fff;z-index:2}',
     '#sg-overlay .sg-title{flex:1;min-width:0;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '#sg-overlay .sg-actions{display:flex;gap:6px;flex-shrink:0}',
@@ -130,21 +172,74 @@ gtag('config', 'G-C7MHSFPRSE');
 
   var dd = document.createElement('div');
   dd.id = 'sg-dropdown';
-  for (var i = 0; i < names.length; i++) {
-    (function(idx) {
-      var a = document.createElement('a');
-      var label = document.createElement('span');
-      label.textContent = names[idx];
-      a.appendChild(label);
-      a.href = gameHref(urls[idx]);
-      a.onclick = function(e) {
-        e.preventDefault();
-        openGame(names[idx], urls[idx]);
-      };
-      dd.appendChild(a);
-    })(i);
-  }
+  var tools = document.createElement('div');
+  tools.className = 'sg-tools';
+  var search = document.createElement('input');
+  search.type = 'search';
+  search.placeholder = 'Search games';
+  var chips = document.createElement('div');
+  chips.className = 'sg-chips';
+  var grid = document.createElement('div');
+  grid.className = 'sg-grid';
+  tools.appendChild(search);
+  tools.appendChild(chips);
+  dd.appendChild(tools);
+  dd.appendChild(grid);
   document.body.appendChild(dd);
+  var activeCat = 'All';
+  function thumbSrc(url) {
+    var slug = String(url || '').split('/')[0];
+    return root + 'resources/thumbs/' + slug + '.jpg';
+  }
+  function paintGames() {
+    var q = (search.value || '').trim().toLowerCase();
+    grid.textContent = '';
+    games.forEach(function(g) {
+      if (activeCat !== 'All' && g.cat !== activeCat) return;
+      if (q && g.name.toLowerCase().indexOf(q) === -1 && String(g.cat || '').toLowerCase().indexOf(q) === -1) return;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sg-card';
+      var img = document.createElement('img');
+      img.alt = '';
+      img.src = thumbSrc(g.url);
+      img.onerror = function() { img.remove(); };
+      var nm = document.createElement('span');
+      nm.className = 'sg-card-name';
+      nm.textContent = g.name;
+      var ct = document.createElement('span');
+      ct.className = 'sg-card-cat';
+      ct.textContent = g.cat || '';
+      b.appendChild(img);
+      b.appendChild(nm);
+      b.appendChild(ct);
+      b.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openGame(g.name, g.url);
+      };
+      grid.appendChild(b);
+    });
+  }
+  var catNames = ['All'];
+  games.forEach(function(g) { if (catNames.indexOf(g.cat) === -1) catNames.push(g.cat); });
+  catNames.forEach(function(cat) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = cat;
+    if (cat === 'All') b.className = 'on';
+    b.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      activeCat = cat;
+      Array.prototype.forEach.call(chips.children, function(el) { el.classList.toggle('on', el.textContent === cat); });
+      paintGames();
+    };
+    chips.appendChild(b);
+  });
+  search.oninput = paintGames;
+  search.onclick = function(e) { e.stopPropagation(); };
+  paintGames();
 
   function isResourcesLink(el) {
     var a = el.closest ? el.closest('a') : null;
@@ -164,10 +259,6 @@ gtag('config', 'G-C7MHSFPRSE');
     if (!isResourcesLink(e.target)) { dd.classList.remove('show'); return; }
     e.preventDefault();
     e.stopPropagation();
-    var link = e.target.closest('a');
-    var rect = link.getBoundingClientRect();
-    dd.style.top = (rect.bottom + window.scrollY) + 'px';
-    dd.style.left = (rect.left + window.scrollX) + 'px';
     dd.classList.toggle('show');
   }, true);
 
@@ -201,8 +292,11 @@ gtag('config', 'G-C7MHSFPRSE');
   actions.appendChild(closeBtn);
   bar.appendChild(titleEl);
   bar.appendChild(actions);
+  var stage = document.createElement('div');
+  stage.className = 'sg-stage';
+  stage.appendChild(iframe);
   wrap.appendChild(bar);
-  wrap.appendChild(iframe);
+  wrap.appendChild(stage);
   ov.appendChild(wrap);
   document.body.appendChild(ov);
 
@@ -216,18 +310,28 @@ gtag('config', 'G-C7MHSFPRSE');
     fsBtn.innerHTML = svg(on ? ICON_EXIT : ICON_FS);
     fsBtn.title = on ? 'Exit fullscreen' : 'Fullscreen';
   }
-  function pingResize() {
+  function fitFrame() {
+    var aw = stage.clientWidth || 1;
+    var ah = stage.clientHeight || 1;
+    var scale = Math.min(aw / 1280, ah / 800);
+    iframe.style.width = '1280px';
+    iframe.style.height = '800px';
+    iframe.style.position = 'absolute';
+    iframe.style.transformOrigin = '0 0';
+    iframe.style.transform = 'scale(' + scale + ')';
+    iframe.style.left = Math.max(0, (aw - 1280 * scale) / 2) + 'px';
+    iframe.style.top = Math.max(0, (ah - 800 * scale) / 2) + 'px';
     setTimeout(function() {
       try { var w = iframe.contentWindow; if (w) w.dispatchEvent(new Event('resize')); } catch (e) {}
-      window.dispatchEvent(new Event('resize'));
     }, 50);
   }
+  window.addEventListener('resize', function() { if (ov.classList.contains('show')) fitFrame(); });
   function enterFs() {
     ov.classList.add('sg-fs');
     var req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
     if (req) try { var p = req.call(wrap); if (p && p.catch) p.catch(function(){}); } catch (e) {}
     syncFsBtn();
-    pingResize();
+    fitFrame();
   }
   function exitFs() {
     nativeOn = false;
@@ -237,7 +341,7 @@ gtag('config', 'G-C7MHSFPRSE');
       if (ex) try { var p = ex.call(document); if (p && p.catch) p.catch(function(){}); } catch (e) {}
     }
     syncFsBtn();
-    pingResize();
+    fitFrame();
   }
   function closeGame() {
     exitFs();
@@ -252,30 +356,20 @@ gtag('config', 'G-C7MHSFPRSE');
     if (el === wrap) { nativeOn = true; ov.classList.add('sg-fs'); }
     else if (!el && nativeOn) { nativeOn = false; ov.classList.remove('sg-fs'); }
     syncFsBtn();
-    pingResize();
+    fitFrame();
   });
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape' || !ov.classList.contains('show')) return;
     if (ov.classList.contains('sg-fs') && !nativeFsEl()) exitFs();
   });
 
-  function fitContent() {
-    try {
-      var doc = iframe.contentDocument || iframe.contentWindow.document;
-      if (!doc || !doc.head || doc.getElementById('sg-fit')) return;
-      var st = doc.createElement('style');
-      st.id = 'sg-fit';
-      st.textContent = 'html,body{overflow:hidden!important;margin:0!important;padding:0!important;width:100%!important;height:100%!important}canvas,#unity-canvas,#unity-container{max-width:100%!important;max-height:100%!important;width:100%!important;height:100%!important;object-fit:contain!important}';
-      doc.head.appendChild(st);
-    } catch (e) {}
-  }
-
   window.openGame = function(name, url) {
     titleEl.textContent = name || '';
     iframe.src = gameHref(url);
     ov.classList.add('show');
     document.body.style.overflow = 'hidden';
-    iframe.addEventListener('load', fitContent, { once: true });
+    fitFrame();
+    iframe.addEventListener('load', fitFrame, { once: true });
     dd.classList.remove('show');
     try {
       gtag('event', 'play_game', { game_name: name, game_url: gameHref(url), item_id: name, item_name: name });

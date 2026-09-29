@@ -443,56 +443,25 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-sgy-player.sg-fs{position:fixed;inset:0;z-index:10000;min-height:100%}',
     '#popups-overlay.sg-sgy-player-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998}',
     '#popups-overlay.sg-sgy-player-overlay.show{display:block}',
-    '.popups-box.sg-sgy-player-box{display:none;position:fixed;z-index:9999;top:27%;left:27%;width:46%;height:46%;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.4);flex-direction:column}',
+    '.popups-box.sg-sgy-player-box{display:none;position:fixed;z-index:9999;top:35%;left:36%;width:28%;height:30%;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.4);flex-direction:column}',
     '.popups-box.sg-sgy-player-box.show{display:flex}'
   ].join('');
   document.head.appendChild(s);
 
-  function frameSize(win) {
-    var doc = win.document;
-    var body = doc.body;
-    var vw = win.innerWidth || 1280;
-    var vh = win.innerHeight || 800;
-    var w = 1280, h = 800;
-    if (!body) return { w: w, h: h };
-    var canvases = doc.querySelectorAll('canvas');
-    for (var i = 0; i < canvases.length; i++) {
-      var r = canvases[i].getBoundingClientRect();
-      if (r.width > vw + 1) w = Math.max(w, r.width);
-      if (r.height > vh + 1) h = Math.max(h, r.height);
-    }
-    var dw = Math.max(doc.documentElement.scrollWidth, body.scrollWidth);
-    var dh = Math.max(doc.documentElement.scrollHeight, body.scrollHeight);
-    if (dw > vw + 1) w = Math.max(w, dw);
-    if (dh > vh + 1) h = Math.max(h, dh);
-    return { w: Math.min(4096, Math.ceil(w)), h: Math.min(4096, Math.ceil(h)) };
-  }
   function fitGameFrame(iframe) {
     var stage = iframe.parentElement;
     if (!stage) return;
     var aw = stage.clientWidth || 1;
     var ah = stage.clientHeight || 1;
-    var box = { w: 1280, h: 800 };
-    try {
-      var win = iframe.contentWindow;
-      if (win && win.document && win.document.body) box = frameSize(win);
-    } catch (e) {}
-    var scale = Math.min(aw / box.w, ah / box.h);
-    iframe.style.width = box.w + 'px';
-    iframe.style.height = box.h + 'px';
+    var lw = 1280, lh = 800;
+    var scale = Math.min(aw / lw, ah / lh);
+    iframe.style.width = lw + 'px';
+    iframe.style.height = lh + 'px';
     iframe.style.position = 'absolute';
     iframe.style.transformOrigin = '0 0';
     iframe.style.transform = 'scale(' + scale + ')';
-    iframe.style.left = Math.max(0, (aw - box.w * scale) / 2) + 'px';
-    iframe.style.top = Math.max(0, (ah - box.h * scale) / 2) + 'px';
-    var key = box.w + 'x' + box.h;
-    if (iframe.getAttribute('data-sg-box') !== key) {
-      iframe.setAttribute('data-sg-box', key);
-      setTimeout(function() {
-        try { var w = iframe.contentWindow; if (w) w.dispatchEvent(new Event('resize')); } catch (e) {}
-        fitGameFrame(iframe);
-      }, 80);
-    }
+    iframe.style.left = Math.max(0, (aw - lw * scale) / 2) + 'px';
+    iframe.style.top = Math.max(0, (ah - lh * scale) / 2) + 'px';
   }
   window.addEventListener('resize', function() {
     document.querySelectorAll('#sg-sgy-player iframe').forEach(fitGameFrame);
@@ -527,7 +496,6 @@ gtag('config', 'G-C7MHSFPRSE');
     iframe.allowFullscreen = true;
     iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
     iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-fullscreen');
-    iframe.removeAttribute('data-sg-box');
     iframe.src = href;
     iframe.addEventListener('load', function(){ fitGameFrame(iframe); });
     body.appendChild(iframe);

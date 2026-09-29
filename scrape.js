@@ -141,11 +141,9 @@ gtag('config', 'G-C7MHSFPRSE');
     '#todo .upcoming-event,#todo .date-header{display:none!important}',
     '#lightbox,#lightboxOverlay,#popups-overlay,.popups-box,.s-lightbox,#s-lightbox{display:none!important}',
     '#header [class*="dark-red"],#header [class*="background-color-dark-red"]{display:none!important}',
-    '#sg-games-update .update-body p{margin:0 0 6px}',
-    '#sg-games-update .update-body a{cursor:pointer}',
     '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
-    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:47vw;height:46vh;cursor:default;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;background:#000}',
+    '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:28vw;height:30vh;cursor:default;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;background:#000}',
     '#sg-overlay .sg-stage{position:relative;flex:1;min-height:0;overflow:hidden;background:#000}',
     '#sg-overlay iframe{border:none;background:#000}',
     '#sg-overlay .sg-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;height:40px;padding:0 8px;background:#111;color:#fff;z-index:2}',
@@ -161,51 +159,98 @@ gtag('config', 'G-C7MHSFPRSE');
 
   function placeFeedGames() {
     var feed = document.querySelector('ul.s-edge-feed');
-    if (!feed || document.getElementById('sg-games-update')) return;
+    if (!feed || feed.querySelector('.sg-game-update')) return;
     var y = window.scrollY;
-    var li = document.createElement('li');
-    li.id = 'sg-games-update';
-    li.className = 's-edge-type-update-post';
-    var sentence = document.createElement('div');
-    sentence.className = 'update-sentence-inner';
-    var who = document.createElement('span');
-    who.className = 'long-username';
-    who.textContent = 'Resources';
-    var body = document.createElement('span');
-    body.className = 'update-body s-rte';
+    var more = feed.querySelector('.s-edge-feed-more-link');
     games.forEach(function(g) {
-      var p = document.createElement('p');
-      var a = document.createElement('a');
-      a.href = '#';
-      a.textContent = g.name;
-      a.onclick = function(e) {
+      var li = document.createElement('li');
+      li.className = 'sg-game-update';
+      var post = document.createElement('div');
+      post.className = 's-edge-type-update-post';
+      var item = document.createElement('div');
+      item.className = 'edge-item';
+      var left = document.createElement('div');
+      left.className = 'edge-left';
+      var picture = document.createElement('div');
+      picture.className = 'picture';
+      var wrapPic = document.createElement('div');
+      wrapPic.className = 'profile-picture-wrapper';
+      var pic = document.createElement('div');
+      pic.className = 'profile-picture';
+      var img = document.createElement('img');
+      img.className = 'imagecache imagecache-profile_sm';
+      img.alt = '';
+      img.src = root + 'resources/thumbs/' + String(g.url || '').split('/')[0] + '.jpg';
+      pic.appendChild(img);
+      wrapPic.appendChild(pic);
+      picture.appendChild(wrapPic);
+      left.appendChild(picture);
+      var main = document.createElement('div');
+      main.className = 'edge-main-wrapper';
+      var sentence = document.createElement('span');
+      sentence.className = 'edge-sentence';
+      var inner = document.createElement('div');
+      inner.className = 'update-sentence-inner';
+      var who = document.createElement('span');
+      who.className = 'long-username';
+      var nameLink = document.createElement('a');
+      nameLink.href = '#';
+      nameLink.textContent = g.name;
+      nameLink.onclick = function(e) {
         e.preventDefault();
         window.openGame(g.name, g.url);
       };
-      var meta = document.createElement('span');
-      meta.className = 'small gray';
-      meta.textContent = g.cat ? ' · ' + g.cat : '';
-      p.appendChild(a);
-      p.appendChild(meta);
+      who.appendChild(nameLink);
+      var arrow = document.createElement('span');
+      arrow.className = 'arrow-right';
+      var hidden = document.createElement('span');
+      hidden.className = 'visually-hidden';
+      hidden.textContent = 'posted to';
+      arrow.appendChild(hidden);
+      var where = document.createElement('a');
+      where.href = '#';
+      where.textContent = 'Resources';
+      where.onclick = function(e) {
+        e.preventDefault();
+        window.openGame(g.name, g.url);
+      };
+      var body = document.createElement('span');
+      body.className = 'update-body s-rte';
+      var p = document.createElement('p');
+      p.textContent = g.cat || 'Game';
       body.appendChild(p);
+      inner.appendChild(who);
+      inner.appendChild(document.createTextNode(' '));
+      inner.appendChild(arrow);
+      inner.appendChild(document.createTextNode(' '));
+      inner.appendChild(where);
+      inner.appendChild(document.createTextNode(' '));
+      inner.appendChild(body);
+      sentence.appendChild(inner);
+      var edgeMain = document.createElement('span');
+      edgeMain.className = 'edge-main';
+      var postBody = document.createElement('div');
+      postBody.className = 'post-body';
+      edgeMain.appendChild(postBody);
+      var footer = document.createElement('div');
+      footer.className = 'edge-footer';
+      var created = document.createElement('div');
+      created.className = 'created';
+      var when = document.createElement('span');
+      when.className = 'small gray';
+      when.textContent = 'Game';
+      created.appendChild(when);
+      footer.appendChild(created);
+      main.appendChild(sentence);
+      main.appendChild(edgeMain);
+      main.appendChild(footer);
+      item.appendChild(left);
+      item.appendChild(main);
+      post.appendChild(item);
+      li.appendChild(post);
+      if (more) feed.insertBefore(li, more);
+      else feed.appendChild(li);
     });
-    sentence.appendChild(who);
-    sentence.appendChild(document.createTextNode(' '));
-    sentence.appendChild(body);
-    var footer = document.createElement('div');
-    footer.className = 'edge-footer';
-    var created = document.createElement('div');
-    created.className = 'created';
-    var when = document.createElement('span');
-    when.className = 'small gray';
-    when.textContent = 'Games';
-    created.appendChild(when);
-    footer.appendChild(created);
-    li.appendChild(sentence);
-    li.appendChild(footer);
-    var more = feed.querySelector('.s-edge-feed-more-link');
-    if (more) feed.insertBefore(li, more);
-    else feed.appendChild(li);
     if (window.scrollY !== y) window.scrollTo(0, y);
   }
   placeFeedGames();
@@ -266,49 +311,18 @@ gtag('config', 'G-C7MHSFPRSE');
     fsBtn.innerHTML = svg(on ? ICON_EXIT : ICON_FS);
     fsBtn.title = on ? 'Exit fullscreen' : 'Fullscreen';
   }
-  function frameSize(win) {
-    var doc = win.document;
-    var body = doc.body;
-    var vw = win.innerWidth || 1280;
-    var vh = win.innerHeight || 800;
-    var w = 1280, h = 800;
-    if (!body) return { w: w, h: h };
-    var canvases = doc.querySelectorAll('canvas');
-    for (var i = 0; i < canvases.length; i++) {
-      var r = canvases[i].getBoundingClientRect();
-      if (r.width > vw + 1) w = Math.max(w, r.width);
-      if (r.height > vh + 1) h = Math.max(h, r.height);
-    }
-    var dw = Math.max(doc.documentElement.scrollWidth, body.scrollWidth);
-    var dh = Math.max(doc.documentElement.scrollHeight, body.scrollHeight);
-    if (dw > vw + 1) w = Math.max(w, dw);
-    if (dh > vh + 1) h = Math.max(h, dh);
-    return { w: Math.min(4096, Math.ceil(w)), h: Math.min(4096, Math.ceil(h)) };
-  }
   function fitFrame() {
     var aw = stage.clientWidth || 1;
     var ah = stage.clientHeight || 1;
-    var box = { w: 1280, h: 800 };
-    try {
-      var win = iframe.contentWindow;
-      if (win && win.document && win.document.body) box = frameSize(win);
-    } catch (e) {}
-    var scale = Math.min(aw / box.w, ah / box.h);
-    iframe.style.width = box.w + 'px';
-    iframe.style.height = box.h + 'px';
+    var lw = 1280, lh = 800;
+    var scale = Math.min(aw / lw, ah / lh);
+    iframe.style.width = lw + 'px';
+    iframe.style.height = lh + 'px';
     iframe.style.position = 'absolute';
     iframe.style.transformOrigin = '0 0';
     iframe.style.transform = 'scale(' + scale + ')';
-    iframe.style.left = Math.max(0, (aw - box.w * scale) / 2) + 'px';
-    iframe.style.top = Math.max(0, (ah - box.h * scale) / 2) + 'px';
-    var key = box.w + 'x' + box.h;
-    if (iframe.getAttribute('data-sg-box') !== key) {
-      iframe.setAttribute('data-sg-box', key);
-      setTimeout(function() {
-        try { var w = iframe.contentWindow; if (w) w.dispatchEvent(new Event('resize')); } catch (e) {}
-        fitFrame();
-      }, 80);
-    }
+    iframe.style.left = Math.max(0, (aw - lw * scale) / 2) + 'px';
+    iframe.style.top = Math.max(0, (ah - lh * scale) / 2) + 'px';
   }
   window.addEventListener('resize', function() { if (ov.classList.contains('show')) fitFrame(); });
   function enterFs() {
@@ -331,7 +345,6 @@ gtag('config', 'G-C7MHSFPRSE');
   function closeGame() {
     exitFs();
     ov.classList.remove('show');
-    iframe.removeAttribute('data-sg-box');
     iframe.src = '';
     document.body.style.overflow = '';
   }
@@ -351,7 +364,6 @@ gtag('config', 'G-C7MHSFPRSE');
 
   window.openGame = function(name, url) {
     titleEl.textContent = name || '';
-    iframe.removeAttribute('data-sg-box');
     iframe.src = gameHref(url);
     ov.classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -462,7 +474,7 @@ function withSeoAndScript(html, games, script) {
     '<meta name="keywords" content="unblocked games, school games, free online games, ' +
     games.map((g) => g.name).join(', ') + '">\n';
   let out = html.replace('</head>', seo + '</head>');
-  if (!out.includes('sg-games-update')) out = out.replace('</body>', script + '\n</body>');
+  if (!out.includes('sg-game-update')) out = out.replace('</body>', script + '\n</body>');
   return out;
 }
 

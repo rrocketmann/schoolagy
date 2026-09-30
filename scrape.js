@@ -146,6 +146,11 @@ gtag('config', 'G-C7MHSFPRSE');
     '#todo .upcoming-event,#todo .date-header{display:none!important}',
     '#lightbox,#lightboxOverlay,#popups-overlay,.popups-box,.s-lightbox,#s-lightbox{display:none!important}',
     '#header [class*="dark-red"],#header [class*="background-color-dark-red"]{display:none!important}',
+    '#sg-dropdown{display:none;position:fixed;z-index:1000;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:240px;max-height:400px;overflow-y:auto;overscroll-behavior:contain}',
+    '#sg-dropdown.show{display:block}',
+    '#sg-dropdown a{display:block;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
+    '#sg-dropdown a:hover{background:#f5f5f5}',
+    '#sg-dropdown a:last-child{border-bottom:none}',
     '#sg-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;cursor:pointer;overscroll-behavior:contain}',
     '#sg-overlay.show{display:block}',
     '#sg-overlay .wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40vw;height:44vh;cursor:default;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;background:#000}',
@@ -162,6 +167,41 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-overlay.sg-fs .wrap{top:0;left:0;transform:none;width:100%;height:100%;border-radius:0}'
   ].join('');
   document.head.appendChild(s);
+
+  var dd = document.createElement('div');
+  dd.id = 'sg-dropdown';
+  games.forEach(function(g) {
+    var a = document.createElement('a');
+    a.href = '#';
+    a.textContent = g.name;
+    a.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dd.classList.remove('show');
+      window.openGame(g.name, g.url);
+    };
+    dd.appendChild(a);
+  });
+  document.body.appendChild(dd);
+
+  function isResourcesLink(el) {
+    var a = el.closest ? el.closest('a') : null;
+    if (!a || a.closest('#sg-dropdown') || a.closest('.sg-game-update')) return false;
+    var path = '';
+    try { path = new URL(a.href, location.href).pathname; } catch (e) { return false; }
+    if (path.endsWith('/index.html')) path = path.slice(0, -'/index.html'.length);
+    return path.endsWith('/resources') || path.endsWith('/resources/');
+  }
+  document.addEventListener('click', function(e) {
+    if (!isResourcesLink(e.target)) { dd.classList.remove('show'); return; }
+    e.preventDefault();
+    e.stopPropagation();
+    var link = e.target.closest('a');
+    var rect = link.getBoundingClientRect();
+    dd.style.top = rect.bottom + 'px';
+    dd.style.left = Math.max(8, rect.left) + 'px';
+    dd.classList.toggle('show');
+  }, true);
 
   function placeFeedGames() {
     var feed = document.querySelector('ul.s-edge-feed');

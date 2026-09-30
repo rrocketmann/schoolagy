@@ -432,6 +432,11 @@ gtag('config', 'G-C7MHSFPRSE');
   var s = document.createElement('style');
   s.textContent = [
     '#todo .upcoming-event,#todo .date-header,.recently-completed-wrapper{display:none!important}',
+    '#sg-dropdown{display:none;position:fixed;z-index:1000;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:240px;max-height:400px;overflow-y:auto;overscroll-behavior:contain}',
+    '#sg-dropdown.show{display:block}',
+    '#sg-dropdown a{display:block;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
+    '#sg-dropdown a:hover{background:#f5f5f5}',
+    '#sg-dropdown a:last-child{border-bottom:none}',
     '#library-main.active-loader .loading-overlay,#library-main.active-loader .loading-image{display:none!important}',
     '#sg-sgy-player{display:flex;flex-direction:column;height:100%;min-height:0;background:#fff}',
     '#sg-sgy-player .popups-title{display:flex;align-items:center;gap:10px;background:#333;color:#fff;padding:8px 12px;font-size:14px;font-weight:700}',
@@ -447,6 +452,41 @@ gtag('config', 'G-C7MHSFPRSE');
     '.popups-box.sg-sgy-player-box.show{display:flex}'
   ].join('');
   document.head.appendChild(s);
+
+  var dd = document.createElement('div');
+  dd.id = 'sg-dropdown';
+  games.forEach(function(g) {
+    var a = document.createElement('a');
+    a.href = '#';
+    a.textContent = g.name;
+    a.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dd.classList.remove('show');
+      window.openGame(g.name, g.url);
+    };
+    dd.appendChild(a);
+  });
+  document.body.appendChild(dd);
+
+  function isResourcesLink(el) {
+    var a = el.closest ? el.closest('a') : null;
+    if (!a || a.closest('#sg-dropdown')) return false;
+    var path = '';
+    try { path = new URL(a.href, location.href).pathname; } catch (e) { return false; }
+    path = path.replace(/\/index\.html$/, '');
+    return /\/resources\/?$/.test(path);
+  }
+  document.addEventListener('click', function(e) {
+    if (!isResourcesLink(e.target)) { dd.classList.remove('show'); return; }
+    e.preventDefault();
+    e.stopPropagation();
+    var link = e.target.closest('a');
+    var rect = link.getBoundingClientRect();
+    dd.style.top = rect.bottom + 'px';
+    dd.style.left = Math.max(8, rect.left) + 'px';
+    dd.classList.toggle('show');
+  }, true);
 
   function fitGameFrame(iframe) {
     var stage = iframe.parentElement;

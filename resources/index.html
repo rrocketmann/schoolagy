@@ -619,11 +619,9 @@ gtag('config', 'G-C7MHSFPRSE');
     marker.id = 'sg-game-rows';
     marker.style.display = 'none';
     tbody.appendChild(marker);
-    var firstGame = null;
     games.forEach(function(g, i) {
       var tr = document.createElement('tr');
       tr.className = 'collection-template-item-row sg-game-row ' + (i % 2 ? 'even' : 'odd');
-      if (!firstGame) firstGame = tr;
       var box = document.createElement('td');
       box.className = 'collection-item-checkbox';
       var icon = document.createElement('td');
@@ -662,10 +660,6 @@ gtag('config', 'G-C7MHSFPRSE');
       tr.appendChild(title);
       tbody.appendChild(tr);
     });
-    if (firstGame) {
-      var top = firstGame.getBoundingClientRect().top + window.scrollY - 72;
-      window.scrollTo(0, Math.max(0, top));
-    }
   }
 
   fillResources();

@@ -1,12 +1,29 @@
 (function () {
   var ROUNDS = 5;
   var NS = 'http://www.w3.org/2000/svg';
+  var SHORT = {
+    'United States of America': 'United States',
+    'United Republic of Tanzania': 'Tanzania',
+    'Democratic Republic of the Congo': 'DR Congo',
+    'Republic of the Congo': 'Congo',
+    'Central African Republic': 'C. African Rep.',
+    'Dominican Republic': 'Dominican Rep.',
+    'Bosnia and Herzegovina': 'Bosnia',
+    'Republic of Serbia': 'Serbia',
+    'French Southern and Antarctic Lands': 'Fr. S. Antarctic',
+    'Equatorial Guinea': 'Eq. Guinea',
+    'United Arab Emirates': 'UAE'
+  };
   var map = document.getElementById('map');
-  var photo = document.getElementById('photo');
+  var mapWrap = document.getElementById('map-wrap');
+  var canvas = document.getElementById('view');
+  var pano = createPano(canvas);
   var statusEl = document.getElementById('status');
   var totalEl = document.getElementById('total');
   var resultEl = document.getElementById('result');
   var hint = document.getElementById('map-hint');
+  var lookHint = document.getElementById('look-hint');
+  var loadingEl = document.getElementById('loading');
   var guessBtn = document.getElementById('guess');
   var nextBtn = document.getElementById('next');
   var againBtn = document.getElementById('again');
@@ -22,28 +39,16 @@
   var locked = false;
   var history = [];
   var marks;
+  var labelLayer;
+  var view = { cx: WORLD.w / 2, cy: WORLD.h / 2, w: WORLD.w };
+  var drag = null;
+  var markers = null;
+  var countries = [];
 
   function el(name, attrs) {
     var node = document.createElementNS(NS, name);
     if (attrs) Object.keys(attrs).forEach(function (k) { node.setAttribute(k, attrs[k]); });
     return node;
-  }
-
-  function drawMap() {
-    map.setAttribute('viewBox', '0 0 ' + WORLD.w + ' ' + WORLD.h);
-    map.appendChild(el('rect', { width: WORLD.w, height: WORLD.h, fill: '#16324f' }));
-    var lands = el('g');
-    WORLD.countries.forEach(function (c) {
-      var d = '';
-      c.r.forEach(function (ring) {
-        ring.forEach(function (p, i) { d += (i ? 'L' : 'M') + p[0] + ' ' + p[1]; });
-        d += 'Z';
-      });
-      lands.appendChild(el('path', { d: d, fill: '#1f7a52', stroke: '#0c3324', 'stroke-width': 0.6 }));
-    });
-    map.appendChild(lands);
-    marks = el('g');
-    map.appendChild(marks);
   }
 
   function project(lon, lat) {
@@ -116,50 +121,226 @@
     return place.title.replace(/\.[a-z0-9]+$/i, '');
   }
 
-  function clearMarks() {
-    while (marks.firstChild) marks.removeChild(marks.firstChild);
+  function labelFor(name) {
+    return SHORT[name] || name;
   }
 
-  function addPin(x, y, fill) {
-    marks.appendChild(el('circle', {
-      cx: x, cy: y, r: 7, fill: fill, stroke: '#fff', 'stroke-width': 2
-    }));
+  function ringBox(ring) {
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity, sx = 0, sy = 0;
+    for (var i = 0; i < ring.length; i++) {
+      var x = ring[i][0], y = ring[i][1];
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+      sx += x;
+      sy += y;
+    }
+    return { cx: sx / ring.length, cy: sy / ring.length, w: maxX - minX, h: maxY - minY, area: (maxX - minX) * (maxY - minY) };
+  }
+
+  function drawMap() {
+    var ocean = el('rect', { x: -200, y: -200, width: WORLD.w + 400, height: WORLD.h + 400, fill: '#16324f' });
+    map.appendChild(ocean);
+    var lands = el('g');
+    WORLD.countries.forEach(function (c) {
+      var d = '';
+      var best = null;
+      c.r.forEach(function (ring) {
+        var box = ringBox(ring);
+        if (!best || box.area > best.area) best = box;
+        ring.forEach(function (p, i) { d += (i ? 'L' : 'M') + p[0] + ' ' + p[1]; });
+        d += 'Z';
+      });
+      var path = el('path', {
+        d: d, fill: '#1f7a52', stroke: '#0c3324', 'stroke-width': '1', 'vector-effect': 'non-scaling-stroke'
+      });
+      lands.appendChild(path);
+      if (best && best.w > 8 && best.h > 6) {
+        countries.push({ n: c.n, cx: best.cx, cy: best.cy, w: best.w, h: best.h, area: best.area });
+      }
+    });
+    var rank = {
+      'United States of America': 0, China: 1, Brazil: 2, Russia: 3, Australia: 4,
+      India: 5, Canada: 6, Mexico: 7, Argentina: 8, 'South Africa': 9,
+      Japan: 10, Indonesia: 11, France: 12, 'United Kingdom': 13, Germany: 14,
+      Egypt: 15, Nigeria: 16
+    };
+    countries.sort(function (a, b) {
+      var ra = rank[a.n] == null ? 50 : rank[a.n];
+      var rb = rank[b.n] == null ? 50 : rank[b.n];
+      return ra - rb || b.area - a.area;
+    });
+    map.appendChild(lands);
+    labelLayer = el('g', { 'pointer-events': 'none' });
+    map.appendChild(labelLayer);
+    marks = el('g', { 'pointer-events': 'none' });
+    map.appendChild(marks);
+  }
+
+  function viewHeight() {
+    var rect = map.getBoundingClientRect();
+    var aspect = rect.width / Math.max(1, rect.height);
+    return view.w / aspect;
+  }
+
+  function applyView() {
+    var rect = map.getBoundingClientRect();
+    if (rect.width < 20 || rect.height < 20) return;
+    var h = viewHeight();
+    var x = view.cx - view.w / 2;
+    var y = view.cy - h / 2;
+    map.setAttribute('viewBox', x + ' ' + y + ' ' + view.w + ' ' + h);
+    map.setAttribute('preserveAspectRatio', 'none');
+    updateLabels();
+    redrawMarks();
+  }
+
+  function resetView() {
+    view.cx = WORLD.w / 2;
+    view.cy = WORLD.h / 2;
+    view.w = WORLD.w;
+    applyView();
+  }
+
+  function zoomAt(svgX, svgY, factor) {
+    var next = Math.max(36, Math.min(WORLD.w, view.w * factor));
+    var k = next / view.w;
+    view.cx = svgX + (view.cx - svgX) * k;
+    view.cy = svgY + (view.cy - svgY) * k;
+    view.w = next;
+    applyView();
+  }
+
+  function clientToSvg(ev) {
+    var pt = map.createSVGPoint();
+    pt.x = ev.clientX;
+    pt.y = ev.clientY;
+    var ctm = map.getScreenCTM();
+    if (!ctm) return null;
+    return pt.matrixTransform(ctm.inverse());
+  }
+
+  function pinR() {
+    var rect = map.getBoundingClientRect();
+    return Math.max(2.2, 9 * view.w / Math.max(1, rect.width));
+  }
+
+  function clearNode(node) {
+    while (node.firstChild) node.removeChild(node.firstChild);
+  }
+
+  function addText(x, y, text, size, fill) {
+    var node = el('text', {
+      x: x, y: y, 'text-anchor': 'middle', 'font-size': size, fill: fill,
+      stroke: '#071018', 'stroke-width': size * 0.22, 'font-family': 'system-ui, Segoe UI, sans-serif',
+      'font-weight': '700', 'paint-order': 'stroke'
+    });
+    node.textContent = text;
+    labelLayer.appendChild(node);
+    return node;
+  }
+
+  function updateLabels() {
+    clearNode(labelLayer);
+    var rect = map.getBoundingClientRect();
+    var h = viewHeight();
+    var x0 = view.cx - view.w / 2;
+    var y0 = view.cy - h / 2;
+    var px = rect.width / view.w;
+    var font = 13 / px;
+    var placed = [];
+    function free(sx, sy, gap) {
+      for (var i = 0; i < placed.length; i++) {
+        var dx = placed[i][0] - sx;
+        var dy = placed[i][1] - sy;
+        if (dx * dx + dy * dy < gap * gap) return false;
+      }
+      return true;
+    }
+    countries.forEach(function (c) {
+      if (c.cx < x0 || c.cx > x0 + view.w || c.cy < y0 || c.cy > y0 + h) return;
+      if (c.w * px < 36 || c.h * px < 14) return;
+      var sx = (c.cx - x0) * px;
+      var sy = (c.cy - y0) * px;
+      if (!free(sx, sy, 32)) return;
+      addText(c.cx, c.cy, labelFor(c.n), font, '#f4f8ff');
+      placed.push([sx, sy]);
+    });
+    if (view.w < 720) {
+      var cityFont = 12 / px;
+      CITIES.forEach(function (city) {
+        var p = project(city[2], city[1]);
+        if (p.x < x0 || p.x > x0 + view.w || p.y < y0 || p.y > y0 + h) return;
+        var sx = (p.x - x0) * px;
+        var sy = (p.y - y0) * px;
+        if (!free(sx, sy, 36)) return;
+        addText(p.x, p.y + cityFont * 0.3, city[0], cityFont, '#ffe08a');
+        placed.push([sx, sy]);
+      });
+    }
+  }
+
+  function redrawMarks() {
+    clearNode(marks);
+    if (!markers) return;
+    var r = pinR();
+    if (markers.answer) {
+      marks.appendChild(el('line', {
+        x1: markers.guess.x, y1: markers.guess.y, x2: markers.answer.x, y2: markers.answer.y,
+        stroke: '#ffd84a', 'stroke-width': String(Math.max(0.6, r * 0.22)), 'stroke-dasharray': (r * 0.7) + ' ' + (r * 0.45)
+      }));
+    }
+    function dot(p, fill) {
+      marks.appendChild(el('circle', {
+        cx: p.x, cy: p.y, r: r, fill: fill, stroke: '#fff', 'stroke-width': String(Math.max(0.4, r * 0.22))
+      }));
+    }
+    dot(markers.guess, '#ffd84a');
+    if (markers.answer) dot(markers.answer, '#ff5b5b');
+  }
+
+  function placePin(ev) {
+    if (locked) return;
+    var p = clientToSvg(ev);
+    if (!p) return;
+    if (p.y < -30 || p.y > WORLD.h + 30 || p.x < -30 || p.x > WORLD.w + 30) return;
+    pin = { x: p.x, y: p.y, geo: unproject(p.x, p.y) };
+    markers = { guess: pin, answer: null };
+    redrawMarks();
+    guessBtn.disabled = false;
+    var where = countryAt(pin.x, pin.y);
+    resultEl.textContent = where ? ('Pin is in ' + where + '.') : 'Pin is in the ocean.';
   }
 
   function showRound() {
     var place = deck[round];
     pin = null;
     locked = false;
-    clearMarks();
-    photo.src = place.file;
-    photo.alt = '';
+    markers = null;
+    redrawMarks();
+    resetView();
+    pano.reset();
+    lookHint.classList.remove('hide');
+    loadingEl.classList.remove('hide');
+    loadingEl.textContent = 'Loading panorama…';
+    pano.load(place.file, function (err) {
+      loadingEl.classList.add('hide');
+      if (err) {
+        loadingEl.textContent = err.message;
+        loadingEl.classList.remove('hide');
+      }
+    });
     statusEl.textContent = 'Round ' + (round + 1) + ' of ' + deck.length;
-    resultEl.textContent = 'Look around the photo, then drop a pin.';
+    resultEl.textContent = 'Drag the photo to look around, then pin the map.';
     hint.classList.remove('hide');
-    hint.textContent = 'Click where this photo was taken';
     guessBtn.disabled = true;
     guessBtn.classList.remove('hide');
     nextBtn.classList.add('hide');
     againBtn.classList.add('hide');
     stage.classList.remove('hide');
     endEl.classList.add('hide');
-  }
-
-  function onMapClick(ev) {
-    if (locked) return;
-    var pt = map.createSVGPoint();
-    pt.x = ev.clientX;
-    pt.y = ev.clientY;
-    var ctm = map.getScreenCTM();
-    if (!ctm) return;
-    var p = pt.matrixTransform(ctm.inverse());
-    if (p.x < 0 || p.y < 0 || p.x > WORLD.w || p.y > WORLD.h) return;
-    pin = { x: p.x, y: p.y, geo: unproject(p.x, p.y) };
-    clearMarks();
-    addPin(pin.x, pin.y, '#ffd84a');
-    guessBtn.disabled = false;
-    var where = countryAt(pin.x, pin.y);
-    resultEl.textContent = where ? ('Pin is in ' + where + '.') : 'Pin is in the ocean.';
+    mapWrap.classList.remove('hide');
   }
 
   function finishGuess() {
@@ -173,17 +354,11 @@
     var miles = km * 0.621371;
     var where = countryAt(answer.x, answer.y);
     history.push({ place: place, km: km, pts: pts, where: where });
-    clearMarks();
-    marks.appendChild(el('line', {
-      x1: pin.x, y1: pin.y, x2: answer.x, y2: answer.y,
-      stroke: '#ffd84a', 'stroke-width': 1.5, 'stroke-dasharray': '4 3'
-    }));
-    addPin(pin.x, pin.y, '#ffd84a');
-    addPin(answer.x, answer.y, '#ff5b5b');
+    markers = { guess: pin, answer: answer };
+    redrawMarks();
     totalEl.textContent = score + ' pts';
     var dist = km < 1 ? 'under 1 km' : (Math.round(km).toLocaleString() + ' km / ' + Math.round(miles).toLocaleString() + ' mi');
     var placeLabel = where ? (placeName(place) + ' · ' + where) : placeName(place);
-    photo.alt = placeLabel;
     resultEl.innerHTML = '';
     resultEl.appendChild(document.createTextNode(pts + ' pts · ' + dist + ' off. ' + placeLabel + '. Photo by ' + place.author + ' (' + place.license + '). '));
     var link = document.createElement('a');
@@ -194,17 +369,13 @@
     resultEl.appendChild(link);
     guessBtn.classList.add('hide');
     hint.classList.add('hide');
-    if (round + 1 >= deck.length) {
-      nextBtn.textContent = 'Results';
-    } else {
-      nextBtn.textContent = 'Next';
-    }
+    nextBtn.textContent = (round + 1 >= deck.length) ? 'Results' : 'Next';
     nextBtn.classList.remove('hide');
   }
 
   function showEnd() {
-    stage.classList.add('hide');
     endEl.classList.remove('hide');
+    mapWrap.classList.add('hide');
     guessBtn.classList.add('hide');
     nextBtn.classList.add('hide');
     againBtn.classList.remove('hide');
@@ -258,7 +429,53 @@
     });
   }
 
-  map.addEventListener('click', onMapClick);
+  map.addEventListener('pointerdown', function (ev) {
+    if (ev.button !== 0) return;
+    map.setPointerCapture(ev.pointerId);
+    drag = { x: ev.clientX, y: ev.clientY, cx: view.cx, cy: view.cy, moved: false };
+  });
+  map.addEventListener('pointermove', function (ev) {
+    if (!drag) return;
+    var dx = ev.clientX - drag.x;
+    var dy = ev.clientY - drag.y;
+    if (dx * dx + dy * dy > 16) drag.moved = true;
+    if (!drag.moved) return;
+    var rect = map.getBoundingClientRect();
+    var scale = view.w / Math.max(1, rect.width);
+    view.cx = drag.cx - dx * scale;
+    view.cy = drag.cy - dy * scale;
+    applyView();
+  });
+  function endDrag(ev) {
+    if (!drag) return;
+    var moved = drag.moved;
+    drag = null;
+    if (!moved) placePin(ev);
+  }
+  map.addEventListener('pointerup', endDrag);
+  map.addEventListener('pointercancel', function () { drag = null; });
+  mapWrap.addEventListener('wheel', function (ev) {
+    ev.preventDefault();
+    var p = clientToSvg(ev);
+    if (!p) return;
+    zoomAt(p.x, p.y, ev.deltaY > 0 ? 1.16 : 1 / 1.16);
+  }, { passive: false });
+  document.getElementById('zoom-in').addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    zoomAt(view.cx, view.cy, 1 / 1.35);
+  });
+  document.getElementById('zoom-out').addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    zoomAt(view.cx, view.cy, 1.35);
+  });
+  document.getElementById('map-grow').addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    mapWrap.classList.toggle('big');
+    requestAnimationFrame(applyView);
+  });
+  canvas.addEventListener('pointermove', function () {
+    if (pano.moved) lookHint.classList.add('hide');
+  });
   guessBtn.addEventListener('click', finishGuess);
   nextBtn.addEventListener('click', function () {
     round += 1;
@@ -269,10 +486,29 @@
   document.getElementById('credit-btn').addEventListener('click', function () { creditBox.classList.remove('hide'); });
   document.getElementById('credit-close').addEventListener('click', function () { creditBox.classList.add('hide'); });
   document.addEventListener('keydown', function (ev) {
-    if (ev.key === 'Enter' && !guessBtn.disabled && !guessBtn.classList.contains('hide')) finishGuess();
+    if (ev.key === 'Enter' && !guessBtn.disabled && !guessBtn.classList.contains('hide')) {
+      finishGuess();
+      return;
+    }
+    var step = 0.09 * (pano.fov / 75);
+    if (ev.key === 'ArrowLeft') { pano.nudge(step, 0); lookHint.classList.add('hide'); ev.preventDefault(); }
+    else if (ev.key === 'ArrowRight') { pano.nudge(-step, 0); lookHint.classList.add('hide'); ev.preventDefault(); }
+    else if (ev.key === 'ArrowUp') { pano.nudge(0, step); lookHint.classList.add('hide'); ev.preventDefault(); }
+    else if (ev.key === 'ArrowDown') { pano.nudge(0, -step); lookHint.classList.add('hide'); ev.preventDefault(); }
   });
 
+  if (pano.fail) {
+    loadingEl.textContent = pano.fail;
+    loadingEl.classList.remove('hide');
+  }
   drawMap();
   fillCredits();
-  start();
+  pano.resize();
+  if (window.ResizeObserver) new ResizeObserver(function () { applyView(); }).observe(mapWrap);
+  window.addEventListener('resize', applyView);
+  if (!PLACES.length) {
+    resultEl.textContent = 'No panoramas are installed.';
+  } else {
+    start();
+  }
 })();

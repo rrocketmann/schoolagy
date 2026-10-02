@@ -31,6 +31,8 @@
   var endEl = document.getElementById('end');
   var creditBox = document.getElementById('credits');
   var creditList = document.getElementById('credit-list');
+  var pipsEl = document.getElementById('pips');
+  var needle = document.getElementById('compass-needle');
 
   var deck = [];
   var round = 0;
@@ -313,6 +315,16 @@
     resultEl.textContent = where ? ('Pin is in ' + where + '.') : 'Pin is in the ocean.';
   }
 
+  function renderPips() {
+    pipsEl.innerHTML = '';
+    for (var i = 0; i < deck.length; i++) {
+      var dot = document.createElement('i');
+      if (i < round || (i === round && locked)) dot.className = 'done';
+      else if (i === round) dot.className = 'on';
+      pipsEl.appendChild(dot);
+    }
+  }
+
   function showRound() {
     var place = deck[round];
     pin = null;
@@ -332,7 +344,8 @@
       }
     });
     statusEl.textContent = 'Round ' + (round + 1) + ' of ' + deck.length;
-    resultEl.textContent = 'Drag the photo to look around, then pin the map.';
+    resultEl.textContent = 'Look around, then drop a pin on the map.';
+    renderPips();
     hint.classList.remove('hide');
     guessBtn.disabled = true;
     guessBtn.classList.remove('hide');
@@ -356,7 +369,8 @@
     history.push({ place: place, km: km, pts: pts, where: where });
     markers = { guess: pin, answer: answer };
     redrawMarks();
-    totalEl.textContent = score + ' pts';
+    totalEl.textContent = score.toLocaleString() + ' pts';
+    renderPips();
     var dist = km < 1 ? 'under 1 km' : (Math.round(km).toLocaleString() + ' km / ' + Math.round(miles).toLocaleString() + ' mi');
     var placeLabel = where ? (placeName(place) + ' · ' + where) : placeName(place);
     resultEl.innerHTML = '';
@@ -380,6 +394,7 @@
     nextBtn.classList.add('hide');
     againBtn.classList.remove('hide');
     statusEl.textContent = 'Game over';
+    renderPips();
     var best = 0;
     try { best = Number(localStorage.getItem('sg-openguesser-best') || 0); } catch (e) {}
     if (score > best) {
@@ -473,6 +488,17 @@
     mapWrap.classList.toggle('big');
     requestAnimationFrame(applyView);
   });
+  document.getElementById('look-in').addEventListener('click', function () {
+    pano.zoomFov(0.86);
+    lookHint.classList.add('hide');
+  });
+  document.getElementById('look-out').addEventListener('click', function () {
+    pano.zoomFov(1.16);
+    lookHint.classList.add('hide');
+  });
+  pano.onView = function (yaw) {
+    needle.style.transform = 'rotate(' + (-yaw * 180 / Math.PI) + 'deg)';
+  };
   canvas.addEventListener('pointermove', function () {
     if (pano.moved) lookHint.classList.add('hide');
   });
@@ -491,6 +517,7 @@
       return;
     }
     var step = 0.09 * (pano.fov / 75);
+    // Keys turn the view. Arrow right looks right, which is the opposite yaw of dragging right.
     if (ev.key === 'ArrowLeft') { pano.nudge(step, 0); lookHint.classList.add('hide'); ev.preventDefault(); }
     else if (ev.key === 'ArrowRight') { pano.nudge(-step, 0); lookHint.classList.add('hide'); ev.preventDefault(); }
     else if (ev.key === 'ArrowUp') { pano.nudge(0, step); lookHint.classList.add('hide'); ev.preventDefault(); }

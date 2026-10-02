@@ -84,6 +84,8 @@ function createPano(canvas) {
     draw();
   }
 
+  var onView = null;
+
   function draw() {
     if (!gl || !program) return;
     gl.useProgram(program);
@@ -92,6 +94,7 @@ function createPano(canvas) {
     gl.uniform1f(locs.pitch, pitch);
     gl.uniform1f(locs.fov, fov);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    if (onView) onView(yaw, pitch, fov);
   }
 
   function nudge(dyaw, dpitch) {
@@ -124,8 +127,10 @@ function createPano(canvas) {
     if (dx * dx + dy * dy > 4) moved = true;
     lastX = ev.clientX;
     lastY = ev.clientY;
+    // Grab the photo, the way Street View does. The picture follows the pointer.
+    // +yaw looks left and +pitch looks up, so both deltas keep their sign.
     var sens = 0.0032 * (fov / 75);
-    nudge(-dx * sens, dy * sens);
+    nudge(dx * sens, dy * sens);
   });
   canvas.addEventListener('pointerup', function () { dragging = false; });
   canvas.addEventListener('pointercancel', function () { dragging = false; });
@@ -139,7 +144,9 @@ function createPano(canvas) {
 
   return {
     get fov() { return fov; },
+    get yaw() { return yaw; },
     get moved() { return moved; },
+    set onView(fn) { onView = fn; },
     fail: fail,
     resize: resize,
     nudge: nudge,

@@ -6,54 +6,99 @@
 <title>OpenGuesser</title>
 <style>
   html, body { margin: 0; height: 100%; background: #071018; color: #e8eef7; font-family: system-ui, Segoe UI, sans-serif; }
-  button { font: inherit; }
+  button { font: inherit; border: 0; color: inherit; }
   #app { height: 100%; display: flex; flex-direction: column; }
-  header, footer { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 8px 14px; background: #10192b; z-index: 3; }
-  header { height: 48px; }
-  footer { min-height: 58px; }
-  .brand { font-weight: 800; }
-  #status { color: #9fb0c9; }
-  #total { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; }
+  header, footer {
+    flex-shrink: 0; display: flex; align-items: center; gap: 12px;
+    padding: 8px 14px; background: #10192b; z-index: 4;
+    border-color: rgba(255,255,255,.08); border-style: solid;
+  }
+  header { height: 52px; border-width: 0 0 1px; }
+  footer { min-height: 64px; border-width: 1px 0 0; }
+  .brand { font-weight: 800; letter-spacing: .01em; }
+  #round-meta { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  #status { color: #b7c6db; font-variant-numeric: tabular-nums; }
+  #pips { display: flex; gap: 6px; }
+  #pips i {
+    width: 10px; height: 10px; border-radius: 50%; display: block;
+    background: #2a3b55; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+  }
+  #pips i.on { background: #7eb6ff; }
+  #pips i.done { background: #3ddc97; }
+  #total {
+    margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 800;
+    background: #1a2740; border-radius: 999px; padding: 6px 12px;
+  }
   #stage { flex: 1; min-height: 0; position: relative; background: #000; }
   #photo-wrap { position: absolute; inset: 0; }
   #view { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
   #view:active { cursor: grabbing; }
   #look-hint, #loading, #map-hint {
-    position: absolute; background: rgba(0,0,0,.55); color: #fff;
-    padding: 6px 10px; border-radius: 6px; font-size: 14px; pointer-events: none;
+    position: absolute; background: rgba(7,16,24,.72); color: #fff;
+    padding: 6px 10px; border-radius: 8px; font-size: 13px; pointer-events: none;
   }
-  #look-hint { left: 12px; top: 12px; }
-  #loading { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+  #look-hint { left: 64px; top: 14px; }
+  #loading { left: 50%; top: 42%; transform: translate(-50%, -50%); }
+  #look-tools {
+    position: absolute; left: 12px; top: 12px; z-index: 2;
+    display: flex; flex-direction: column; gap: 8px; align-items: center;
+  }
+  #look-tools button, #map-tools button {
+    width: 40px; height: 40px; padding: 0; border-radius: 10px; cursor: pointer;
+    background: rgba(16, 25, 43, .92); color: #fff; font-size: 22px; line-height: 1;
+    box-shadow: 0 6px 16px rgba(0,0,0,.35);
+  }
+  #look-tools button:hover, #map-tools button:hover { background: #243656; }
+  #compass {
+    width: 40px; height: 40px; border-radius: 50%; overflow: hidden;
+    background: rgba(16, 25, 43, .92); box-shadow: 0 6px 16px rgba(0,0,0,.35);
+    position: relative;
+  }
+  #compass-needle {
+    position: absolute; left: 15px; top: 6px; width: 0; height: 0;
+    border-left: 5px solid transparent; border-right: 5px solid transparent;
+    border-bottom: 14px solid #ffd84a; transform-origin: 5px 14px;
+  }
   #map-wrap {
-    position: absolute; right: 12px; bottom: 12px; width: min(420px, 46%); height: min(280px, 48%);
-    background: #16324f; border-radius: 10px; overflow: hidden;
-    box-shadow: 0 10px 28px rgba(0,0,0,.45); z-index: 2;
+    position: absolute; right: 12px; bottom: 12px; width: min(460px, 48%); height: min(300px, 52%);
+    background: #16324f; border-radius: 14px; overflow: hidden;
+    border: 2px solid rgba(255,255,255,.22);
+    box-shadow: 0 16px 40px rgba(0,0,0,.5); z-index: 3;
   }
   #map-wrap.big { left: 12px; top: 12px; width: auto; height: auto; }
   #map { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; background: #16324f; }
-  #map-hint { left: 8px; bottom: 8px; max-width: calc(100% - 16px); }
-  #map-tools { position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 6px; }
-  #map-tools button {
-    width: 36px; height: 36px; padding: 0; border-radius: 6px;
-    background: rgba(16, 25, 43, .9); color: #fff; font-size: 20px; line-height: 1;
-  }
+  #map-hint { left: 10px; bottom: 10px; max-width: calc(100% - 64px); }
+  #map-tools { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; }
   #result { flex: 1; min-width: 0; font-size: 15px; line-height: 1.35; }
   #result a { color: #8ec5ff; }
-  footer > button { border: 0; border-radius: 6px; padding: 10px 16px; background: #2f6fed; color: #fff; cursor: pointer; font-weight: 700; }
+  footer > button {
+    border-radius: 10px; padding: 12px 18px; background: #2f6fed; color: #fff;
+    cursor: pointer; font-weight: 800; min-width: 108px;
+  }
   footer > button:disabled { opacity: 0.45; cursor: default; }
-  button.ghost { background: transparent; color: #c5d4ea; }
-  #end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; background: #071018; z-index: 4; }
+  #guess { background: #1f9d55; font-size: 16px; }
+  button.ghost { background: transparent; color: #c5d4ea; min-width: 0; }
+  #end {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px; padding: 24px;
+    text-align: center; background: #071018; z-index: 5;
+  }
   #end h1 { margin: 0; font-size: 42px; }
   #end ol { text-align: left; max-width: 720px; margin: 0; padding-left: 20px; }
-  #credits { position: fixed; inset: 0; background: rgba(0,0,0,.72); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 5; }
-  #credits .card { background: #141d2e; border-radius: 8px; max-width: 720px; max-height: 80%; overflow: auto; padding: 18px 20px; }
+  #credits { position: fixed; inset: 0; background: rgba(0,0,0,.72); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 6; }
+  #credits .card { background: #141d2e; border-radius: 12px; max-width: 720px; max-height: 80%; overflow: auto; padding: 18px 20px; }
   #credits h2 { margin: 0 0 8px; }
   #credits li { margin: 8px 0; }
-  #credits button { border: 0; border-radius: 6px; padding: 10px 16px; background: #2f6fed; color: #fff; cursor: pointer; font-weight: 700; }
+  #credits a { color: #8ec5ff; }
+  #credits button { border-radius: 10px; padding: 10px 16px; background: #2f6fed; color: #fff; cursor: pointer; font-weight: 800; }
   .hide { display: none !important; }
   @media (max-width: 800px) {
-    #map-wrap { width: calc(100% - 24px); height: 38%; }
-    #map-wrap.big { height: auto; }
+    header, footer { gap: 8px; padding: 8px 10px; }
+    #map-wrap { width: calc(100% - 16px); height: 36%; right: 8px; bottom: 8px; }
+    #map-wrap.big { left: 8px; top: 8px; height: auto; }
+    #look-hint { display: none; }
+    #look-tools { left: 8px; top: 8px; }
+    #result { font-size: 13px; }
   }
 </style>
 </head>
@@ -61,13 +106,23 @@
 <div id="app">
   <header>
     <div class="brand">OpenGuesser</div>
-    <div id="status">Round 1 of 5</div>
+    <div id="round-meta">
+      <div id="pips" aria-hidden="true"></div>
+      <div id="status">Round 1 of 5</div>
+    </div>
     <div id="total">0 pts</div>
   </header>
   <div id="stage">
     <div id="photo-wrap">
       <canvas id="view"></canvas>
-      <div id="look-hint">Drag to look around. Scroll to zoom in.</div>
+      <div id="look-tools">
+        <button id="look-in" type="button" aria-label="Zoom in on the photo">+</button>
+        <button id="look-out" type="button" aria-label="Zoom out of the photo">−</button>
+        <div id="compass" title="How far you have turned from the start of this photo">
+          <div id="compass-needle"></div>
+        </div>
+      </div>
+      <div id="look-hint">Drag to look. Scroll to zoom.</div>
       <div id="loading" class="hide">Loading panorama…</div>
     </div>
     <div id="map-wrap">
@@ -77,12 +132,12 @@
         <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
         <button id="map-grow" type="button" aria-label="Expand map">⛶</button>
       </div>
-      <div id="map-hint">Scroll to zoom. Drag to move. Click to pin.</div>
+      <div id="map-hint">Scroll to zoom. Drag to move. Click to drop a pin.</div>
     </div>
     <div id="end" class="hide"></div>
   </div>
   <footer>
-    <div id="result">Drag the photo to look around, then pin the map.</div>
+    <div id="result">Look around, then drop a pin on the map.</div>
     <button id="guess" disabled>Guess</button>
     <button id="next" class="hide">Next</button>
     <button id="again" class="hide">Play again</button>

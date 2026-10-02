@@ -57,6 +57,7 @@ const GAME_META = {
   hexgl: ['HexGL', 'Racing'],
   hextris: ['Hextris', 'Puzzle'],
   'hollow-knight': ['Hollow Knight', 'Action'],
+  'geography-guesser': ['Geography Guesser', 'Puzzle'],
   openguesser: ['OpenGuesser', 'Puzzle'],
   peggyspost: ["Peggy's Post", 'Sim'],
   polytrack: ['Polytrack', 'Racing'],

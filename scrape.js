@@ -40,6 +40,7 @@ function removeDiv(html, id) {
 
 const GAME_META = {
   '2048': ['2048', 'Puzzle'],
+  'ball-platformer': ['Ball Platformer', 'Action'],
   basketrandom: ['Basket Random', 'Sports'],
   bitlife: ['BitLife', 'Sim'],
   bobbysbugs: ["Bobby's Bugs", 'Sim'],
@@ -48,6 +49,7 @@ const GAME_META = {
   clusterrush: ['Cluster Rush', 'Racing'],
   cookieclicker: ['Cookie Clicker', 'Idle'],
   'cosmic-sim': ['Cosmic Sim', 'Sim'],
+  credits: ['Credits', 'About'],
   crossyroad: ['Crossy Road', 'Arcade'],
   doodlejump: ['Doodle Jump', 'Arcade'],
   doom: ['Doom', 'Action'],
@@ -57,13 +59,17 @@ const GAME_META = {
   hexgl: ['HexGL', 'Racing'],
   hextris: ['Hextris', 'Puzzle'],
   'hollow-knight': ['Hollow Knight', 'Action'],
+  momentum: ['Momentum', 'Action'],
   openguesser: ['OpenGuesser', 'Puzzle'],
   peggyspost: ["Peggy's Post", 'Sim'],
   polytrack: ['Polytrack', 'Racing'],
   retrobowl: ['Retro Bowl', 'Sports'],
   retrobowlcollege: ['Retro Bowl College', 'Sports'],
+  'samosa-rush': ['Samosa Rush', 'Arcade'],
   slope: ['Slope', 'Racing'],
+  snake: ['Snake', 'Arcade'],
   sortthecourt: ['Sort the Court', 'Sim'],
+  starframe: ['Starframe', 'Action'],
   subwaysurferssingapore: ['Subway Surfers', 'Arcade'],
   'supertux-classic': ['SuperTux', 'Action'],
   tetris: ['Tetris', 'Puzzle'],
@@ -316,7 +322,7 @@ gtag('config', 'G-C7MHSFPRSE');
   var iframe = document.createElement('iframe');
   iframe.allowFullscreen = true;
   iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
-  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-fullscreen');
+  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-fullscreen');
   iframe.setAttribute('scrolling', 'no');
   var bar = document.createElement('div');
   bar.className = 'sg-bar';

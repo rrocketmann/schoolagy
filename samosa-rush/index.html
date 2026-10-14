@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Samosa Rush</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div class="panel" id="hud-level">
+    <img class="food-ico fire-ico" src="fire.png" alt="">
+    <span id="hud-level-num">01</span>
+    <span id="hud-level-name">NAAN RUN</span>
+  </div>
+  <div id="progress" aria-hidden="true">
+    <div id="progress-track">
+      <div id="progress-well">
+        <div id="progress-fill"></div>
+      </div>
+      <img id="progress-pip" src="samosa.png" alt="">
+      <img id="progress-flag" src="nguyen.png" alt="">
+    </div>
+  </div>
+  <div class="hud-right">
+    <div class="panel" id="hud-attempts">
+      <img class="food-ico fire-ico" src="fire.png" alt="">
+      <span id="attempt-count">ORDER 1</span>
+    </div>
+    <div class="panel" id="hud-time">
+      <img class="food-ico poori-ico" src="poori.png" alt="">
+      <span id="time-count">0:00.0</span>
+    </div>
+  </div>
+</div>
+
+<div id="hint">
+  <span><b>SPACE</b> / <b>CLICK</b> jump</span>
+  <span>hold to keep jumping</span>
+  <span><b>R</b> restart</span>
+</div>
+
+<div id="intro">
+  <div id="intro-plate">
+    <div id="intro-num">PLATE 1</div>
+    <div id="intro-name">Naan Run</div>
+  </div>
+</div>
+
+<div id="win">
+  <div id="win-plate">
+    <img id="win-nguyen" src="nguyen.png" alt="">
+    <div class="win-title">PLATE CLEARED</div>
+    <div id="win-stats"></div>
+    <div class="win-sub">Press <b>R</b> for another serving</div>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>

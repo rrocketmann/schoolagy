@@ -1,0 +1,7 @@
+html, body { margin: 0; height: 100%; background: #161a23; overflow: hidden; }
+#game { display: block; width: 100vw; height: 100vh; }
+#help {
+  position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%);
+  font: 12px ui-monospace, Menlo, monospace; color: rgba(229,233,240,0.55);
+  pointer-events: none; user-select: none;
+}

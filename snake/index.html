@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>snake</title>
+<style>
+html,body{margin:0;height:100%;background:#000;display:grid;place-items:center}
+.wrap{display:grid;justify-items:center;gap:10px}
+canvas{background:#222;outline:1px solid #444}
+</style>
+<div class=wrap>
+<canvas id=c width=400 height=400 tabindex=0></canvas>
+</div>
+<script>
+const cv=document.getElementById('c'),g=cv.getContext('2d'),N=20,S=20;
+let d={x:1,y:0},n={x:1,y:0},z,f,sc,dead;
+function food(){
+  do f={x:Math.random()*N|0,y:Math.random()*N|0}
+  while(z.some(p=>p.x===f.x&&p.y===f.y));
+}
+function reset(){
+  z=[{x:8,y:10},{x:7,y:10},{x:6,y:10}];
+  d=n={x:1,y:0};sc=0;dead=0;food();draw();
+}
+function draw(){
+  g.fillStyle='#222';g.fillRect(0,0,400,400);
+  g.fillStyle='#ddd';
+  for(const p of z)g.fillRect(p.x*S+1,p.y*S+1,S-2,S-2);
+  g.fillStyle='#888';
+  g.fillRect(f.x*S+1,f.y*S+1,S-2,S-2);
+  document.title=dead?'dead '+sc:''+sc;
+}
+onkeydown=e=>{
+  const k=e.key;
+  if(k==='ArrowUp'&&d.y!==1)n={x:0,y:-1};
+  if(k==='ArrowDown'&&d.y!==-1)n={x:0,y:1};
+  if(k==='ArrowLeft'&&d.x!==1)n={x:-1,y:0};
+  if(k==='ArrowRight'&&d.x!==-1)n={x:1,y:0};
+  if(k==='r'||k==='R')reset();
+  if(k.startsWith('Arrow'))e.preventDefault();
+};
+reset();
+cv.focus();
+setInterval(()=>{
+  if(dead)return;
+  d=n;
+  const h={x:z[0].x+d.x,y:z[0].y+d.y};
+  if(h.x<0||h.y<0||h.x>=N||h.y>=N||z.some(p=>p.x===h.x&&p.y===h.y)){dead=1;draw();return}
+  z.unshift(h);
+  if(h.x===f.x&&h.y===f.y){sc++;food()}else z.pop();
+  draw();
+},120);
+</script>

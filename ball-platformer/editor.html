@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Level Editor</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #161a23; overflow: hidden;
+      font: 12px ui-monospace, Menlo, monospace; color: #e5e9f0; }
+    body { display: flex; }
+
+    #sidebar {
+      width: 220px; flex: 0 0 auto; background: #1c212d; border-right: 1px solid #2b2f3a;
+      padding: 10px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;
+    }
+    #canvas-wrap { flex: 1 1 auto; position: relative; }
+    #editor-canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+
+    h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #8b93a7; margin: 0 0 6px; }
+    section { display: flex; flex-direction: column; gap: 6px; }
+
+    .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .tool-btn {
+      display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 6px;
+      border: 1px solid #2b2f3a; background: #232838; color: #e5e9f0; cursor: pointer; font: inherit;
+    }
+    .tool-btn.active { border-color: #7dd3fc; background: #2a3346; }
+    .tool-btn .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; border: 1px solid rgba(255,255,255,0.25); }
+
+    .row { display: flex; gap: 6px; align-items: center; }
+    .row input[type=number] { width: 52px; background: #232838; border: 1px solid #2b2f3a; color: #e5e9f0; border-radius: 4px; padding: 3px 5px; font: inherit; }
+    .row input[type=text] { flex: 1; background: #232838; border: 1px solid #2b2f3a; color: #e5e9f0; border-radius: 4px; padding: 3px 5px; font: inherit; }
+
+    button.action {
+      background: #232838; border: 1px solid #2b2f3a; color: #e5e9f0; border-radius: 6px;
+      padding: 6px 8px; cursor: pointer; font: inherit; text-align: left;
+    }
+    button.action:hover { border-color: #4c566a; }
+    button#playtest.playing { background: #4c9a6a; border-color: #6fc98d; color: #0d150f; }
+
+    #status { position: absolute; left: 8px; bottom: 8px; background: rgba(0,0,0,0.55); padding: 6px 10px;
+      border-radius: 6px; pointer-events: none; white-space: pre; }
+    #hint { color: #8b93a7; line-height: 1.5; }
+    a.top-link { color: #7dd3fc; text-decoration: none; }
+    input[type=file] { display: none; }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <div><a class="top-link" href="index.html">&larr; back to game</a></div>
+
+    <section>
+      <h2>Tiles</h2>
+      <div class="tool-grid" id="tool-grid"></div>
+    </section>
+
+    <section>
+      <h2>Size</h2>
+      <div class="row">
+        <label>W <input type="number" id="cols" min="4" max="400" value="60" /></label>
+        <label>H <input type="number" id="rows" min="4" max="200" value="18" /></label>
+        <button class="action" id="resize">Resize</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Level</h2>
+      <div class="row"><input type="text" id="level-name" value="LEVEL_CUSTOM" /></div>
+      <button class="action" id="new">New (blank + border)</button>
+      <button class="action" id="load-level1">Load level1.js</button>
+      <button class="action" id="import">Import .js / .txt&hellip;</button>
+      <input type="file" id="import-file" accept=".js,.txt" />
+      <button class="action" id="export">Export .js (download)</button>
+      <button class="action" id="copy">Copy ASCII</button>
+      <button class="action" id="undo">Undo (Ctrl+Z)</button>
+    </section>
+
+    <section>
+      <h2>Playtest</h2>
+      <button class="action" id="playtest">&#9654; Playtest</button>
+      <div class="row"><label>Gravity <input type="number" id="pt-gravity" step="50" /></label></div>
+    </section>
+
+    <section id="hint">
+      Left-drag: paint · Right-drag: erase<br>
+      Space+drag or middle-drag: pan · Wheel: zoom<br>
+      1-6: tiles · 0: eraser · Esc: stop playtest
+    </section>
+  </div>
+
+  <div id="canvas-wrap">
+    <canvas id="editor-canvas"></canvas>
+    <div id="status"></div>
+  </div>
+
+  <script type="module" src="src/editor/main.js"></script>
+</body>
+</html>

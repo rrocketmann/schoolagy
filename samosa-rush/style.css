@@ -1,0 +1,293 @@
+:root {
+  --accent: #fbbf24;
+  --accent-rgb: 251, 191, 36;
+  --cloth: #f43f5e;
+  --sky: #0b0d18;
+  --cream: #fff6d8;
+  --masala: #4a2412;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--sky);
+  font-family: 'Rubik', 'Segoe UI', system-ui, sans-serif;
+  user-select: none;
+}
+
+#game {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* ---------- HUD ---------- */
+#hud {
+  position: fixed;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.panel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 26px 16px;
+  color: var(--cream);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: 14px;
+  text-shadow: 0 1px 2px rgba(40, 16, 4, 0.85);
+  background: url('ui-trough.png') center / 100% 140% no-repeat;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+}
+
+.food-ico {
+  width: 22px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
+}
+
+.fire-ico { width: 16px; height: 26px; }
+.poori-ico { width: 26px; height: 22px; }
+
+#hud-level-num {
+  color: #ffe08a;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+}
+
+#hud-level-name {
+  opacity: 0.95;
+}
+
+.hud-right {
+  display: flex;
+  gap: 8px;
+}
+
+#hud-time {
+  font-variant-numeric: tabular-nums;
+  min-width: 108px;
+  justify-content: center;
+}
+
+#hud-attempts {
+  letter-spacing: 0.14em;
+  font-size: 13px;
+}
+
+/* Progress: brass trough of mango chutney, samosa pip, lassi finish */
+#progress {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(380px, 42vw);
+  pointer-events: none;
+}
+
+#progress-track {
+  position: relative;
+  height: 52px;
+  background: url('ui-trough.png') center / 100% 100% no-repeat;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+}
+
+#progress-well {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 38%;
+  height: 28%;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(70, 32, 10, 0.45);
+}
+
+#progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c2410c, #f59e0b 45%, #fde68a);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.55);
+}
+
+#progress-pip {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  width: 34px;
+  height: 28px;
+  margin-left: -17px;
+  margin-top: -16px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+  z-index: 2;
+}
+
+#progress-flag {
+  position: absolute;
+  right: 3%;
+  top: 50%;
+  width: 28px;
+  height: 38px;
+  margin-top: -22px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+  z-index: 2;
+}
+
+/* ---------- Hint ---------- */
+#hint {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 22px;
+  padding: 16px 36px 18px;
+  color: var(--cream);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  white-space: nowrap;
+  background: url('ui-trough.png') center / 100% 160% no-repeat;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+  animation: hint-fade 1s ease 9s forwards;
+  z-index: 5;
+  text-shadow: 0 1px 2px rgba(40, 16, 4, 0.85);
+}
+
+#hint b {
+  color: #ffe08a;
+  font-weight: 800;
+}
+
+@keyframes hint-fade {
+  to { opacity: 0; transform: translateX(-50%) translateY(10px); }
+}
+
+/* ---------- Level intro ---------- */
+#intro {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 6;
+}
+
+#intro-plate {
+  width: min(560px, 78vw);
+  padding: 90px 48px 80px;
+  text-align: center;
+  background: url('ui-thali.png') center / contain no-repeat;
+  filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.45));
+}
+
+#intro.show {
+  animation: intro 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+#intro-num {
+  color: #7f1d1d;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.45em;
+}
+
+#intro-name {
+  margin-top: 6px;
+  color: #3f1d0a;
+  font-weight: 900;
+  font-size: clamp(28px, 5vw, 52px);
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 0 rgba(255, 236, 180, 0.45);
+}
+
+@keyframes intro {
+  0%   { opacity: 0; transform: translateY(24px) scale(0.96); }
+  18%  { opacity: 1; transform: translateY(0) scale(1); }
+  75%  { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-16px) scale(1.02); }
+}
+
+/* ---------- Win ---------- */
+#win {
+  display: none;
+  position: fixed;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 40%, rgba(80, 30, 8, 0.25), rgba(12, 6, 4, 0.78));
+  pointer-events: none;
+  z-index: 7;
+}
+
+#win.show {
+  display: flex;
+  animation: win-in 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+#win-plate {
+  position: relative;
+  width: min(640px, 86vw);
+  padding: 110px 40px 90px;
+  text-align: center;
+  background: url('ui-thali.png') center / contain no-repeat;
+  filter: drop-shadow(0 18px 36px rgba(0, 0, 0, 0.5));
+}
+
+#win-nguyen {
+  position: absolute;
+  right: 16%;
+  top: 12%;
+  width: 72px;
+  height: 98px;
+  object-fit: contain;
+}
+
+.win-title {
+  font-weight: 900;
+  font-size: clamp(28px, 5vw, 48px);
+  letter-spacing: 0.06em;
+  color: #5b1a0e;
+  text-shadow: 0 1px 0 rgba(255, 236, 180, 0.5);
+}
+
+#win-stats {
+  margin-top: 8px;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.12em;
+  color: #7a3b12;
+}
+
+.win-sub {
+  margin-top: 10px;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: #8a4a1a;
+}
+
+.win-sub b {
+  color: #b45309;
+}
+
+@keyframes win-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}

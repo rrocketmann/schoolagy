@@ -1,42 +1,9 @@
-const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
-const SCHOLOGY_EMAIL = process.env.SCHOLOGY_EMAIL;
-const SCHOLOGY_PASSWORD = process.env.SCHOLOGY_PASSWORD;
 const HOME_FILE = path.join(__dirname, 'index.html');
-const HOME_URL = 'https://pausd.schoology.com/home';
-
-if (!SCHOLOGY_EMAIL || !SCHOLOGY_PASSWORD) {
-  console.error('Error: SCHOLOGY_EMAIL and SCHOLOGY_PASSWORD environment variables required');
-  process.exit(1);
-}
-
-function removeDiv(html, id) {
-  const search = 'id="' + id + '"';
-  let pos = html.indexOf(search);
-  if (pos === -1) return html;
-  while (pos > 0 && html[pos] !== '<') pos--;
-  if (html.substring(pos, pos + 4) !== '<div') return html;
-
-  let depth = 0, inTag = false, inScript = false, inComment = false;
-  for (let i = pos; i < html.length; i++) {
-    if (inComment) { if (html.substring(i, i + 3) === '-->') { inComment = false; i += 2; } continue; }
-    if (inScript) { if (html.substring(i, i + 9) === '</script>') { inScript = false; i += 8; } continue; }
-    if (inTag) { if (html[i] === '>') inTag = false; continue; }
-    if (html[i] === '<') {
-      if (html.substring(i, i + 4) === '<!--') { inComment = true; i += 3; continue; }
-      if (html.substring(i, i + 9) === '</script>') { inScript = false; i += 8; continue; }
-      if (html.substring(i, i + 4) === '<scr') { inScript = true; inTag = true; continue; }
-      if (html[i + 1] === '/') {
-        if (html.substring(i, i + 6) === '</div>') { depth--; if (depth === 0) return html.substring(0, pos) + html.substring(i + 6); }
-        inTag = true;
-      } else if (html.substring(i, i + 4) === '<div') { depth++; inTag = true; }
-      else { inTag = true; }
-    }
-  }
-  return html;
-}
+const RESOURCES_FILE = path.join(__dirname, 'resources', 'index.html');
+const UNLOCK_KEY = 'sg-pausd-view';
 
 const GAME_META = {
   '2048': ['2048', 'Puzzle'],
@@ -305,7 +272,33 @@ gtag('config', 'G-C7MHSFPRSE');
     });
     if (window.scrollY !== y) window.scrollTo(0, y);
   }
-  placeFeedGames();
+
+  function showHome() {
+    try { localStorage.setItem('${UNLOCK_KEY}', '1'); } catch (e) {}
+    var login = document.getElementById('sg-login');
+    if (login) login.hidden = true;
+    if (!document.getElementById('sg-app')) {
+      var app = document.createElement('div');
+      app.id = 'sg-app';
+      app.innerHTML =
+        '<header class="sg-top"><a class="sg-brand" href="' + root + '">Schoology</a><nav>' +
+        '<a href="' + root + '">Home</a>' +
+        '<a href="' + root + 'resources/">Resources</a>' +
+        '</nav></header><div class="sg-feed-wrap"><ul class="s-edge-feed"></ul></div>';
+      document.body.appendChild(app);
+    }
+    document.title = 'Home | Schoology';
+    placeFeedGames();
+  }
+
+  var opened = false;
+  try { opened = localStorage.getItem('${UNLOCK_KEY}') === '1'; } catch (e) {}
+  if (opened) showHome();
+  else {
+    var loginBtn = document.getElementById('sg-login-btn');
+    if (loginBtn) loginBtn.addEventListener('click', showHome);
+  }
+
   document.addEventListener('click', function(e) {
     var t = e.target;
     if (!t || !t.closest) return;
@@ -460,187 +453,398 @@ gtag('config', 'G-C7MHSFPRSE');
 </script>`;
 }
 
-function cleanHtml(html, profileName) {
-  let out = html;
-  if (profileName) out = out.split(profileName).join('');
-  out = out.replace(/Martin Malyshau/g, '');
-  out = out.replace(/\d+ unread notifications/gi, '0 unread notifications');
-  out = out.replace(/\d+ unread messages/gi, '0 unread messages');
-  out = out.replace(/"unreadCount"\s*:\s*\d+/g, '"unreadCount":0');
-  out = out.replace(/"recentlyCompleted"\s*:\s*"defer"/g, '"recentlyCompleted":"disable"');
-  ['lightboxOverlay', 'lightbox', 'popups-overlay'].forEach((id) => {
-    out = removeDiv(out, id);
-  });
-  return out;
+function gtagHead() {
+  return `<script async src="https://www.googletagmanager.com/gtag/js?id=G-C7MHSFPRSE"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-C7MHSFPRSE');
+</script>
+`;
 }
 
-async function sanitizePage(page) {
-  await page.evaluate(() => {
-    document.querySelectorAll('#todo .upcoming-event, #todo .date-header').forEach((el) => el.remove());
-    document.querySelectorAll('#todo .upcoming-list').forEach((list) => { list.innerHTML = ''; });
-    document.querySelectorAll('#overdue-submissions .overdue-submissions-list').forEach((list) => { list.innerHTML = ''; });
-    const events = document.querySelector('#upcoming-events .upcoming-list');
-    if (events) events.innerHTML = '<div class="empty">No upcoming events</div>';
-    document.querySelectorAll('.recently-completed-wrapper').forEach((el) => {
-      el.style.display = 'block';
-      const list = el.querySelector('.recently-completed-list');
-      if (list) {
-        list.innerHTML =
-          '<div class="refresh-wrapper">' +
-          '<p class="more-loading" style="display: none;"><img src="/sites/all/themes/schoology_theme/images/ajax-loader.gif" alt="Loading"></p>' +
-          '<p class="refresh-message">Recently Completed items are collapsed by default</p>' +
-          '<p><button type="button" class="button-reset clickable refresh-button" role="button">' +
-          '<img class="refresh-icon" src="/sites/all/themes/schoology_theme/images/refresh.svg" alt="Click here to load the Recently Completed items">' +
-          'Click here to load the Recently Completed items</button></p>' +
-          '</div>';
+function resourcesScript(games) {
+  return `${gtagHead()}<script>
+(function(){
+  var games = ${JSON.stringify(games)};
+
+  function siteRoot() {
+    var p = location.pathname;
+    if (p.endsWith('/index.html')) p = p.slice(0, -'/index.html'.length);
+    if (p.endsWith('/resources')) p = p.slice(0, -'/resources'.length);
+    else if (p.endsWith('/resources/')) p = p.slice(0, -'/resources/'.length);
+    if (!p.endsWith('/')) p += '/';
+    return p;
+  }
+  var root = siteRoot();
+
+  function gameHref(url) {
+    if (/^https?:/i.test(url)) return url;
+    return root + url;
+  }
+
+  function fixLinks() {
+    document.querySelectorAll('a[href]').forEach(function(a) {
+      if (a.dataset.sgFixed) return;
+      var h = a.getAttribute('href') || '';
+      if (!h || h.startsWith('#') || h.startsWith('javascript:') || h.startsWith('mailto:')) return;
+      if (h.startsWith('//') || /^https?:/i.test(h)) return;
+      if (h.startsWith('/home') || h === '/') { a.href = root; a.dataset.sgFixed = '1'; return; }
+      var path = h.split('?')[0];
+      if (path === '/resources' || path === '/resources/') {
+        a.href = root + 'resources/';
+        a.dataset.sgFixed = '1';
+        return;
       }
+      if (h.startsWith('/')) { a.href = 'javascript:void(0)'; a.dataset.sgFixed = '1'; }
     });
-    if (window.Drupal && Drupal.settings && Drupal.settings.s_home) {
-      Drupal.settings.s_home.recentlyCompleted = 'disable';
-    }
-    document.querySelectorAll('#lightbox, #lightboxOverlay, #popups-overlay, .popups-box, .s-lightbox').forEach((el) => el.remove());
+  }
+  fixLinks();
 
-    function stripNotifBtn(sel, label) {
-      document.querySelectorAll(sel).forEach((btn) => {
-        btn.setAttribute('aria-label', label);
-        Array.from(btn.querySelectorAll('span')).forEach((span) => {
-          const t = (span.textContent || '').trim();
-          if (/^\d+$/.test(t) || (span.className && String(span.className).indexOf('dark-red') !== -1)) span.remove();
-        });
-      });
-    }
-    stripNotifBtn('button[aria-label*="unread notifications"], button[aria-label*="Unread notifications"]', '0 unread notifications');
-    stripNotifBtn('button[aria-label*="unread messages"], button[aria-label*="Unread messages"]', '0 unread messages');
-    document.querySelectorAll('#header span, header span').forEach((span) => {
-      const t = (span.textContent || '').trim();
-      if (/^\d+$/.test(t) && span.className && String(span.className).indexOf('dark-red') !== -1) span.remove();
-    });
-    if (window.siteNavigationUiProps && window.siteNavigationUiProps.props) {
-      const p = window.siteNavigationUiProps.props;
-      if (p.notifications) p.notifications.unreadCount = 0;
-      if (p.messages) p.messages.unreadCount = 0;
-      if (p.unreadRequestsCount != null) p.unreadRequestsCount = 0;
-    }
+  var s = document.createElement('style');
+  s.textContent = [
+    '#sg-dropdown{display:none;position:fixed;z-index:1000;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:240px;max-height:400px;overflow-y:auto;overscroll-behavior:contain}',
+    '#sg-dropdown.show{display:block}',
+    '#sg-dropdown a{display:block;padding:10px 16px;color:#333;text-decoration:none;font-size:14px;border-bottom:1px solid #eee;cursor:pointer}',
+    '#sg-dropdown a:hover{background:#f5f5f5}',
+    '#sg-dropdown a:last-child{border-bottom:none}',
+    '#sg-sgy-player{display:flex;flex-direction:column;height:100%;min-height:0;background:#fff}',
+    '#sg-sgy-player .popups-title{display:flex;align-items:center;gap:10px;background:#333;color:#fff;padding:8px 12px;font-size:14px;font-weight:700}',
+    '#sg-sgy-player .popups-title-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '#sg-sgy-player .popups-title button{background:transparent;border:0;color:#fff;cursor:pointer;font-size:13px;padding:4px 8px}',
+    '#sg-sgy-player .popups-title button:hover{text-decoration:underline}',
+    '#sg-sgy-player .popups-body{flex:1;min-height:0;background:#000;position:relative;overflow:hidden}',
+    '#sg-sgy-player iframe{border:0;background:#000}',
+    '#sg-sgy-player.sg-fs{position:fixed;inset:0;z-index:10000;min-height:100%}',
+    '#popups-overlay.sg-sgy-player-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998}',
+    '#popups-overlay.sg-sgy-player-overlay.show{display:block}',
+    '.popups-box.sg-sgy-player-box{display:none;position:fixed;z-index:9999;top:28%;left:30%;width:40%;height:44%;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.4);flex-direction:column}',
+    '.popups-box.sg-sgy-player-box.show{display:flex}'
+  ].join('');
+  document.head.appendChild(s);
+
+  var dd = document.createElement('div');
+  dd.id = 'sg-dropdown';
+  games.forEach(function(g) {
+    var a = document.createElement('a');
+    a.href = '#';
+    a.textContent = g.name;
+    a.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dd.classList.remove('show');
+      window.openGame(g.name, g.url);
+    };
+    dd.appendChild(a);
   });
+  document.body.appendChild(dd);
+
+  function isResourcesLink(el) {
+    var a = el.closest ? el.closest('a') : null;
+    if (!a || a.closest('#sg-dropdown') || a.closest('.sg-game-row') || a.closest('.sg-game-update') || a.closest('#sg-sgy-player')) return false;
+    var raw = a.getAttribute('href') || '';
+    if (!raw || raw.charAt(0) === '#' || raw.indexOf('javascript:') === 0) return false;
+    var path = '';
+    try { path = new URL(a.href, location.href).pathname; } catch (e) { return false; }
+    if (path.endsWith('/index.html')) path = path.slice(0, -'/index.html'.length);
+    return path.endsWith('/resources') || path.endsWith('/resources/');
+  }
+  document.addEventListener('click', function(e) {
+    if (!isResourcesLink(e.target)) { dd.classList.remove('show'); return; }
+    e.preventDefault();
+    e.stopPropagation();
+    var link = e.target.closest('a');
+    var rect = link.getBoundingClientRect();
+    dd.style.top = rect.bottom + 'px';
+    dd.style.left = Math.max(8, rect.left) + 'px';
+    dd.classList.toggle('show');
+  }, true);
+
+  function fitGameFrame(iframe) {
+    var stage = iframe.parentElement;
+    if (!stage) return;
+    var aw = stage.clientWidth || 1;
+    var ah = stage.clientHeight || 1;
+    var key = aw + 'x' + ah;
+    if (iframe.getAttribute('data-sg-fit') === key) return;
+    iframe.setAttribute('data-sg-fit', key);
+    var lw = 1280, lh = 800;
+    var scale = Math.min(aw / lw, ah / lh);
+    iframe.style.width = lw + 'px';
+    iframe.style.height = lh + 'px';
+    iframe.style.position = 'absolute';
+    iframe.style.transformOrigin = '0 0';
+    iframe.style.transform = 'scale(' + scale + ')';
+    iframe.style.left = Math.max(0, (aw - lw * scale) / 2) + 'px';
+    iframe.style.top = Math.max(0, (ah - lh * scale) / 2) + 'px';
+  }
+  window.addEventListener('resize', function() {
+    document.querySelectorAll('#sg-sgy-player iframe').forEach(fitGameFrame);
+  });
+
+  function playerChrome(name, href, onClose) {
+    var wrap = document.createElement('div');
+    wrap.id = 'sg-sgy-player';
+    var title = document.createElement('div');
+    title.className = 'popups-title';
+    var back = document.createElement('button');
+    back.type = 'button';
+    back.textContent = 'Back';
+    var label = document.createElement('span');
+    label.className = 'popups-title-text';
+    label.textContent = name;
+    var fs = document.createElement('button');
+    fs.type = 'button';
+    fs.textContent = 'Fullscreen';
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'popups-close';
+    close.textContent = 'Close';
+    title.appendChild(back);
+    title.appendChild(label);
+    title.appendChild(fs);
+    title.appendChild(close);
+    var body = document.createElement('div');
+    body.className = 'popups-body';
+    var iframe = document.createElement('iframe');
+    iframe.allowFullscreen = true;
+    iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-fullscreen');
+    iframe.setAttribute('scrolling', 'no');
+    iframe.src = href;
+    iframe.addEventListener('load', function(){ fitGameFrame(iframe); });
+    body.appendChild(iframe);
+    setTimeout(function(){ fitGameFrame(iframe); }, 0);
+    wrap.appendChild(title);
+    wrap.appendChild(body);
+    function exitFs() {
+      wrap.classList.remove('sg-fs');
+      fs.textContent = 'Fullscreen';
+      var el = document.fullscreenElement || document.webkitFullscreenElement;
+      if (el) {
+        var ex = document.exitFullscreen || document.webkitExitFullscreen;
+        if (ex) try { ex.call(document); } catch (e) {}
+      }
+      setTimeout(function(){ fitGameFrame(iframe); }, 50);
+    }
+    back.onclick = close.onclick = function(e) {
+      e.preventDefault();
+      exitFs();
+      onClose();
+    };
+    fs.onclick = function(e) {
+      e.preventDefault();
+      if (wrap.classList.contains('sg-fs')) exitFs();
+      else {
+        wrap.classList.add('sg-fs');
+        fs.textContent = 'Exit fullscreen';
+        var req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+        if (req) try { var p = req.call(wrap); if (p && p.catch) p.catch(function(){}); } catch (err) {}
+      }
+      setTimeout(function(){ fitGameFrame(iframe); }, 50);
+    };
+    return wrap;
+  }
+
+  function showPopupPlayer(name, href) {
+    var overlay = document.getElementById('popups-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'popups-overlay';
+      document.body.appendChild(overlay);
+    }
+    overlay.classList.add('sg-sgy-player-overlay', 'show');
+    var box = document.querySelector('.popups-box.sg-sgy-player-box');
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'popups-box popups-large sg-sgy-player-box';
+      document.body.appendChild(box);
+    }
+    box.innerHTML = '';
+    box.appendChild(playerChrome(name, href, function() {
+      overlay.classList.remove('show');
+      box.classList.remove('show');
+      box.innerHTML = '';
+    }));
+    box.classList.add('show');
+  }
+
+  window.openGame = function(name, url) {
+    var href = gameHref(url);
+    showPopupPlayer(name, href);
+    try {
+      gtag('event', 'play_game', { game_name: name, game_url: href, item_id: name, item_name: name });
+    } catch (e) {}
+  };
+
+  function fillResources() {
+    var tbody = document.querySelector('#collection-view-contents tbody');
+    if (!tbody || document.getElementById('sg-game-rows')) return;
+    var y = window.scrollY;
+    var marker = document.createElement('tr');
+    marker.id = 'sg-game-rows';
+    marker.style.display = 'none';
+    tbody.appendChild(marker);
+    games.forEach(function(g, i) {
+      var tr = document.createElement('tr');
+      tr.className = 'collection-template-item-row sg-game-row ' + (i % 2 ? 'even' : 'odd');
+      var box = document.createElement('td');
+      box.className = 'collection-item-checkbox';
+      var icon = document.createElement('td');
+      icon.className = 'collection-item-icon';
+      var thumb = document.createElement('img');
+      thumb.alt = '';
+      thumb.src = root + 'resources/thumbs/' + String(g.url || '').split('/')[0] + '.jpg';
+      thumb.style.width = '36px';
+      thumb.style.height = '36px';
+      thumb.style.objectFit = 'cover';
+      icon.appendChild(thumb);
+      var title = document.createElement('td');
+      title.className = 'collection-item-title';
+      title.colSpan = 2;
+      var a = document.createElement('a');
+      a.href = '#';
+      a.className = 'item-title';
+      a.textContent = g.name;
+      a.onclick = function(e) {
+        e.preventDefault();
+        window.openGame(g.name, g.url);
+      };
+      var info = document.createElement('span');
+      info.className = 'resource-info-wrapper';
+      var details = document.createElement('p');
+      details.className = 'resource-details';
+      var created = document.createElement('span');
+      created.className = 'created-on';
+      created.textContent = g.cat || 'Game';
+      details.appendChild(created);
+      info.appendChild(details);
+      title.appendChild(a);
+      title.appendChild(info);
+      tr.appendChild(box);
+      tr.appendChild(icon);
+      tr.appendChild(title);
+      tbody.appendChild(tr);
+    });
+    if (window.scrollY !== y) window.scrollTo(0, y);
+  }
+
+  function showResources() {
+    try { localStorage.setItem('${UNLOCK_KEY}', '1'); } catch (e) {}
+    var login = document.getElementById('sg-login');
+    if (login) login.hidden = true;
+    if (!document.getElementById('sg-app')) {
+      var app = document.createElement('div');
+      app.id = 'sg-app';
+      app.innerHTML =
+        '<header class="sg-top"><a class="sg-brand" href="' + root + '">Schoology</a><nav>' +
+        '<a href="' + root + '">Home</a>' +
+        '<a href="' + root + 'resources/">Resources</a>' +
+        '</nav></header>' +
+        '<div class="sg-library" id="library-wrapper"><h1>Resources</h1>' +
+        '<table id="collection-view-contents"><tbody></tbody></table></div>';
+      document.body.appendChild(app);
+    }
+    document.title = 'Resources | Schoology';
+    fillResources();
+  }
+
+  var opened = false;
+  try { opened = localStorage.getItem('${UNLOCK_KEY}') === '1'; } catch (e) {}
+  if (opened) showResources();
+  else {
+    var loginBtn = document.getElementById('sg-login-btn');
+    if (loginBtn) loginBtn.addEventListener('click', showResources);
+  }
+})();
+</script>`;
 }
 
-function withSeoAndScript(html, games, script) {
+function publicHtml(script) {
+  const games = discoverGames();
   const seo =
     '<meta name="description" content="Play ' + games.length + ' unblocked games including ' +
     games.slice(0, 5).map((g) => g.name).join(', ') + ' and more. Free browser games.">\n' +
     '<meta name="keywords" content="unblocked games, school games, free online games, ' +
     games.map((g) => g.name).join(', ') + '">\n';
-  let out = html.replace('</head>', seo + '</head>');
-  if (!out.includes('sg-game-update')) out = out.replace('</body>', script + '\n</body>');
-  return out;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login | Schoology</title>
+${seo}<style>
+  html, body { margin: 0; min-height: 100%; background: #eef1f4; color: #333; font-family: Roboto, Arial, Helvetica, sans-serif; }
+  #sg-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; }
+  #sg-login[hidden] { display: none !important; }
+  .sg-card { width: 100%; max-width: 400px; background: #fff; border-radius: 6px; box-shadow: 0 8px 28px rgba(0,0,0,.12); padding: 32px 28px 28px; text-align: center; box-sizing: border-box; }
+  .sg-mark { font-weight: 700; font-size: 28px; color: #0677ba; letter-spacing: -.3px; }
+  .sg-district { margin: 18px 0 4px; font-size: 16px; font-weight: 700; }
+  .sg-hint { margin: 0 0 22px; color: #677274; font-size: 14px; }
+  #sg-login-btn { appearance: none; border: 0; background: #0677ba; color: #fff; font: 700 15px/1 Roboto, Arial, sans-serif; padding: 12px 18px; border-radius: 4px; width: 100%; cursor: pointer; }
+  #sg-login-btn:hover { background: #055f94; }
+  .sg-top { display: flex; align-items: center; gap: 24px; height: 56px; padding: 0 20px; background: #0677ba; color: #fff; }
+  .sg-top a { color: #fff; text-decoration: none; font-weight: 700; }
+  .sg-brand { font-size: 22px; }
+  .sg-top nav { display: flex; gap: 16px; }
+  .sg-top nav a { font-weight: 600; font-size: 14px; }
+  .sg-feed-wrap { max-width: 720px; margin: 24px auto 48px; padding: 0 16px; }
+  .s-edge-feed { list-style: none; margin: 0; padding: 0; }
+  .sg-game-update { background: #fff; border: 1px solid #e4e6e8; border-radius: 4px; margin: 0 0 12px; padding: 14px 16px; }
+  .edge-item { display: flex; gap: 12px; }
+  .imagecache-profile_sm { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; background: #111; }
+  .long-username a, .edge-sentence a { color: #0677ba; font-weight: 700; text-decoration: none; }
+  .edge-sentence { font-size: 14px; }
+  .arrow-right::before { content: "›"; margin: 0 4px; color: #677274; }
+  .small.gray { color: #677274; font-size: 12px; }
+  .sg-library { max-width: 960px; margin: 24px auto 48px; background: #fff; border: 1px solid #e4e6e8; }
+  .sg-library h1 { font-size: 20px; margin: 0; padding: 16px 18px; border-bottom: 1px solid #e4e6e8; }
+  #collection-view-contents { width: 100%; border-collapse: collapse; }
+  .sg-game-row td { padding: 8px 12px; border-top: 1px solid #eee; vertical-align: middle; }
+  .item-title { color: #0677ba; font-weight: 700; text-decoration: none; cursor: pointer; }
+  .resource-details { margin: 2px 0 0; color: #677274; font-size: 12px; }
+</style>
+</head>
+<body>
+  <div id="sg-login">
+    <div class="sg-card">
+      <div class="sg-mark">Schoology</div>
+      <p class="sg-district">Palo Alto Unified School District</p>
+      <p class="sg-hint">Log in to open your Schoology view.</p>
+      <button id="sg-login-btn" type="button">Log in</button>
+    </div>
+  </div>
+${script}
+</body>
+</html>
+`;
 }
 
-async function gotoPage(page, url, timeout) {
-  try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout });
-  } catch (err) {
-    if (!/timeout/i.test(err.message || '')) throw err;
-    console.log('Navigation timed out at', page.url() || url, '– continuing');
-  }
-}
-
-async function loginIfNeeded(page) {
-  if (!page.url().includes('classlink')) return;
-  console.log('On ClassLink – logging in...');
-  const usernameInput = await page.waitForSelector('input[type="text"], input[type="email"]', { timeout: 15000 });
-  const passwordInput = await page.waitForSelector('input[type="password"]', { timeout: 15000 });
-  await usernameInput.click({ clickCount: 3 });
-  await usernameInput.type(SCHOLOGY_EMAIL);
-  await passwordInput.click({ clickCount: 3 });
-  await passwordInput.type(SCHOLOGY_PASSWORD);
-  await new Promise((r) => setTimeout(r, 1000));
-  await page.screenshot({ path: '/tmp/step3.png', fullPage: true }).catch(() => {});
-
-  const loginBtn =
-    (await page.$('button[data-cy="loginButton"]')) ||
-    (await page.$('button[type="submit"]')) ||
-    (await page.$('button.cl-button-primary')) ||
-    (await page.evaluateHandle(() => {
-      const btns = Array.from(document.querySelectorAll('button'));
-      return btns.find((b) => b.offsetParent !== null && b.textContent.trim().length > 0) || null;
-    }));
-  if (!loginBtn) throw new Error('Could not find login button');
-  await Promise.all([
-    page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {}),
-    loginBtn.click(),
-  ]);
-  console.log('Post-login URL:', page.url());
-}
-
-async function readProfileName(page) {
-  return page.evaluate(() => {
-    const selectors = ['.header-user-name', '.click-area .name', '.full-name', '[data-sgy-s-user-name]'];
-    for (const sel of selectors) {
-      const el = document.querySelector(sel);
-      if (!el) continue;
-      const t = (el.getAttribute('data-sgy-s-user-name') || el.textContent || '').trim();
-      if (t && t.length > 1 && t.length < 80) return t;
-    }
-    return '';
-  }).catch(() => '');
-}
-
-async function scrape(page, url, waitSelector, label) {
-  console.log('Opening', url);
-  await gotoPage(page, url, 120000);
-  if (waitSelector) {
-    try {
-      await page.waitForSelector(waitSelector, { timeout: 30000 });
-      console.log(label, 'loaded');
-    } catch {
-      console.log(label, 'selector timed out, waiting extra...');
-    }
-  }
-  await new Promise((r) => setTimeout(r, 5000));
-  await sanitizePage(page);
-  return page.content();
-}
-
-(async () => {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+function assertNoSchoolSnapshot(html, label) {
+  const banned = [
+    /csrf_token/i,
+    /logout_token/i,
+    /profile-image/i,
+    /Drupal\.settings/,
+    /@[a-z0-9.-]+\.(org|net|edu|com)/i,
+  ];
+  banned.forEach((re) => {
+    if (re.test(html)) throw new Error(label + ' still contains school snapshot data (' + re + ')');
   });
+}
 
-  try {
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 800 });
-    await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    );
+function writePublicPages() {
+  const games = discoverGames();
+  console.log('Discovered', games.length, 'games');
+  const home = publicHtml(clientScript(games));
+  const resources = publicHtml(resourcesScript(games));
+  assertNoSchoolSnapshot(home, 'index.html');
+  assertNoSchoolSnapshot(resources, 'resources/index.html');
+  fs.writeFileSync(HOME_FILE, home, 'utf8');
+  fs.writeFileSync(RESOURCES_FILE, resources, 'utf8');
+  console.log('Saved', HOME_FILE);
+  console.log('Saved', RESOURCES_FILE);
+}
 
-    console.log('Opening pausd.schoology.com...');
-    await gotoPage(page, 'https://pausd.schoology.com', 120000);
-    await loginIfNeeded(page);
-
-    const games = discoverGames();
-    console.log('Discovered', games.length, 'games');
-    const script = clientScript(games);
-
-    const homeHtml = await scrape(
-      page,
-      HOME_URL,
-      '.sEdgeFilterProcessed, .s-edge-feed > li:not(.s-edge-feed-more-link)',
-      'Home feed'
-    );
-    const profileName = await readProfileName(page);
-    if (profileName) console.log('Stripping profile name');
-
-    const homeOut = withSeoAndScript(cleanHtml(homeHtml, profileName), games, script);
-    fs.writeFileSync(HOME_FILE, homeOut, 'utf8');
-    console.log('Saved', HOME_FILE);
-  } catch (err) {
-    console.error('Error:', err.message);
-    if (err.stack) console.error(err.stack);
-    const pages = await browser.pages().catch(() => []);
-    if (pages[0]) await pages[0].screenshot({ path: '/tmp/error.png' }).catch(() => {});
-    process.exit(1);
-  } finally {
-    await browser.close();
-  }
-})();
+writePublicPages();

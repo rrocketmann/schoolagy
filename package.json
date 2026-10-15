@@ -4,8 +4,5 @@
   "private": true,
   "scripts": {
     "scrape": "node scrape.js"
-  },
-  "dependencies": {
-    "puppeteer": "^23.0.0"
   }
 }

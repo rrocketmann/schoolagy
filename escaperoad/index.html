@@ -83,6 +83,18 @@
   window.onresize = function () { drawCanvas(logoPercent); };
   loadingCover.style.display = "";
 
+  // Starting a drive logs an analytics event. There is no Firebase on
+  // this page, and the thrown error stops the player.
+  if (!window.firebase) {
+    var fb = function () { return fbProxy; };
+    var fbProxy = new Proxy(fb, {
+      get: function () { return fbProxy; },
+      apply: function () { return fbProxy; }
+    });
+    window.firebase = fbProxy;
+  }
+  if (!window.firebaseConfig) window.firebaseConfig = { projectId: "" };
+
   // The build pauses itself for an ad and only continues when that ad
   // calls back. The ad never finishes, so the title sits still. Do not
   // load those scripts. The framework resumes the game on its own.

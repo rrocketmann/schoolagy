@@ -71,6 +71,10 @@
 </main>
 <script>
 (function () {
+  if (window.parent !== window) {
+    var bar = document.querySelector('.top');
+    if (bar) bar.style.display = 'none';
+  }
   var root = location.pathname.replace(/index\.html$/, '').replace(/credits\/?$/, '');
   if (!root.endsWith('/')) root += '/';
   document.getElementById('home').href = root;

@@ -61,9 +61,10 @@
   function drawCanvas(percent) {
     if (logoLoaded) return;
     if (percent > 1) percent = 1;
+    var bg = document.getElementById("ld_bg");
+    if (!bg || !bg.complete || !bg.naturalWidth) return;
     resizeLogoCanvas();
     var ctx = logoCanvas.getContext("2d");
-    var bg = document.getElementById("ld_bg");
     var sw = logoCanvas.width / 1920;
     var sh = logoCanvas.height / 1080;
     ctx.drawImage(bg, 0, 0, logoCanvas.width, logoCanvas.height);
@@ -82,12 +83,47 @@
   window.onresize = function () { drawCanvas(logoPercent); };
   loadingCover.style.display = "";
 
+  // The build pauses until an outside ad script calls resume. That request
+  // often never finishes, so the city screen sits still. Keep the local
+  // stand-in and do not load those scripts.
+  (function () {
+    var desc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, "src");
+    Object.defineProperty(HTMLScriptElement.prototype, "src", {
+      configurable: true,
+      set: function (v) {
+        var s = String(v || "");
+        if (/1games\.io|wgplayer\.com|googlesyndication|doubleclick\.net|googleads/i.test(s)) return;
+        desc.set.call(this, v);
+      },
+      get: function () { return desc.get.call(this); }
+    });
+    var afg = {
+      wgplayer: {},
+      onBeforeAd: function () {},
+      adBreak: function (opts) {
+        if (opts && typeof opts.adBreakDone === "function") opts.adBreakDone();
+        if (opts && typeof opts.adDismissed === "function") opts.adDismissed();
+      }
+    };
+    Object.defineProperty(afg, "ready", { get: function () { return false; }, set: function () {} });
+    Object.defineProperty(window, "afg", { get: function () { return afg; }, set: function () {} });
+    window.GMSOFT_OPTIONS = { enableAds: false, debug: false };
+    window.sgAdStub = {
+      log: function () {},
+      ping: function () {},
+      registerGameControls: function () {},
+      registerRewardCallbacks: function () {},
+      showRewardAd: function () {}
+    };
+    window.preroll = { config: { loaderObjectName: "sgAdStub" } };
+  })();
+
   var script = document.createElement("script");
   script.src = buildUrl + "/loader.js";
   script.onload = function () {
     createUnityInstance(canvas, config, function (progress) {
       logoPercent = progress;
-      drawCanvas(progress);
+      try { drawCanvas(progress); } catch (e) {}
     }).then(function (unityInstance) {
       window.unityInstance = unityInstance;
       setTimeout(function () {

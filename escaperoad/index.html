@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Escape Road</title>
+<link rel="stylesheet" href="TemplateData/style.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  #logo-canvas, body { font-family: Arial, Helvetica, sans-serif; }
+</style>
+</head>
+<body class="dark">
+<div id="unity-container" class="unity-desktop">
+  <canvas id="unity-canvas"></canvas>
+</div>
+<div id="loading-cover" style="display:none;background:#000;">
+  <div id="unity-loading-bar">
+    <canvas id="logo-canvas" style="position:absolute;background:#000;">
+      <img src="loading.png" id="ld_bg" alt="">
+      <img src="car-icon.png" id="ld_car" alt="">
+    </canvas>
+  </div>
+</div>
+<script>
+  const container = document.querySelector("#unity-container");
+  const canvas = document.querySelector("#unity-canvas");
+  const loadingCover = document.querySelector("#loading-cover");
+  const buildUrl = "TemplateData";
+  const config = {
+    dataUrl: buildUrl + "/data.unityweb",
+    frameworkUrl: buildUrl + "/framework.js.unityweb",
+    codeUrl: buildUrl + "/wasm.unityweb",
+    streamingAssetsUrl: "StreamingAssets",
+    companyName: "1games.io",
+    productName: "Escape Road",
+    productVersion: "2.0"
+  };
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    container.className = "unity-mobile";
+    config.devicePixelRatio = 1;
+  }
+
+  var logoLoaded = false;
+  var logoPercent = 0;
+  var logoCanvas = document.getElementById("logo-canvas");
+
+  function resizeLogoCanvas() {
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    var nw = h * 16 / 9;
+    if (nw <= w) {
+      logoCanvas.width = nw;
+      logoCanvas.height = h;
+    } else {
+      logoCanvas.width = w;
+      logoCanvas.height = w * 9 / 16;
+    }
+  }
+
+  function drawCanvas(percent) {
+    if (logoLoaded) return;
+    if (percent > 1) percent = 1;
+    resizeLogoCanvas();
+    var ctx = logoCanvas.getContext("2d");
+    var bg = document.getElementById("ld_bg");
+    var sw = logoCanvas.width / 1920;
+    var sh = logoCanvas.height / 1080;
+    ctx.drawImage(bg, 0, 0, logoCanvas.width, logoCanvas.height);
+    ctx.fillStyle = "#977e21";
+    var lw = 700, lh = 50;
+    ctx.fillRect((1920 - lw) * 0.5 * sw, (1080 - 150) * sh, lw * sw, lh * sh);
+    ctx.fillStyle = "#fad234";
+    var pad = 5, pw = lw - pad * 2, ph = lh - pad * 2, px = (1920 - pw) * 0.5;
+    ctx.fillRect(px * sw, (1080 - 150 + pad) * sh, pw * percent * sw, ph * sh);
+    ctx.font = Math.round(35 * sh) + "px Arial, Helvetica, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fff";
+    ctx.fillText(parseInt(percent * 100, 10) + "%", logoCanvas.width / 2, logoCanvas.height / 2 + sh * 425);
+  }
+
+  window.onresize = function () { drawCanvas(logoPercent); };
+  loadingCover.style.display = "";
+
+  var script = document.createElement("script");
+  script.src = buildUrl + "/loader.js";
+  script.onload = function () {
+    createUnityInstance(canvas, config, function (progress) {
+      logoPercent = progress;
+      drawCanvas(progress);
+    }).then(function (unityInstance) {
+      window.unityInstance = unityInstance;
+      setTimeout(function () {
+        loadingCover.style.display = "none";
+        logoLoaded = true;
+        window.focus();
+      }, 400);
+    }).catch(function (message) {
+      console.error(message);
+    });
+  };
+  document.body.appendChild(script);
+</script>
+</body>
+</html>

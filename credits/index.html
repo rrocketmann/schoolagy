@@ -3,107 +3,54 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Credits</title>
+<title>Credits | Schoology</title>
 <style>
-  :root {
-    color-scheme: dark;
-    --ink: #efe7d6;
-    --muted: #a7b0c0;
-    --line: #2a3848;
-    --blue: #0677ba;
-    --card: #16202b;
-  }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: #0c1218; color: var(--ink); font-family: "Segoe UI", system-ui, sans-serif; }
-  body { overflow: hidden; }
-  canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
-  .stage { position: relative; height: 100%; display: flex; flex-direction: column; }
-  header { padding: 28px 32px 8px; text-align: center; }
-  .mark { margin: 0; font-size: 13px; letter-spacing: .42em; color: #8ec4e8; font-weight: 700; }
-  h1 { margin: 8px 0 0; font-size: 42px; font-weight: 750; letter-spacing: .04em; }
-  .basis { max-width: 640px; margin: 10px auto 0; color: var(--muted); font-size: 16px; line-height: 1.45; }
-  .people { display: flex; justify-content: center; gap: 16px; padding: 22px 20px 8px; flex-wrap: wrap; }
-  .who {
-    position: relative;
-    width: 250px;
-    padding: 16px 16px 14px;
-    text-decoration: none;
-    color: inherit;
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    overflow: hidden;
-    animation: float 5.5s ease-in-out infinite;
-  }
-  .who:nth-child(2) { animation-delay: -1.8s; }
-  .who:nth-child(3) { animation-delay: -3.4s; }
-  .who::before {
-    content: "";
-    position: absolute;
-    inset: -40% auto auto -30%;
-    width: 80px;
-    height: 220%;
-    background: linear-gradient(90deg, transparent, rgba(6, 119, 186, .45), transparent);
-    transform: rotate(18deg);
-    animation: sweep 4.8s linear infinite;
-  }
-  .who b, .who span, .who small { position: relative; display: block; }
-  .who b { font-size: 18px; }
-  .who span { margin-top: 6px; color: #d5deea; font-size: 14px; line-height: 1.35; }
-  .who small { margin-top: 10px; color: #7eb6db; font-size: 12px; }
-  .who:hover { border-color: var(--blue); }
-  .window { position: relative; flex: 1; min-height: 0; margin: 8px 0 64px; overflow: hidden; }
-  .window::before, .window::after {
-    content: "";
-    position: absolute;
-    left: 0; right: 0;
-    height: 48px;
-    z-index: 1;
-    pointer-events: none;
-  }
-  .window::before { top: 0; background: linear-gradient(#0c1218, transparent); }
-  .window::after { bottom: 0; background: linear-gradient(transparent, #0c1218); }
-  .reel { will-change: transform; }
-  .col { max-width: 680px; margin: 0 auto; padding: 12px 28px 28px; }
-  .game { display: flex; justify-content: space-between; gap: 18px; padding: 11px 0; border-bottom: 1px solid rgba(42, 56, 72, .85); }
-  .game b { font-weight: 650; }
-  .game span { color: var(--muted); text-align: right; }
-  .note { color: var(--muted); font-size: 15px; line-height: 1.5; margin: 18px 0; }
-  footer {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    padding: 12px 20px 14px;
-    text-align: center;
-    background: rgba(12, 18, 24, .92);
-    border-top: 1px solid var(--line);
-    color: #d5deea;
-    font-size: 14px;
-  }
-  footer strong { color: var(--ink); }
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-7px); }
-  }
-  @keyframes sweep { from { left: -40%; } to { left: 130%; } }
-  @media (prefers-reduced-motion: reduce) {
-    .who, .who::before { animation: none; }
-  }
+  html, body { margin: 0; background: #eef1f4; color: #333; font-family: Roboto, Arial, Helvetica, sans-serif; }
+  a { color: #0677ba; }
+  .top { display: flex; align-items: center; gap: 24px; height: 56px; padding: 0 20px; background: #0677ba; }
+  .top a { color: #fff; text-decoration: none; font-weight: 700; }
+  .brand { font-size: 22px; }
+  .top nav { display: flex; gap: 16px; }
+  .top nav a { font-size: 14px; font-weight: 600; }
+  main { max-width: 760px; margin: 24px auto 48px; padding: 0 16px; }
+  h1 { margin: 0 0 8px; font-size: 24px; }
+  .basis { margin: 0 0 20px; color: #677274; font-size: 15px; line-height: 1.45; }
+  .lead, .who, .list { background: #fff; border: 1px solid #e4e6e8; border-radius: 4px; }
+  .lead { display: block; margin-bottom: 12px; padding: 28px 28px 24px; text-decoration: none; color: inherit; }
+  .lead b { display: block; font-size: 36px; color: #0677ba; }
+  .lead span, .who span { display: block; margin-top: 8px; font-size: 16px; line-height: 1.4; }
+  .lead small, .who small { display: block; margin-top: 10px; color: #0677ba; font-size: 13px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .who { flex: 1; min-width: 220px; padding: 14px 16px; text-decoration: none; color: inherit; }
+  .who b { display: block; font-size: 16px; color: #0677ba; }
+  .who span { font-size: 14px; }
+  .list { margin-top: 28px; overflow: hidden; }
+  .list h2 { margin: 0; padding: 14px 16px; font-size: 16px; border-bottom: 1px solid #e4e6e8; }
+  .game { display: flex; justify-content: space-between; gap: 16px; padding: 10px 16px; border-top: 1px solid #eee; }
+  .game b { font-weight: 700; }
+  .game span { color: #677274; text-align: right; }
+  .note { color: #677274; font-size: 14px; line-height: 1.5; }
+  .disclaimer { margin-top: 18px; color: #677274; font-size: 13px; }
 </style>
 </head>
-<body tabindex="0">
-<canvas id="sky"></canvas>
-<div class="stage">
-  <header>
-    <p class="mark">SCHOOLAGY</p>
-    <h1>Credits</h1>
-    <p class="basis">A catalog of games inside an interface based on Schoology, the learning platform from PowerSchool.</p>
-  </header>
-  <div class="people">
-    <a class="who" href="https://github.com/rrocketmann" target="_blank" rel="noopener noreferrer">
-      <b>rrocketmann</b>
-      <span>Schoolagy, the catalog this all runs in.</span>
-      <small>github.com/rrocketmann</small>
-    </a>
+<body>
+<header class="top">
+  <a class="brand" id="home" href="../">Schoology</a>
+  <nav>
+    <a id="home-link" href="../">Home</a>
+    <a id="resources-link" href="../resources/">Resources</a>
+  </nav>
+</header>
+<main>
+  <h1>Credits</h1>
+  <p class="basis">A catalog of games inside an interface based on Schoology, the learning platform from PowerSchool.</p>
+  <a class="lead" href="https://github.com/rrocketmann" target="_blank" rel="noopener noreferrer">
+    <b>rrocketmann</b>
+    <span>Schoolagy, the catalog this all runs in.</span>
+    <small>github.com/rrocketmann</small>
+  </a>
+  <div class="row">
     <a class="who" href="https://github.com/NguyenPham0608" target="_blank" rel="noopener noreferrer">
       <b>NguyenPham0608</b>
       <span>Samosa Rush and Ball Platformer.</span>
@@ -115,116 +62,66 @@
       <small>github.com/The-GoldenRetriever</small>
     </a>
   </div>
-  <div class="window" id="window">
-    <div class="reel" id="reel"></div>
-  </div>
-  <footer>Schoolagy is based on <strong>Schoology</strong>, a <strong>PowerSchool</strong> product. It is not made or endorsed by PowerSchool.</footer>
-</div>
+  <section class="list">
+    <h2>Games</h2>
+    <div id="games"></div>
+  </section>
+  <p class="note" id="note"></p>
+  <p class="disclaimer">Schoolagy is based on Schoology, a PowerSchool product. It is not made or endorsed by PowerSchool.</p>
+</main>
 <script>
-const games = [
-  ['2048', 'Gabriele Cirulli'],
-  ['Ball Platformer', 'NguyenPham0608'],
-  ['BitLife', 'Candywriter'],
-  ['Chrome Dino', 'Google'],
-  ['Clumsy Bird', 'Ellison Leão'],
-  ['Cookie Clicker', 'Orteil and Opti'],
-  ['Cosmic Sim', 'hosted with Schoolagy'],
-  ['Crossy Road', 'Hipster Whale'],
-  ['Doodle Jump', 'Igor and Marko Pusenjak, Lima Sky'],
-  ['Doom', 'id Software. This browser port is credited to Emupedia'],
-  ['Elevator Saga', 'Magnus Wolffelt'],
-  ['Eaglercraft', 'lax1dude. Minecraft is by Mojang'],
-  ['HexGL', 'Thibaut Despoulain'],
-  ['Hextris', 'Logan Engstrom, Garrett Finucane, Noah Moroze, Michael Yang'],
-  ['Hollow Knight', 'Team Cherry'],
-  ['Momentum', 'The-GoldenRetriever'],
-  ['OpenGuesser', 'made for Schoolagy. Photos by Wikimedia Commons contributors'],
-  ['Polytrack', 'Kodub'],
-  ['Retro Bowl', 'New Star Games'],
-  ['Retro Bowl College', 'New Star Games'],
-  ['Samosa Rush', 'NguyenPham0608'],
-  ['Snake', 'written for this catalog'],
-  ['Sort the Court', 'Graeme Borland'],
-  ['Starframe', 'The-GoldenRetriever'],
-  ['Subway Surfers', 'SYBO and Kiloo'],
-  ['SuperTux', 'the SuperTux team'],
-  ['Tetris', 'Alexey Pajitnov. This build is TwitchTetris by Leigh Pauls']
-];
+(function () {
+  var root = location.pathname.replace(/index\.html$/, '').replace(/credits\/?$/, '');
+  if (!root.endsWith('/')) root += '/';
+  document.getElementById('home').href = root;
+  document.getElementById('home-link').href = root;
+  document.getElementById('resources-link').href = root + 'resources/';
 
-const note = 'Basket Random, Bobby\'s Bugs, Cluster Rush, Drive Mad, Peggy\'s Post, Slope, Tiny Fishing, Tomb of the Mask, and Vex 3 through Vex 6 are the work of their original creators and publishers.';
-
-const reel = document.getElementById('reel');
-function column() {
-  const col = document.createElement('div');
-  col.className = 'col';
-  for (const [name, who] of games) {
-    const row = document.createElement('div');
+  var games = [
+    ['2048', 'Gabriele Cirulli'],
+    ['Ball Platformer', 'NguyenPham0608'],
+    ['BitLife', 'Candywriter'],
+    ['Chrome Dino', 'Google'],
+    ['Clumsy Bird', 'Ellison Leão'],
+    ['Cookie Clicker', 'Orteil and Opti'],
+    ['Cosmic Sim', 'hosted with Schoolagy'],
+    ['Crossy Road', 'Hipster Whale'],
+    ['Doodle Jump', 'Igor and Marko Pusenjak, Lima Sky'],
+    ['Doom', 'id Software. This browser port is credited to Emupedia'],
+    ['Dragon', 'Karim Maaloul'],
+    ['Elevator Saga', 'Magnus Wolffelt'],
+    ['Escape Road', '1games.io'],
+    ['Eaglercraft', 'lax1dude. Minecraft is by Mojang'],
+    ['HexGL', 'Thibaut Despoulain'],
+    ['Hextris', 'Logan Engstrom, Garrett Finucane, Noah Moroze, Michael Yang'],
+    ['Hollow Knight', 'Team Cherry'],
+    ['Lion', 'Karim Maaloul'],
+    ['Momentum', 'The-GoldenRetriever'],
+    ['OpenGuesser', 'made for Schoolagy. Photos by Wikimedia Commons contributors'],
+    ['Polytrack', 'Kodub'],
+    ['Retro Bowl', 'New Star Games'],
+    ['Retro Bowl College', 'New Star Games'],
+    ['Samosa Rush', 'NguyenPham0608'],
+    ['Snake', 'written for this catalog'],
+    ['Sort the Court', 'Graeme Borland'],
+    ['Starframe', 'The-GoldenRetriever'],
+    ['Subway Surfers', 'SYBO and Kiloo'],
+    ['SuperTux', 'the SuperTux team'],
+    ['Tetris', 'Alexey Pajitnov. This build is TwitchTetris by Leigh Pauls']
+  ];
+  var box = document.getElementById('games');
+  games.forEach(function (pair) {
+    var row = document.createElement('div');
     row.className = 'game';
-    const b = document.createElement('b');
-    b.textContent = name;
-    const s = document.createElement('span');
-    s.textContent = who;
-    row.append(b, s);
-    col.appendChild(row);
-  }
-  const p = document.createElement('p');
-  p.className = 'note';
-  p.textContent = note;
-  col.appendChild(p);
-  return col;
-}
-reel.append(column(), column());
-
-const sky = document.getElementById('sky');
-const ctx = sky.getContext('2d');
-const dots = Array.from({ length: 70 }, () => ({
-  x: Math.random(),
-  y: Math.random(),
-  r: Math.random() * 1.6 + 0.4,
-  v: Math.random() * 0.00012 + 0.00004
-}));
-function resize() {
-  sky.width = innerWidth;
-  sky.height = innerHeight;
-}
-addEventListener('resize', resize);
-resize();
-document.body.focus();
-function frame() {
-  requestAnimationFrame(frame);
-  ctx.clearRect(0, 0, sky.width, sky.height);
-  ctx.fillStyle = '#9eb4c8';
-  for (const d of dots) {
-    d.y -= d.v;
-    if (d.y < 0) d.y += 1;
-    ctx.globalAlpha = 0.35 + d.r * 0.25;
-    ctx.beginPath();
-    ctx.arc(d.x * sky.width, d.y * sky.height, d.r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-}
-frame();
-
-let offset = 0;
-let held = 0;
-let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
-addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowUp') { held = -2.2; e.preventDefault(); }
-  if (e.key === 'ArrowDown') { held = 2.4; e.preventDefault(); }
-  if (e.key === ' ' || e.key === 'Spacebar') { paused = !paused; e.preventDefault(); }
-});
-addEventListener('keyup', (e) => {
-  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') held = 0;
-});
-(function roll() {
-  requestAnimationFrame(roll);
-  const half = reel.scrollHeight / 2;
-  if (!half) return;
-  if (!paused) offset += 0.45;
-  offset += held;
-  offset = ((offset % half) + half) % half;
-  reel.style.transform = 'translateY(' + (-offset) + 'px)';
+    var b = document.createElement('b');
+    b.textContent = pair[0];
+    var s = document.createElement('span');
+    s.textContent = pair[1];
+    row.appendChild(b);
+    row.appendChild(s);
+    box.appendChild(row);
+  });
+  document.getElementById('note').textContent = 'Basket Random, Bobby\'s Bugs, Cluster Rush, Drive Mad, Peggy\'s Post, Slope, Tiny Fishing, Tomb of the Mask, and Vex 3 through Vex 6 are the work of their original creators and publishers.';
 })();
 </script>
 </body>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Dragon</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #652e37; }
+  #world {
+    background: #652e37;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  #instructions {
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    margin: auto;
+    margin-top: 120px;
+    font-family: "Trebuchet MS", "Open Sans", Arial, sans-serif;
+    font-weight: 800;
+    color: #fdde8c;
+    font-size: .8em;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.5;
+    user-select: none;
+    pointer-events: none;
+  }
+  .lightInstructions {
+    color: #f89a78;
+    font-size: .9em;
+  }
+  #credits {
+    position: absolute;
+    width: 100%;
+    margin: auto;
+    bottom: 0;
+    margin-bottom: 20px;
+    font-family: "Trebuchet MS", "Open Sans", Arial, sans-serif;
+    font-weight: 800;
+    color: #f7575f;
+    font-size: 0.6em;
+    text-transform: uppercase;
+    text-align: center;
+    pointer-events: none;
+  }
+  #credits a {
+    color: #f89a78;
+  }
+  #power {
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    margin: auto;
+    margin-top: -220px;
+    font-family: "Trebuchet MS", "Open Sans", Arial, sans-serif;
+    font-weight: 800;
+    color: #481f26;
+    font-size: 4em;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.5;
+    user-select: none;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div id="world"></div>
+<div id="instructions">The longer you keep clicking, the harder he sneezes<br><span class="lightInstructions">- Press and drag to turn around -</span></div>
+<div id="credits"></div>
+<div id="power">00</div>
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+<script src="TweenMax.min.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

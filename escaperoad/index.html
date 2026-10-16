@@ -83,20 +83,27 @@
   window.onresize = function () { drawCanvas(logoPercent); };
   loadingCover.style.display = "";
 
-  // The build pauses until an outside ad script calls resume. That request
-  // often never finishes, so the city screen sits still. Keep the local
-  // stand-in and do not load those scripts.
+  // The build pauses itself for an ad and only continues when that ad
+  // calls back. The ad never finishes, so the title sits still. Do not
+  // load those scripts. The framework resumes the game on its own.
+  var AD_URL = /1games\.io|wgplayer\.com|gamedistribution\.com|googlesyndication|doubleclick\.net|googleads/i;
   (function () {
     var desc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, "src");
-    Object.defineProperty(HTMLScriptElement.prototype, "src", {
-      configurable: true,
-      set: function (v) {
-        var s = String(v || "");
-        if (/1games\.io|wgplayer\.com|googlesyndication|doubleclick\.net|googleads/i.test(s)) return;
-        desc.set.call(this, v);
-      },
-      get: function () { return desc.get.call(this); }
-    });
+    if (desc && desc.set) {
+      Object.defineProperty(HTMLScriptElement.prototype, "src", {
+        configurable: true,
+        set: function (v) {
+          if (AD_URL.test(String(v || ""))) return;
+          desc.set.call(this, v);
+        },
+        get: function () { return desc.get.call(this); }
+      });
+    }
+    var origSet = HTMLScriptElement.prototype.setAttribute;
+    HTMLScriptElement.prototype.setAttribute = function (name, value) {
+      if (String(name).toLowerCase() === "src" && AD_URL.test(String(value || ""))) return;
+      return origSet.apply(this, arguments);
+    };
     var afg = {
       wgplayer: {},
       onBeforeAd: function () {},
@@ -107,13 +114,28 @@
     };
     Object.defineProperty(afg, "ready", { get: function () { return false; }, set: function () {} });
     Object.defineProperty(window, "afg", { get: function () { return afg; }, set: function () {} });
-    window.GMSOFT_OPTIONS = { enableAds: false, debug: false };
+    var gmOpts = { enableAds: false, debug: false, gameId: "", pubId: "", unlockTimer: 0, timeShowInter: 0 };
+    Object.defineProperty(window, "GMSOFT_OPTIONS", {
+      configurable: true,
+      get: function () { return gmOpts; },
+      set: function (v) {
+        if (v && typeof v === "object") {
+          if (v.gameId) gmOpts.gameId = v.gameId;
+          if (v.pubId) gmOpts.pubId = v.pubId;
+          if (v.timeShowInter != null) gmOpts.timeShowInter = v.timeShowInter;
+          if (v.unlockTimer != null) gmOpts.unlockTimer = v.unlockTimer;
+        }
+        gmOpts.enableAds = false;
+        gmOpts.debug = false;
+      }
+    });
     window.sgAdStub = {
       log: function () {},
       ping: function () {},
       registerGameControls: function () {},
       registerRewardCallbacks: function () {},
-      showRewardAd: function () {}
+      showRewardAd: function () {},
+      refetchAd: function () {}
     };
     window.preroll = { config: { loaderObjectName: "sgAdStub" } };
   })();

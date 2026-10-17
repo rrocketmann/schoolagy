@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Escape Road 3</title>
+<link rel="stylesheet" href="game.css">
+<style>
+  html, body { height: 100%; overflow: hidden; background: #002b50; }
+  #unity-container { position: absolute; inset: 0; }
+  #unity-canvas { width: 100%; height: 100%; display: block; }
+  #loadingBlock { position: fixed; inset: 0; z-index: 3; }
+  .jss1:before {
+    top: 0;
+    width: 100%;
+    filter: blur(16px);
+    height: 100%;
+    content: "";
+    display: block;
+    opacity: 0.5;
+    z-index: 0;
+    position: absolute;
+    background-size: cover;
+    background-image: url("loading.png");
+  }
+</style>
+</head>
+<body>
+<div id="unity-container" style="display:none">
+  <canvas id="unity-canvas"></canvas>
+</div>
+<div id="loadingBlock">
+  <div class="jss31 jss34 jss1">
+    <div class="spinner"></div>
+    <div class="jss31 jss34 jss48" style="flex:1 1 0%">
+      <div class="jss32">
+        <div class="jss7 jss9 jss20 jss3">
+          <div class="jss125">
+            <div class="jss123">
+              <img src="logo.png" alt="">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="jss31 jss34" style="flex:3 1 0%">
+      <div class="jss32">
+        <div class="jss31 jss34 jss39 jss50 gameloader">
+          <div class="jss32">
+            <div class="gameloader-game-name">Escape Road 3</div>
+          </div>
+          <div class="jss32">
+            <div class="jss32 gameloader-logo">
+              <img id="game-logo" src="loading.png" alt="">
+            </div>
+          </div>
+          <div class="jss32">
+            <div>
+              <div class="gameloader-progressbar">
+                <div class="gameloader-progressbar-progress" id="progress_fill" style="width:0%"></div>
+              </div>
+              <div class="gameloader-progress-info">Game Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  // The build pauses for ads and logs to Firebase. Neither is on this
+  // page. Resume locally and ignore those calls so the game can start.
+  (function () {
+    var fb = function () { return fbProxy; };
+    var fbProxy = new Proxy(fb, {
+      get: function (_t, prop) {
+        if (prop === "then") {
+          return function (onOk) {
+            if (typeof onOk === "function") onOk(fbProxy);
+            return fbProxy;
+          };
+        }
+        return fbProxy;
+      },
+      apply: function () { return fbProxy; }
+    });
+    window.firebase = fbProxy;
+    window.firebaseConfig = { projectId: "" };
+    window.firebaseSetUserProperties = function () {};
+    window.firebaseLogEvent = function () {};
+    window.firebaseLogEventParameter = function () {};
+
+    var afgApi = {
+      wgplayer: {},
+      onBeforeAd: function () {},
+      onAfterAd: function () {},
+      adBreak: function (opts) {
+        opts = opts || {};
+        if (opts.adBreakDone) opts.adBreakDone({});
+        if (opts.adDismissed) opts.adDismissed();
+      }
+    };
+    Object.defineProperty(afgApi, "ready", {
+      configurable: true,
+      get: function () { return false; },
+      set: function () {}
+    });
+    window.afg = afgApi;
+
+    var cg = new Proxy(function () { return Promise.resolve(cg); }, {
+      get: function (_t, prop) {
+        if (prop === "then") return undefined;
+        return cg;
+      }
+    });
+    window.CrazyGames = { SDK: cg };
+
+    window.sgAdStub = {
+      log: function () {},
+      ping: function () {},
+      refetchAd: function () {},
+      GameEvent: function () {},
+      registerGameControls: function () {},
+      registerRewardCallbacks: function () {},
+      showRewardAd: function () {},
+      rewarded: { initSlot: function () {} }
+    };
+    window.preroll = { config: { loaderObjectName: "sgAdStub" } };
+    window.GMSOFT_SDKTYPE = "gm";
+
+    try {
+      localStorage.setItem("gmsdksigndomain", "ewogICJzaWduZWQiOiAibStVenRwc20xL1dkU05STEFGS0x3YVl0dzg4b296QlA0QktaeHY5cnNadUluNWlMUWZxMUk3ZEcwbnlIN3hKamRBVTEvQUQ5dlFNUW1EeWNZUzRtb3F0VGlFd0N4WHoyTytzbllWMXhyTjBMM3Z4cnVKblJIM2dpMFJpQUVIaW8rU2pDNkEwSFBsN3lTT0V2TCsyY2g5OEdrN2NDRWV6eTEwcEtCTll2akRZNldVRHRZN3ZSdW43dnAvb2VKSXJjeEJNZjl4UWxONURVTkJEN0JvNzRTYlNmWEdYY3dWUi81TkJQQ2hzRnh0cFhOaHpIWURhUVRkYWtrQjdjVENSYVBGQ2VxREN3N1FDQkhoK0ZOZFNXdVEwbm5RMm1QRTJ4alVqOXV1Y0kxWGdQNGZpNmJMVTRRMFhiRkh1SzRsRENLVWF4ZlBmbmxFemZ0UXdOR0MrY09BPT0iLAogICJhcCI6ICJ5ZXMiLAogICJobiI6ICJvZnJlZS5pbyIsCiAgImRvbWFpbiI6ICJvZnJlZS5pbyIsCiAgInMiOiAieWVzIiwKICAic3R5cGUiOiAyCn0=");
+    } catch (e) {}
+
+    var AD_URL = /crazygames\.com|gamedistribution\.com|cdnwave\.com|ofree\.io|googlesyndication|doubleclick\.net|googleads|googleapis\.com|gstatic\.com\/firebasejs/i;
+    var desc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, "src");
+    if (desc && desc.set) {
+      Object.defineProperty(HTMLScriptElement.prototype, "src", {
+        configurable: true,
+        set: function (v) {
+          if (AD_URL.test(String(v || ""))) return;
+          desc.set.call(this, v);
+        },
+        get: function () { return desc.get.call(this); }
+      });
+    }
+    var origSet = HTMLScriptElement.prototype.setAttribute;
+    HTMLScriptElement.prototype.setAttribute = function (name, value) {
+      if (String(name).toLowerCase() === "src" && AD_URL.test(String(value || ""))) return;
+      return origSet.apply(this, arguments);
+    };
+  })();
+
+  (async function () {
+    var progressElement = document.getElementById("progress_fill");
+    var progressText = document.querySelector(".gameloader-progress-info");
+    var loadedBytes = 0;
+
+    async function fetchWithProgress(url) {
+      var response = await fetch(url);
+      if (!response.ok) throw new Error("Missing " + url);
+      var reader = response.body.getReader();
+      var chunks = [];
+      var received = 0;
+      while (true) {
+        var step = await reader.read();
+        if (step.done) break;
+        received += step.value.length;
+        loadedBytes += step.value.length;
+        chunks.push(step.value);
+        progressText.textContent = "Loading " + (loadedBytes / (1024 * 1024)).toFixed(0) + " MB";
+      }
+      var full = new Uint8Array(received);
+      var offset = 0;
+      for (var i = 0; i < chunks.length; i++) {
+        full.set(chunks[i], offset);
+        offset += chunks[i].length;
+      }
+      return full.buffer;
+    }
+
+    function parts(file, start, end) {
+      var list = [];
+      for (var i = start; i <= end; i++) list.push(file + ".part" + i);
+      return list;
+    }
+
+    async function mergeFiles(fileParts) {
+      var buffers = await Promise.all(fileParts.map(fetchWithProgress));
+      return URL.createObjectURL(new Blob(buffers));
+    }
+
+    var dataUrl = await mergeFiles(parts("Build/escape-road-3-v26041006.data", 1, 7));
+    var wasmUrl = await mergeFiles(parts("Build/escape-road-3-v26041006.wasm", 1, 3));
+    var config = {
+      dataUrl: dataUrl,
+      frameworkUrl: "Build/escape-road-3-v26041006.framework.js",
+      codeUrl: wasmUrl,
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "ozgames.io",
+      productName: "Escape Road 3",
+      productVersion: "26041006",
+      gameId: "escape-road-3",
+      eventLog: false
+    };
+    window.config = config;
+    window.GMSOFT_GAME_INFO = {};
+    window.GMSOFT_ADS_INFO = {};
+    var container = document.getElementById("unity-container");
+    var canvas = document.getElementById("unity-canvas");
+    var loadingBar = document.getElementById("loadingBlock");
+    var script = document.createElement("script");
+    script.src = "Build/escape-road-3-v26041006.loader.js";
+    script.onload = function () {
+      createUnityInstance(canvas, config, function (progress) {
+        progressElement.style.width = (100 * progress) + "%";
+        progressText.textContent = "Starting " + Math.round(progress * 100) + "%";
+      }).then(function (unityInstance) {
+        window.unityInstance = unityInstance;
+        loadingBar.style.display = "none";
+        container.style.display = "block";
+      }).catch(function (message) {
+        progressText.textContent = String(message);
+        console.error(message);
+      });
+    };
+    script.onerror = function () {
+      progressText.textContent = "The game loader did not start.";
+    };
+    document.body.appendChild(script);
+  })().catch(function (err) {
+    var progressText = document.querySelector(".gameloader-progress-info");
+    if (progressText) progressText.textContent = String(err && err.message || err);
+    console.error(err);
+  });
+</script>
+</body>
+</html>

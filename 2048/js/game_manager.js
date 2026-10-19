@@ -15,6 +15,7 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
 
 // Restart the game
 GameManager.prototype.restart = function () {
+  window.trackGameAnalytics.restart('2048');
   this.storageManager.clearGameState();
   this.actuator.continueGame(); // Clear the game won/lost message
   this.setup();
@@ -184,6 +185,7 @@ GameManager.prototype.move = function (direction) {
 
     if (!this.movesAvailable()) {
       this.over = true; // Game over!
+      window.trackGameAnalytics.end('2048', this.score);
     }
 
     this.actuate();

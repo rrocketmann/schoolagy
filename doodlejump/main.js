@@ -15,6 +15,9 @@ var width = 422,
 canvas.width = width;
 canvas.height = height;
 
+// Include analytics
+trackGameAnalytics.start('doodlejump');
+
 //Variables for game
 var platforms = [],
   image = document.getElementById("sprite"),
@@ -445,6 +448,8 @@ function init() {
       hideScore();
       player.isDead = "lol";
 
+      window.trackGameAnalytics.end('doodlejump', score);
+
       var tweet = document.getElementById("tweetBtn");
       tweet.href='http://twitter.com/share?url=http://is.gd/PnFFzu&text=I just scored ' +score+ ' points in the HTML5 Doodle Jump game!&count=horiztonal&via=cssdeck&related=solitarydesigns';
     
@@ -483,6 +488,7 @@ function init() {
 }
 
 function reset() {
+  window.trackGameAnalytics.restart('doodlejump');
   hideGoMenu();
   showScore();
   player.isDead = false;

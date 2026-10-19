@@ -48,7 +48,15 @@
 
     </div>
 
-    <script src="main.js"></script>
-  <script src="../js/analytics.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'GA_MEASUREMENT_ID');
+  </script>
+
+  <script src="main.js"></script>
   </body>
 </html>

@@ -1,7 +1,28 @@
 (function () {
-  const TRACKING_ENDPOINT = 'https://your-analytics-endpoint.com/track';
+  const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX'; // Replace with your GA4 measurement ID
+  const USE_GA = true; // Set to false to use only custom endpoint
+
+  function sendGA(gameName, event, data = {}) {
+    if (!USE_GA || !window.gtag) return;
+
+    const params = {
+      game: gameName,
+      event,
+      ...data,
+    };
+
+    window.gtag('event', event, {
+      game_name: gameName,
+      ...data,
+      send_to: [GA_MEASUREMENT_ID],
+    });
+  }
 
   function trackEvent(gameName, event, data = {}) {
+    if (USE_GA) {
+      sendGA(gameName, event, data);
+    }
+
     const payload = {
       game: gameName,
       event,
@@ -9,7 +30,7 @@
       ...data,
     };
 
-    fetch(TRACKING_ENDPOINT, {
+    fetch('https://your-analytics-endpoint.com/track', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

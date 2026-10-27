@@ -860,6 +860,7 @@
   var memoryRuns = [];
   var publishedRuns = [];
   var button = null;
+  var sendFailed = false;
   var INBOX_TOPIC = "pt701f4fa6522b8cc882531db97f7f6523c6771ef2";
   var UPLOAD_EXPIRE = "172800";
   var REPOST_MS = 8 * 60 * 60 * 1000;
@@ -1427,12 +1428,17 @@
       return ready.then(function (saved) {
         if (!saved) return null;
         return notifyLap({ v: 1, id: run.id, json: saved.jsonUrl, video: saved.videoUrl || null }).then(function () {
+          sendFailed = false;
           saved.posts = (saved.posts || 0) + 1;
           saved.lastPost = Date.now();
+          paint();
           return saveOutbox(saved);
         });
       });
-    }).catch(function () {});
+    }).catch(function () {
+      sendFailed = true;
+      paint();
+    });
   }
 
   function schedulePublish(run, blob) {
@@ -1463,12 +1469,12 @@
     var i;
     for (i = 0; i < memoryRuns.length; i++) if (memoryRuns[i].id === run.id) return;
     memoryRuns.push(run);
-    var saves = [saveLocal(run)];
-    if (blob) saves.push(saveVideo(run.id, blob));
-    Promise.all(saves).then(function () {
-      schedulePublish(run, blob || null);
-    }).catch(function () {});
     paint();
+    var stored = saveLocal(run).catch(function () {});
+    var videoStored = blob ? saveVideo(run.id, blob).catch(function () {}) : Promise.resolve();
+    Promise.all([stored, videoStored]).then(function () {
+      schedulePublish(run, blob || null);
+    });
   }
 
   function openDb() {
@@ -1627,7 +1633,9 @@
   function paint() {
     if (!button) return;
     var count = allRuns().length;
-    button.textContent = count === 1 ? "Dataset · 1 lap" : "Dataset · " + count + " laps";
+    var label = count === 1 ? "Dataset · 1 lap" : "Dataset · " + count + " laps";
+    if (sendFailed && count) label += " · not sent";
+    button.textContent = label;
   }
 
   function mount() {
@@ -1707,6 +1715,8 @@
       }
       paint();
       retryOutbox();
+      setTimeout(retryOutbox, 20000);
+      setTimeout(retryOutbox, 80000);
     }).catch(function () {});
   }
 

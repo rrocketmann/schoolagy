@@ -1,8 +1,8 @@
-# Polytrack 0.5.2 OK laps
+# Polytrack 0.5.2 good data
 
-Finished laps from Polytrack 0.5.2. A lap is included only when that browser's determinism check passed.
+Good data from Polytrack 0.5.2. A run is included only when that browser's determinism check passed.
 
-A finished OK lap is uploaded for the site owner as well as saved in this zip. Profile names are not included. Polytrack 0.6.3 is a separate dataset and is not in this zip. A lap that fails the determinism check is not uploaded.
+Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. Polytrack 0.6.3 is a separate dataset and is not in this zip. A run that fails the determinism check is not uploaded.
 
 ## Files
 

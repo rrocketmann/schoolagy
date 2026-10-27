@@ -1,7 +1,7 @@
 // Records finished laps, and only when this computer's determinism check is Ok.
 // Each lap keeps the agent's 19 numbers, every value the simulation posts,
-// a 1 ms pose and control trace, and a canvas video. OK laps are saved in this
-// browser and sent to the lap archive. The zip download stays on this computer.
+// a 1 ms pose and control trace, and a canvas video. Good data is saved in this
+// browser and sent to the archive. The zip download stays on this computer.
 (function (global) {
   "use strict";
 
@@ -161,11 +161,11 @@
     vehicle: VEHICLE
   };
   var DATASET_README = [
-    "# Polytrack 0.5.2 OK laps",
+    "# Polytrack 0.5.2 good data",
     "",
-    "Finished laps from Polytrack 0.5.2. A lap is included only when that browser's determinism check passed.",
+    "Good data from Polytrack 0.5.2. A run is included only when that browser's determinism check passed.",
     "",
-    "A finished OK lap is uploaded for the site owner as well as saved in this zip. Profile names are not included. Polytrack 0.6.3 is a separate dataset and is not in this zip. A lap that fails the determinism check is not uploaded.",
+    "Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. Polytrack 0.6.3 is a separate dataset and is not in this zip. A run that fails the determinism check is not uploaded.",
     "",
     "## Files",
     "",
@@ -901,8 +901,8 @@
       determinismOk = data.isDeterminstic === true || data.isDeterministic === true;
       if (button) {
         button.title = determinismOk
-          ? "Finished OK laps are saved here and sent to the lap archive. Click to download a zip."
-          : "Determinism check did not pass, so laps from this browser are not saved or sent.";
+          ? "Good data is saved here and sent to the archive. Click to download a zip."
+          : "Determinism check did not pass, so good data from this browser is not saved or sent.";
       }
       return;
     }
@@ -1643,7 +1643,7 @@
     button = document.createElement("button");
     button.type = "button";
     button.id = "polytrack-dataset";
-    button.title = "Finished OK laps are saved here and sent to the lap archive. Click to download a zip.";
+    button.title = "Good data is saved here and sent to the archive. Click to download a zip.";
     button.addEventListener("mousedown", function (event) {
       event.preventDefault();
     });

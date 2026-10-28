@@ -860,6 +860,7 @@
   var memoryRuns = [];
   var publishedRuns = [];
   var button = null;
+  var labelNode = null;
   var sendFailed = false;
   var INBOX_TOPIC = "pt701f4fa6522b8cc882531db97f7f6523c6771ef2";
   var UPLOAD_EXPIRE = "172800";
@@ -1588,7 +1589,7 @@
   function download() {
     if (packing) return;
     packing = true;
-    if (button) button.textContent = "Dataset · packing";
+    setLabel("Dataset · packing");
     var runs = allRuns();
     var videos = [];
     var chain = Promise.resolve();
@@ -1630,12 +1631,26 @@
     });
   }
 
+  function setLabel(text) {
+    if (labelNode) labelNode.nodeValue = text;
+  }
+
   function paint() {
     if (!button) return;
     var count = allRuns().length;
     var label = count === 1 ? "Dataset · 1 lap" : "Dataset · " + count + " laps";
     if (sendFailed && count) label += " · not sent";
-    button.textContent = label;
+    setLabel(label);
+  }
+
+  function toolbarSlot() {
+    return document.querySelector("#ui > .game-toolbar");
+  }
+
+  function placeInToolbar() {
+    var slot = toolbarSlot();
+    if (!button || !slot || button.parentNode === slot) return;
+    slot.appendChild(button);
   }
 
   function mount() {
@@ -1643,7 +1658,16 @@
     button = document.createElement("button");
     button.type = "button";
     button.id = "polytrack-dataset";
+    button.className = "button";
     button.title = "Good data is saved here and sent to the archive. Click to download a zip.";
+    var icon = document.createElement("img");
+    icon.className = "button-icon";
+    icon.alt = "";
+    icon.src = "images/save.svg";
+    button.appendChild(icon);
+    button.appendChild(document.createTextNode(" "));
+    labelNode = document.createTextNode("");
+    button.appendChild(labelNode);
     button.addEventListener("mousedown", function (event) {
       event.preventDefault();
     });
@@ -1652,10 +1676,9 @@
       event.stopPropagation();
       download();
     });
-    document.body.appendChild(button);
-    var style = document.createElement("style");
-    style.textContent = "#polytrack-dataset{position:fixed;left:12px;bottom:12px;z-index:40;margin:0;padding:6px 10px;border:0;background:#28346a;color:#fff;font:16px/1.2 sans-serif;cursor:pointer;pointer-events:auto;}#polytrack-dataset:hover{background:#334b77;}";
-    document.head.appendChild(style);
+    var ui = document.getElementById("ui") || document.body;
+    new MutationObserver(placeInToolbar).observe(ui, { childList: true, subtree: true });
+    placeInToolbar();
     paint();
   }
 

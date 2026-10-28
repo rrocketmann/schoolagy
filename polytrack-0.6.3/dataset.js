@@ -1142,6 +1142,7 @@
         button.title = determinismOk
           ? "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. Click to download a zip."
           : "Determinism check did not pass, so good data from this browser is not saved or sent.";
+        notifyParent();
       }
       return;
     }
@@ -1874,8 +1875,24 @@
     });
   }
 
+  function framed() {
+    try { return window.parent && window.parent !== window; } catch (err) { return false; }
+  }
+
+  function notifyParent() {
+    if (!framed()) return;
+    try {
+      window.parent.postMessage({
+        type: "polytrack-dataset",
+        label: labelNode ? labelNode.nodeValue : "",
+        title: button ? button.title : ""
+      }, window.location.origin);
+    } catch (err) {}
+  }
+
   function setLabel(text) {
     if (labelNode) labelNode.nodeValue = text;
+    notifyParent();
   }
 
   function paint() {
@@ -1886,29 +1903,12 @@
     setLabel(label);
   }
 
-  function toolbarSlot() {
-    return document.querySelector("#ui .game-toolbar-ui > .button-container");
-  }
-
-  function placeInToolbar() {
-    var slot = toolbarSlot();
-    if (!button || !slot || button.parentNode === slot) return;
-    slot.appendChild(button);
-  }
-
   function mount() {
     if (button || !document.body) return;
     button = document.createElement("button");
     button.type = "button";
     button.id = "polytrack-063-dataset";
-    button.className = "button";
     button.title = "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. Click to download a zip.";
-    var icon = document.createElement("img");
-    icon.className = "button-icon";
-    icon.alt = "";
-    icon.src = "images/save.svg";
-    button.appendChild(icon);
-    button.appendChild(document.createTextNode(" "));
     labelNode = document.createTextNode("");
     button.appendChild(labelNode);
     button.addEventListener("mousedown", function (event) {
@@ -1919,9 +1919,18 @@
       event.stopPropagation();
       download();
     });
-    var ui = document.getElementById("ui") || document.body;
-    new MutationObserver(placeInToolbar).observe(ui, { childList: true, subtree: true });
-    placeInToolbar();
+    window.addEventListener("message", function (event) {
+      if (event.origin !== window.location.origin) return;
+      if (!event.data || event.data.type !== "polytrack-dataset-download") return;
+      if (event.source !== window.parent) return;
+      download();
+    });
+    if (!framed()) {
+      document.body.appendChild(button);
+      var style = document.createElement("style");
+      style.textContent = "#polytrack-063-dataset{position:fixed;left:12px;bottom:12px;z-index:40;margin:0;padding:6px 10px;border:0;background:#28346a;color:#fff;font:16px/1.2 sans-serif;cursor:pointer;pointer-events:auto;}#polytrack-063-dataset:hover{background:#334b77;}";
+      document.head.appendChild(style);
+    }
     paint();
   }
 
@@ -1963,7 +1972,8 @@
       actionId: actionId,
       names: NAMES,
       actions: ACTIONS,
-      runs: allRuns
+      runs: allRuns,
+      download: download
     };
     if (document.body) mount();
     else document.addEventListener("DOMContentLoaded", mount);

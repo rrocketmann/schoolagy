@@ -690,6 +690,8 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-overlay .sg-title{flex:1;min-width:0;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '#sg-overlay .sg-actions{display:flex;gap:6px;flex-shrink:0}',
     '#sg-overlay .sg-bar button{width:32px;height:32px;border:0;border-radius:4px;background:transparent;color:#fff;cursor:pointer;padding:6px;line-height:0}',
+    '#sg-overlay .sg-bar button.sg-dataset{width:auto;height:32px;padding:0 10px;font:700 13px/32px sans-serif;white-space:nowrap}',
+    '#sg-overlay .sg-bar button.sg-dataset[hidden]{display:none}',
     '#sg-overlay .sg-bar button:hover{background:#0677ba}',
     '#sg-overlay .sg-bar svg{width:20px;height:20px;fill:currentColor;pointer-events:none}',
     '#sg-overlay.sg-fs{background:#000;cursor:default}',
@@ -966,6 +968,12 @@ gtag('config', 'G-C7MHSFPRSE');
   titleEl.className = 'sg-title';
   var actions = document.createElement('div');
   actions.className = 'sg-actions';
+  var datasetBtn = document.createElement('button');
+  datasetBtn.type = 'button';
+  datasetBtn.className = 'sg-dataset';
+  datasetBtn.hidden = true;
+  datasetBtn.textContent = 'Dataset';
+  datasetBtn.title = 'Good data is saved here and sent to the archive. Click to download a zip.';
   var fsBtn = document.createElement('button');
   fsBtn.type = 'button';
   fsBtn.title = 'Fullscreen';
@@ -978,6 +986,7 @@ gtag('config', 'G-C7MHSFPRSE');
   var ICON_CLOSE = 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
   fsBtn.innerHTML = svg(ICON_FS);
   closeBtn.innerHTML = svg(ICON_CLOSE);
+  actions.appendChild(datasetBtn);
   actions.appendChild(fsBtn);
   actions.appendChild(closeBtn);
   bar.appendChild(titleEl);
@@ -1051,8 +1060,31 @@ gtag('config', 'G-C7MHSFPRSE');
     syncFsBtn();
     fitFrame();
   }
+  var datasetWatch = false;
+  function polytrackPage(url) {
+    var path = String(url || '').split('?')[0];
+    return /(?:^|\/)polytrack\/index\.html$/.test(path) || /(?:^|\/)polytrack-0\.6\.3\/index\.html$/.test(path);
+  }
+  datasetBtn.onclick = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var api = null;
+    try { api = iframe.contentWindow && iframe.contentWindow.polytrackDataset; } catch (err) {}
+    if (api && typeof api.download === 'function') api.download();
+  };
+  window.addEventListener('message', function(event) {
+    if (!datasetWatch || event.origin !== location.origin) return;
+    if (!iframe.contentWindow || event.source !== iframe.contentWindow) return;
+    var data = event.data;
+    if (!data || data.type !== 'polytrack-dataset') return;
+    datasetBtn.hidden = false;
+    datasetBtn.textContent = data.label || 'Dataset';
+    if (data.title) datasetBtn.title = data.title;
+  });
   function closeGame() {
     exitFs();
+    datasetWatch = false;
+    datasetBtn.hidden = true;
     ov.classList.remove('show');
     iframe.src = '';
     document.body.style.overflow = '';
@@ -1074,6 +1106,8 @@ gtag('config', 'G-C7MHSFPRSE');
   window.openGame = function(name, url) {
     docFrame = String(url || '').indexOf('credits/') === 0;
     fitted = '';
+    datasetWatch = polytrackPage(url);
+    datasetBtn.hidden = true;
     titleEl.textContent = name || '';
     iframe.setAttribute('scrolling', docFrame ? 'yes' : 'no');
     iframe.src = gameHref(url);

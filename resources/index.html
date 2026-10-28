@@ -445,6 +445,8 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-sgy-player .popups-title{display:flex;align-items:center;gap:10px;background:#333;color:#fff;padding:8px 12px;font-size:14px;font-weight:700}',
     '#sg-sgy-player .popups-title-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '#sg-sgy-player .popups-title button{background:transparent;border:0;color:#fff;cursor:pointer;font-size:13px;padding:4px 8px}',
+    '#sg-sgy-player .popups-title button.sg-dataset{font-weight:700;white-space:nowrap}',
+    '#sg-sgy-player .popups-title button.sg-dataset[hidden]{display:none!important}',
     '#sg-sgy-player .popups-title button:hover{text-decoration:underline}',
     '#sg-sgy-player .popups-body{flex:1;min-height:0;background:#000;position:relative;overflow:hidden}',
     '#sg-sgy-player iframe{border:0;background:#000}',
@@ -578,6 +580,17 @@ gtag('config', 'G-C7MHSFPRSE');
   window.addEventListener('resize', function() {
     document.querySelectorAll('#sg-sgy-player iframe').forEach(fitGameFrame);
   });
+  window.addEventListener('message', function(event) {
+    if (event.origin !== location.origin) return;
+    var data = event.data;
+    if (!data || data.type !== 'polytrack-dataset') return;
+    var frame = document.querySelector('#sg-sgy-player iframe');
+    var btn = document.querySelector('#sg-sgy-player .sg-dataset');
+    if (!frame || !btn || event.source !== frame.contentWindow) return;
+    btn.hidden = false;
+    btn.textContent = data.label || 'Dataset';
+    if (data.title) btn.title = data.title;
+  });
 
   function playerChrome(name, href, onClose) {
     var wrap = document.createElement('div');
@@ -600,6 +613,22 @@ gtag('config', 'G-C7MHSFPRSE');
     close.textContent = 'Close';
     title.appendChild(back);
     title.appendChild(label);
+    if (/(?:^|\/)polytrack\/index\.html(?:$|\?)/.test(String(href || '')) || /(?:^|\/)polytrack-0\.6\.3\/index\.html(?:$|\?)/.test(String(href || ''))) {
+      var datasetBtn = document.createElement('button');
+      datasetBtn.type = 'button';
+      datasetBtn.className = 'sg-dataset';
+      datasetBtn.hidden = true;
+      datasetBtn.textContent = 'Dataset';
+      datasetBtn.title = 'Good data is saved here and sent to the archive. Click to download a zip.';
+      datasetBtn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var api = null;
+        try { api = iframe.contentWindow && iframe.contentWindow.polytrackDataset; } catch (err) {}
+        if (api && typeof api.download === 'function') api.download();
+      };
+      title.appendChild(datasetBtn);
+    }
     title.appendChild(fs);
     title.appendChild(close);
     var body = document.createElement('div');

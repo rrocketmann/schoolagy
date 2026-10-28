@@ -943,6 +943,7 @@
       },
       massOffset: num(message.carMassOffset),
       finished: false,
+      acceptFinish: true,
       clock: performance.now(),
       chunks: [],
       videoBytes: 0,
@@ -1141,20 +1142,29 @@
     session.tickCount += 1;
   }
 
+  function clearAttempt(session) {
+    session.finished = false;
+    session.acceptFinish = false;
+    session.samples = [];
+    session.tickBuf = [];
+    session.tickCount = 0;
+    session.tickTruncated = false;
+    session.rowsTruncated = false;
+    session.nextFrame = 0;
+    restartVideo(session);
+  }
+
   function takeState(state) {
     if (!state || state.id == null) return;
     var session = sessions[state.id];
-    if (!session || session.finished || !state.hasStarted) return;
-    if (state.frames < session.nextFrame - STEP_FRAMES) {
-      session.samples = [];
-      session.tickBuf = [];
-      session.tickCount = 0;
-      session.tickTruncated = false;
-      session.rowsTruncated = false;
-      session.nextFrame = 0;
-      restartVideo(session);
-    }
+    if (!session) return;
     var frame = state.frames | 0;
+    // Reset keeps this car, so a finished lap has to open a new attempt.
+    var restarted = frame < session.nextFrame - STEP_FRAMES || (session.finished && state.finishFrames == null);
+    if (restarted) clearAttempt(session);
+    if (state.finishFrames == null) session.acceptFinish = true;
+    if (session.finished || !state.hasStarted) return;
+    if (state.finishFrames != null && !session.acceptFinish) return;
     var lastTickFrame = session.tickCount ? session.tickBuf[(session.tickCount - 1) * 14] : -1;
     if (frame !== lastTickFrame) pushTick(session, state, frame);
     var crossed = frame >= session.nextFrame;

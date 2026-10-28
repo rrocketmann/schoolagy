@@ -1,0 +1,42 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-width;
+}
+
+body {
+    background: #1a1a2e;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-container {
+    text-align: center;
+    max-width: 500px;
+    padding: 2rem;
+}
+
+h1 {
+    margin-bottom: 1rem;
+    color: #f97316;
+}
+
+.controls {
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+canvas {
+    background: #16213e;
+    display: block;
+    margin: 0 auto;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}

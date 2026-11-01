@@ -2,6 +2,7 @@
 // Each lap keeps the agent's 19 numbers, every value the 0.6.3 simulation posts,
 // a 1 ms pose and control trace, and a canvas video.
 // Good data is saved in this browser and sent to the archive. The zip stays on this computer.
+// Only an official campaign layout is kept. A custom track is ignored.
 (function (global) {
   "use strict";
 
@@ -286,7 +287,7 @@
   var DATASET_README = [
     "# Polytrack 0.6.3 good data",
     "",
-    "Good data from Polytrack 0.6.3. A run is included only when that browser's determinism check passed.",
+    "Good data from Polytrack 0.6.3. A run is included only when that browser's determinism check passed and the layout is an official campaign track.",
     "",
     "Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. A run that fails the determinism check is not uploaded.",
     "",
@@ -1523,12 +1524,62 @@
     return out;
   }
 
+  var OFFICIAL = {
+    "8f94794c132dcd1b": "Summer 1",
+    "eba5b2814a0b60e6": "Summer 2",
+    "08d3a76150bf2493": "Summer 3",
+    "598d2f153b1dfcb9": "Summer 4",
+    "b451518d1b0dc8e0": "Summer 5",
+    "11b898afd000c9f4": "Summer 6",
+    "0830c1efcb61821e": "Summer 7",
+    "bc39a89124e18f0b": "Winter 1",
+    "5d3bdb8249d2fcbe": "Winter 2",
+    "c431c56ee8fd7ded": "Winter 3",
+    "aa851494e5d3d404": "Winter 4",
+    "387b28e30c2a2566": "Winter 5",
+    "d824a995ca386b1e": "Desert 1",
+    "84a542770fc9271d": "Desert 2",
+    "23f882dd20816a97": "Desert 3",
+    "cf41a955af1ef0c1": "Desert 4",
+    "9c53502b022070bd": "Desert 5"
+  };
+
+  function layoutSig(parts) {
+    if (!parts || !parts.length || !global.crypto || !crypto.subtle) return Promise.resolve("");
+    var rows = [];
+    var i;
+    for (i = 0; i < parts.length; i++) {
+      var part = parts[i];
+      if (!part) return Promise.resolve("");
+      rows.push([part.x | 0, part.y | 0, part.z | 0, part.type | 0, part.rotation | 0, part.axis | 0]);
+    }
+    rows.sort(function (a, b) {
+      var n;
+      for (n = 0; n < 6; n++) if (a[n] !== b[n]) return a[n] < b[n] ? -1 : 1;
+      return 0;
+    });
+    var text = "[" + rows.map(function (row) { return "(" + row.join(", ") + ")"; }).join(", ") + "]";
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(function (buf) {
+      var bytes = new Uint8Array(buf);
+      var hex = "";
+      for (i = 0; i < 8; i++) hex += ("0" + bytes[i].toString(16)).slice(-2);
+      return hex;
+    });
+  }
+
   function commit(job) {
     if (!job.ok || job.samples.length < 10) return;
     job.trackPromise.then(function (track) {
+      return layoutSig(track.parts || []).then(function (sig) {
+        if (!OFFICIAL[sig]) return;
+        commitRun(job, track, OFFICIAL[sig]);
+      });
+    }).catch(function () {});
+  }
+
+  function commitRun(job, track, name) {
       var rows = buildRows(job.samples, layoutFromParts(track.parts || []));
       if (rows.length < 10) return;
-      var name = trackLabel() || track.name || job.key;
       var id = runId(name, job.frames, rows);
       var mime = job.video && job.video.mime || "video/webm";
       var file = job.blob ? videoFile(id, mime) : null;
@@ -1566,7 +1617,6 @@
         rows: rows
       };
       remember(run, job.blob);
-    }).catch(function () {});
   }
 
   function saveOutbox(rec) {

@@ -1,6 +1,6 @@
 # Polytrack 0.6.3 good data
 
-Good data from Polytrack 0.6.3. A run is included only when that browser's determinism check passed.
+Good data from Polytrack 0.6.3. A run is included only when that browser's determinism check passed and the layout is an official campaign track.
 
 Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. A run that fails the determinism check is not uploaded.
 

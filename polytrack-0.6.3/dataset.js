@@ -1,7 +1,7 @@
 // Records finished Polytrack 0.6.3 laps, and only when this computer's determinism check is Ok.
-// This save is separate from Polytrack 0.5.2. Each lap keeps the agent's 19 numbers,
-// every value the 0.6.3 simulation posts, a 1 ms pose and control trace, and a canvas video.
-// Good data is saved in this browser and sent to the 0.6.3 archive. The zip stays on this computer.
+// Each lap keeps the agent's 19 numbers, every value the 0.6.3 simulation posts,
+// a 1 ms pose and control trace, and a canvas video.
+// Good data is saved in this browser and sent to the archive. The zip stays on this computer.
 (function (global) {
   "use strict";
 
@@ -288,7 +288,7 @@
     "",
     "Good data from Polytrack 0.6.3. A run is included only when that browser's determinism check passed.",
     "",
-    "Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. Polytrack 0.5.2 is a separate dataset and is not in this zip. A run that fails the determinism check is not uploaded.",
+    "Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. A run that fails the determinism check is not uploaded.",
     "",
     "## Files",
     "",
@@ -304,7 +304,7 @@
     "",
     "## Lap row",
     "",
-    "`game` is `polytrack-0.6.3` and `version` is 1. A Polytrack 0.5.2 lap does not belong in this file.",
+    "`game` is `polytrack-0.6.3` and `version` is 1.",
     "",
     "`action` is the w/a/s/d combination at that physics frame: 0 none, 1 a, 2 d, 3 w, 4 wa, 5 wd, 6 s, 7 sa, 8 sd, and -1 while reset is held. Changes between rows are in `ticks`.",
     "",

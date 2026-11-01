@@ -447,6 +447,9 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-sgy-player .popups-title button{background:transparent;border:0;color:#fff;cursor:pointer;font-size:13px;padding:4px 8px}',
     '#sg-sgy-player .popups-title button.sg-dataset{font-weight:700;white-space:nowrap}',
     '#sg-sgy-player .popups-title button.sg-dataset[hidden]{display:none!important}',
+    '#sg-sgy-player .popups-title label.sg-jerk{display:flex;align-items:center;gap:6px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}',
+    '#sg-sgy-player .popups-title label.sg-jerk[hidden]{display:none!important}',
+    '#sg-sgy-player .popups-title label.sg-jerk input{margin:0}',
     '#sg-sgy-player .popups-title button:hover{text-decoration:underline}',
     '#sg-sgy-player .popups-body{flex:1;min-height:0;background:#000;position:relative;overflow:hidden}',
     '#sg-sgy-player iframe{border:0;background:#000}',
@@ -590,6 +593,8 @@ gtag('config', 'G-C7MHSFPRSE');
     btn.hidden = false;
     btn.textContent = data.label || 'Dataset';
     if (data.title) btn.title = data.title;
+    var jerk = document.querySelector('#sg-sgy-player .sg-jerk');
+    if (jerk) jerk.hidden = false;
   });
 
   function playerChrome(name, href, onClose) {
@@ -619,7 +624,20 @@ gtag('config', 'G-C7MHSFPRSE');
       datasetBtn.className = 'sg-dataset';
       datasetBtn.hidden = true;
       datasetBtn.textContent = 'Dataset';
-      datasetBtn.title = 'Good data is saved here and sent to the archive. Click to download a zip.';
+      datasetBtn.title = 'Good data is saved here and sent to the archive. Click to download a zip. One lap earns one cent.';
+      var jerkLabel = document.createElement('label');
+      jerkLabel.className = 'sg-jerk';
+      jerkLabel.hidden = true;
+      jerkLabel.title = 'While you are driving, the car sometimes yanks left, right, or onto the brake. You have to recover.';
+      var jerkBox = document.createElement('input');
+      jerkBox.type = 'checkbox';
+      jerkLabel.appendChild(jerkBox);
+      jerkLabel.appendChild(document.createTextNode(' Jerk'));
+      jerkBox.addEventListener('change', function() {
+        try {
+          iframe.contentWindow.postMessage({ type: 'polytrack-dataset-jerk', on: jerkBox.checked }, location.origin);
+        } catch (err) {}
+      });
       datasetBtn.onclick = function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -628,6 +646,7 @@ gtag('config', 'G-C7MHSFPRSE');
         if (api && typeof api.download === 'function') api.download();
       };
       title.appendChild(datasetBtn);
+      title.appendChild(jerkLabel);
     }
     title.appendChild(fs);
     title.appendChild(close);

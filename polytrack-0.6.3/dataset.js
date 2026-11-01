@@ -1097,6 +1097,11 @@
   var button = null;
   var labelNode = null;
   var sendFailed = false;
+  var driving = false;
+  var jerkOn = false;
+  var jerkHeld = "";
+  var nextJerk = 0;
+  var userKeys = {};
   var INBOX_TOPIC = "pt360bad3248e4c33725e03b483f99b673448747fd";
   var UPLOAD_EXPIRE = "172800";
   var REPOST_MS = 8 * 60 * 60 * 1000;
@@ -1202,6 +1207,7 @@
     if (!session) return;
     delete sessions[carId];
     stopRecorder(session);
+    driving = false;
   }
 
   function trackKey(trackData) {
@@ -1407,7 +1413,11 @@
     var restarted = frame < session.nextFrame - STEP_FRAMES || (session.finished && state.finishFrames == null);
     if (restarted) clearAttempt(session);
     if (state.finishFrames == null) session.acceptFinish = true;
-    if (session.finished || !state.hasStarted) return;
+    if (session.finished || !state.hasStarted) {
+      driving = false;
+      return;
+    }
+    driving = state.finishFrames == null;
     if (state.finishFrames != null && !session.acceptFinish) return;
     var lastTickFrame = session.tickCount ? session.tickBuf[(session.tickCount - 1) * TICK_FIELDS.length] : -1;
     if (frame !== lastTickFrame) pushTick(session, state, frame);
@@ -1955,12 +1965,58 @@
     notifyParent();
   }
 
+  function money(count) {
+    return "$" + (count / 100).toFixed(2);
+  }
+
   function paint() {
     if (!button) return;
     var count = allRuns().length;
-    var label = count === 1 ? "Dataset · 1 lap" : "Dataset · " + count + " laps";
+    var laps = count === 1 ? "1 lap" : count + " laps";
+    var label = "Dataset · " + laps + " · " + money(count);
     if (sendFailed && count) label += " · not sent";
     setLabel(label);
+  }
+
+  function releaseJerk() {
+    if (!jerkHeld) return;
+    var code = jerkHeld;
+    jerkHeld = "";
+    try {
+      window.dispatchEvent(new KeyboardEvent("keyup", { code: code, key: code, bubbles: true, cancelable: true }));
+    } catch (err) {}
+  }
+
+  function setJerk(on) {
+    jerkOn = !!on;
+    if (!jerkOn) releaseJerk();
+    else nextJerk = performance.now() + 2000 + Math.random() * 3000;
+  }
+
+  function pokeKey(code, holdMs) {
+    if (jerkHeld || userKeys[code]) return;
+    jerkHeld = code;
+    try {
+      window.dispatchEvent(new KeyboardEvent("keydown", { code: code, key: code, bubbles: true, cancelable: true }));
+    } catch (err) {
+      jerkHeld = "";
+      return;
+    }
+    setTimeout(function () {
+      if (jerkHeld !== code) return;
+      if (userKeys[code]) { jerkHeld = ""; return; }
+      releaseJerk();
+    }, holdMs);
+  }
+
+  function jerkTick() {
+    if (!jerkOn || !driving || jerkHeld) return;
+    var now = performance.now();
+    if (now < nextJerk) return;
+    var codes = ["KeyA", "KeyD", "KeyS"].filter(function (code) { return !userKeys[code]; });
+    if (!codes.length) return;
+    pokeKey(codes[(Math.random() * codes.length) | 0], 140 + ((Math.random() * 180) | 0));
+    nextJerk = now + 3000 + Math.random() * 6000;
   }
 
   function mount() {
@@ -1981,16 +2037,29 @@
     });
     window.addEventListener("message", function (event) {
       if (event.origin !== window.location.origin) return;
-      if (!event.data || event.data.type !== "polytrack-dataset-download") return;
-      if (event.source !== window.parent) return;
-      download();
+      if (!event.data || event.source !== window.parent) return;
+      if (event.data.type === "polytrack-dataset-download") download();
+      else if (event.data.type === "polytrack-dataset-jerk") setJerk(event.data.on);
     });
     if (!framed()) {
-      document.body.appendChild(button);
+      var bar = document.createElement("div");
+      bar.id = "polytrack-063-tools";
+      var jerk = document.createElement("label");
+      jerk.id = "polytrack-063-jerk";
+      jerk.title = "While you are driving, the car sometimes yanks left, right, or onto the brake. You have to recover.";
+      var box = document.createElement("input");
+      box.type = "checkbox";
+      box.addEventListener("change", function () { setJerk(box.checked); });
+      jerk.appendChild(box);
+      jerk.appendChild(document.createTextNode(" Jerk"));
+      bar.appendChild(button);
+      bar.appendChild(jerk);
+      document.body.appendChild(bar);
       var style = document.createElement("style");
-      style.textContent = "#polytrack-063-dataset{position:fixed;left:12px;bottom:12px;z-index:40;margin:0;padding:6px 10px;border:0;background:#28346a;color:#fff;font:16px/1.2 sans-serif;cursor:pointer;pointer-events:auto;}#polytrack-063-dataset:hover{background:#334b77;}";
+      style.textContent = "#polytrack-063-tools{position:fixed;left:12px;bottom:12px;z-index:40;display:flex;gap:8px;align-items:center;}#polytrack-063-dataset{margin:0;padding:6px 10px;border:0;background:#28346a;color:#fff;font:16px/1.2 sans-serif;cursor:pointer;pointer-events:auto;}#polytrack-063-dataset:hover{background:#334b77;}#polytrack-063-jerk{display:flex;gap:6px;align-items:center;color:#fff;font:14px/1.2 sans-serif;cursor:pointer;}";
       document.head.appendChild(style);
     }
+    setInterval(jerkTick, 200);
     paint();
   }
 
@@ -2035,6 +2104,12 @@
       runs: allRuns,
       download: download
     };
+    window.addEventListener("keydown", function (event) {
+      if (event.isTrusted && event.code) userKeys[event.code] = true;
+    }, true);
+    window.addEventListener("keyup", function (event) {
+      if (event.isTrusted && event.code) userKeys[event.code] = false;
+    }, true);
     if (document.body) mount();
     else document.addEventListener("DOMContentLoaded", mount);
     loadPublished().then(function (runs) {

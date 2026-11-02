@@ -572,6 +572,14 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-overlay .sg-bar button{width:32px;height:32px;border:0;border-radius:4px;background:transparent;color:#fff;cursor:pointer;padding:6px;line-height:0}',
     '#sg-overlay .sg-bar button.sg-dataset{width:auto;height:32px;padding:0 10px;font:700 13px/32px sans-serif;white-space:nowrap}',
     '#sg-overlay .sg-bar button.sg-dataset[hidden]{display:none}',
+    '#sg-overlay .sg-bar button.sg-terms{width:auto;height:32px;padding:0 10px;font:700 13px/32px sans-serif;white-space:nowrap}',
+    '#sg-overlay .sg-bar button.sg-terms[hidden]{display:none}',
+    '#sg-terms{position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center}',
+    '#sg-terms[hidden]{display:none}',
+    '#sg-terms .sg-terms-card{width:min(720px,92vw);height:min(80vh,640px);background:#fff;border-radius:4px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.4)}',
+    '#sg-terms .sg-terms-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;height:40px;padding:0 8px 0 12px;background:#0677ba;color:#fff;font-weight:700}',
+    '#sg-terms .sg-terms-bar button{border:0;background:transparent;color:#fff;font:700 13px/32px sans-serif;cursor:pointer;padding:0 8px}',
+    '#sg-terms iframe{flex:1;border:0;background:#eef1f4;width:100%}',
     '#sg-overlay .sg-bar label.sg-jerk{display:flex;align-items:center;gap:6px;height:32px;padding:0 8px;font:700 13px/32px sans-serif;white-space:nowrap;color:#fff;cursor:pointer}',
     '#sg-overlay .sg-bar label.sg-jerk[hidden]{display:none}',
     '#sg-overlay .sg-bar label.sg-jerk input{margin:0}',
@@ -856,7 +864,13 @@ gtag('config', 'G-C7MHSFPRSE');
   datasetBtn.className = 'sg-dataset';
   datasetBtn.hidden = true;
   datasetBtn.textContent = 'Dataset';
-  datasetBtn.title = 'Good data is saved here and sent to the archive. Click to download a zip. One lap earns one cent.';
+  datasetBtn.title = 'Good data is saved here and sent to the archive. One saved lap accrues one cent. Payment is in whole dollars under the dataset terms. Click to download a zip.';
+  var termsBtn = document.createElement('button');
+  termsBtn.type = 'button';
+  termsBtn.className = 'sg-terms';
+  termsBtn.hidden = true;
+  termsBtn.textContent = 'Terms';
+  termsBtn.title = 'Dataset payment terms';
   var jerkLabel = document.createElement('label');
   jerkLabel.className = 'sg-jerk';
   jerkLabel.hidden = true;
@@ -870,7 +884,7 @@ gtag('config', 'G-C7MHSFPRSE');
   fsBtn.title = 'Fullscreen';
   var closeBtn = document.createElement('button');
   closeBtn.type = 'button';
-  closeBtn.title = 'Close';
+  closeBtn.title = 'Close (`)';
   function svg(path) { return '<svg viewBox="0 0 24 24"><path d="' + path + '"/></svg>'; }
   var ICON_FS = 'M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z';
   var ICON_EXIT = 'M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z';
@@ -878,6 +892,7 @@ gtag('config', 'G-C7MHSFPRSE');
   fsBtn.innerHTML = svg(ICON_FS);
   closeBtn.innerHTML = svg(ICON_CLOSE);
   actions.appendChild(datasetBtn);
+  actions.appendChild(termsBtn);
   actions.appendChild(jerkLabel);
   actions.appendChild(fsBtn);
   actions.appendChild(closeBtn);
@@ -890,6 +905,37 @@ gtag('config', 'G-C7MHSFPRSE');
   wrap.appendChild(stage);
   ov.appendChild(wrap);
   document.body.appendChild(ov);
+  var termsLayer = document.createElement('div');
+  termsLayer.id = 'sg-terms';
+  termsLayer.hidden = true;
+  var termsCard = document.createElement('div');
+  termsCard.className = 'sg-terms-card';
+  var termsBar = document.createElement('div');
+  termsBar.className = 'sg-terms-bar';
+  var termsTitle = document.createElement('span');
+  termsTitle.textContent = 'Dataset payment terms';
+  var termsClose = document.createElement('button');
+  termsClose.type = 'button';
+  termsClose.textContent = 'Close';
+  termsBar.appendChild(termsTitle);
+  termsBar.appendChild(termsClose);
+  var termsFrame = document.createElement('iframe');
+  termsFrame.title = 'Dataset payment terms';
+  termsCard.appendChild(termsBar);
+  termsCard.appendChild(termsFrame);
+  termsLayer.appendChild(termsCard);
+  document.body.appendChild(termsLayer);
+  function closeTerms() {
+    termsLayer.hidden = true;
+    termsFrame.src = 'about:blank';
+  }
+  function openTerms() {
+    termsFrame.src = root + 'dataset-terms/index.html';
+    termsLayer.hidden = false;
+  }
+  termsBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); openTerms(); };
+  termsClose.onclick = function(e) { e.preventDefault(); e.stopPropagation(); closeTerms(); };
+  termsLayer.addEventListener('click', function(e) { if (e.target === termsLayer) closeTerms(); });
 
   function nativeFsEl() {
     return document.fullscreenElement || document.webkitFullscreenElement || null;
@@ -976,6 +1022,7 @@ gtag('config', 'G-C7MHSFPRSE');
     var data = event.data;
     if (!data || data.type !== 'polytrack-dataset') return;
     datasetBtn.hidden = false;
+    termsBtn.hidden = false;
     jerkLabel.hidden = false;
     datasetBtn.textContent = data.label || 'Dataset';
     if (data.title) datasetBtn.title = data.title;
@@ -984,8 +1031,10 @@ gtag('config', 'G-C7MHSFPRSE');
     exitFs();
     datasetWatch = false;
     datasetBtn.hidden = true;
+    termsBtn.hidden = true;
     jerkLabel.hidden = true;
     jerkBox.checked = false;
+    closeTerms();
     ov.classList.remove('show');
     iframe.src = '';
     document.body.style.overflow = '';
@@ -1001,7 +1050,39 @@ gtag('config', 'G-C7MHSFPRSE');
   });
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape' || !ov.classList.contains('show')) return;
+    if (!termsLayer.hidden) { closeTerms(); return; }
     if (ov.classList.contains('sg-fs') && !nativeFsEl()) exitFs();
+  });
+  function panicLeave() {
+    if (!ov.classList.contains('show')) return;
+    closeTerms();
+    closeGame();
+  }
+  document.addEventListener('keydown', function(e) {
+    if (!ov.classList.contains('show') || e.repeat || e.code !== 'Backquote') return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    panicLeave();
+  }, true);
+  window.addEventListener('message', function(e) {
+    if (e.origin !== location.origin) return;
+    if (!e.data || e.data.type !== 'sg-panic') return;
+    panicLeave();
+  });
+  iframe.addEventListener('load', function() {
+    try {
+      var w = iframe.contentWindow;
+      if (!w || w.__sgPanic || w.__sgPanicBackup) return;
+      w.__sgPanicBackup = true;
+      w.addEventListener('keydown', function(e) {
+        if (!ov.classList.contains('show') || e.repeat || e.code !== 'Backquote') return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        panicLeave();
+      }, true);
+    } catch (err) {}
   });
 
   window.openGame = function(name, url) {
@@ -1009,6 +1090,8 @@ gtag('config', 'G-C7MHSFPRSE');
     fitted = '';
     datasetWatch = polytrackPage(url);
     datasetBtn.hidden = true;
+    termsBtn.hidden = true;
+    closeTerms();
     jerkLabel.hidden = true;
     jerkBox.checked = false;
     titleEl.textContent = name || '';

@@ -291,6 +291,8 @@
     "",
     "Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. A run that fails the determinism check is not uploaded.",
     "",
+    "A saved lap is not a payment. One saved lap accrues one cent. Cash is paid only in whole dollars, only at JLS, only if the creator knows you, and only for an official lap with no checkpoint restart. The program can end without notice. The full terms are the Dataset terms page. A lap missing from this zip was not counted.",
+    "",
     "## Files",
     "",
     "- `runs.jsonl` is one JSON object per line. The first line is the header (`kind` is `header`). Each later line is one lap (`kind` is `run`).",
@@ -1146,8 +1148,8 @@
       determinismOk = data.isDeterminstic === true || data.isDeterministic === true;
       if (button) {
         button.title = determinismOk
-          ? "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. Click to download a zip."
-          : "Determinism check did not pass, so good data from this browser is not saved or sent.";
+          ? "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. One saved lap accrues one cent. Payment is in whole dollars under the dataset terms. Click to download a zip."
+          : "Determinism check did not pass, so good data from this browser is not saved or sent. A lap that is not saved is not paid.";
         notifyParent();
       }
       return;
@@ -2024,7 +2026,7 @@
     button = document.createElement("button");
     button.type = "button";
     button.id = "polytrack-063-dataset";
-    button.title = "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. Click to download a zip.";
+    button.title = "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. One saved lap accrues one cent. Payment is in whole dollars under the dataset terms. Click to download a zip.";
     labelNode = document.createTextNode("");
     button.appendChild(labelNode);
     button.addEventListener("mousedown", function (event) {
@@ -2044,6 +2046,46 @@
     if (!framed()) {
       var bar = document.createElement("div");
       bar.id = "polytrack-063-tools";
+      var terms = document.createElement("button");
+      terms.type = "button";
+      terms.id = "polytrack-063-terms";
+      terms.textContent = "Terms";
+      terms.title = "Dataset payment terms";
+      terms.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        var layer = document.getElementById("polytrack-063-terms-layer");
+        if (!layer) {
+          layer = document.createElement("div");
+          layer.id = "polytrack-063-terms-layer";
+          var card = document.createElement("div");
+          var head = document.createElement("div");
+          head.textContent = "Dataset payment terms";
+          var shut = document.createElement("button");
+          shut.type = "button";
+          shut.textContent = "Close";
+          shut.addEventListener("click", function (ev) {
+            ev.preventDefault();
+            layer.hidden = true;
+            frame.src = "about:blank";
+          });
+          head.appendChild(shut);
+          var frame = document.createElement("iframe");
+          frame.title = "Dataset payment terms";
+          card.appendChild(head);
+          card.appendChild(frame);
+          layer.appendChild(card);
+          layer.addEventListener("click", function (ev) {
+            if (ev.target !== layer) return;
+            layer.hidden = true;
+            frame.src = "about:blank";
+          });
+          document.body.appendChild(layer);
+        }
+        var frame = layer.querySelector("iframe");
+        frame.src = new URL("../dataset-terms/index.html", location.href).href;
+        layer.hidden = false;
+      });
       var jerk = document.createElement("label");
       jerk.id = "polytrack-063-jerk";
       jerk.title = "While you are driving, the car sometimes yanks left, right, or onto the brake. You have to recover.";
@@ -2053,10 +2095,11 @@
       jerk.appendChild(box);
       jerk.appendChild(document.createTextNode(" Recover"));
       bar.appendChild(button);
+      bar.appendChild(terms);
       bar.appendChild(jerk);
       document.body.appendChild(bar);
       var style = document.createElement("style");
-      style.textContent = "#polytrack-063-tools{position:fixed;left:12px;bottom:12px;z-index:40;display:flex;gap:8px;align-items:center;}#polytrack-063-dataset{margin:0;padding:6px 10px;border:0;background:#28346a;color:#fff;font:16px/1.2 sans-serif;cursor:pointer;pointer-events:auto;}#polytrack-063-dataset:hover{background:#334b77;}#polytrack-063-jerk{display:flex;gap:6px;align-items:center;color:#fff;font:14px/1.2 sans-serif;cursor:pointer;}";
+      style.textContent = "#polytrack-063-tools{position:fixed;left:12px;bottom:12px;z-index:40;display:flex;gap:8px;align-items:center;}#polytrack-063-dataset,#polytrack-063-terms{margin:0;padding:6px 10px;border:0;background:#28346a;color:#fff;font:16px/1.2 sans-serif;cursor:pointer;pointer-events:auto;}#polytrack-063-dataset:hover,#polytrack-063-terms:hover{background:#334b77;}#polytrack-063-jerk{display:flex;gap:6px;align-items:center;color:#fff;font:14px/1.2 sans-serif;cursor:pointer;}#polytrack-063-terms-layer{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;}#polytrack-063-terms-layer[hidden]{display:none;}#polytrack-063-terms-layer > div{width:min(720px,92vw);height:min(80vh,640px);background:#fff;display:flex;flex-direction:column;}#polytrack-063-terms-layer > div > div{display:flex;align-items:center;justify-content:space-between;height:40px;padding:0 8px 0 12px;background:#0677ba;color:#fff;font:700 14px/40px sans-serif;}#polytrack-063-terms-layer button{border:0;background:transparent;color:#fff;font:700 13px/32px sans-serif;cursor:pointer;}#polytrack-063-terms-layer iframe{flex:1;border:0;width:100%;background:#eef1f4;}";
       document.head.appendChild(style);
     }
     setInterval(jerkTick, 200);

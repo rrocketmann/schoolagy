@@ -4,6 +4,8 @@ Good data from Polytrack 0.6.3. A run is included only when that browser's deter
 
 Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. A run that fails the determinism check is not uploaded.
 
+A saved lap is not a payment. One saved lap accrues one cent. Cash is paid only in whole dollars, only at JLS, only if the creator knows you, and only for an official lap with no checkpoint restart. The program can end without notice. The full terms are the Dataset terms page. A lap missing from this zip was not counted.
+
 ## Files
 
 - `runs.jsonl` is one JSON object per line. The first line is the header (`kind` is `header`). Each later line is one lap (`kind` is `run`).

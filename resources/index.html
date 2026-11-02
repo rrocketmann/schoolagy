@@ -447,6 +447,14 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-sgy-player .popups-title button{background:transparent;border:0;color:#fff;cursor:pointer;font-size:13px;padding:4px 8px}',
     '#sg-sgy-player .popups-title button.sg-dataset{font-weight:700;white-space:nowrap}',
     '#sg-sgy-player .popups-title button.sg-dataset[hidden]{display:none!important}',
+    '#sg-sgy-player .popups-title button.sg-terms{font-weight:700;white-space:nowrap}',
+    '#sg-sgy-player .popups-title button.sg-terms[hidden]{display:none!important}',
+    '#sg-terms{position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center}',
+    '#sg-terms[hidden]{display:none}',
+    '#sg-terms .sg-terms-card{width:min(720px,92vw);height:min(80vh,640px);background:#fff;border-radius:4px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.4)}',
+    '#sg-terms .sg-terms-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;height:40px;padding:0 8px 0 12px;background:#0677ba;color:#fff;font-weight:700}',
+    '#sg-terms .sg-terms-bar button{border:0;background:transparent;color:#fff;font:700 13px/32px sans-serif;cursor:pointer;padding:0 8px}',
+    '#sg-terms iframe{flex:1;border:0;background:#eef1f4;width:100%}',
     '#sg-sgy-player .popups-title label.sg-jerk{display:flex;align-items:center;gap:6px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}',
     '#sg-sgy-player .popups-title label.sg-jerk[hidden]{display:none!important}',
     '#sg-sgy-player .popups-title label.sg-jerk input{margin:0}',
@@ -460,6 +468,64 @@ gtag('config', 'G-C7MHSFPRSE');
     '.popups-box.sg-sgy-player-box.show{display:flex}'
   ].join('');
   document.head.appendChild(s);
+
+  var termsLayer = null;
+  function closeTerms() {
+    if (!termsLayer) return;
+    termsLayer.hidden = true;
+    var frame = termsLayer.querySelector('iframe');
+    if (frame) frame.src = 'about:blank';
+  }
+  function openTerms() {
+    if (!termsLayer) {
+      termsLayer = document.createElement('div');
+      termsLayer.id = 'sg-terms';
+      termsLayer.hidden = true;
+      var card = document.createElement('div');
+      card.className = 'sg-terms-card';
+      var bar = document.createElement('div');
+      bar.className = 'sg-terms-bar';
+      var label = document.createElement('span');
+      label.textContent = 'Dataset payment terms';
+      var shut = document.createElement('button');
+      shut.type = 'button';
+      shut.textContent = 'Close';
+      shut.onclick = function(e) { e.preventDefault(); e.stopPropagation(); closeTerms(); };
+      bar.appendChild(label);
+      bar.appendChild(shut);
+      var frame = document.createElement('iframe');
+      frame.title = 'Dataset payment terms';
+      card.appendChild(bar);
+      card.appendChild(frame);
+      termsLayer.appendChild(card);
+      termsLayer.addEventListener('click', function(e) { if (e.target === termsLayer) closeTerms(); });
+      document.body.appendChild(termsLayer);
+    }
+    termsLayer.querySelector('iframe').src = root + 'dataset-terms/index.html';
+    termsLayer.hidden = false;
+  }
+  function panicLeave() {
+    var close = document.querySelector('#sg-sgy-player .popups-close');
+    if (!close) return;
+    closeTerms();
+    close.click();
+  }
+  document.addEventListener('keydown', function(e) {
+    if (!document.getElementById('sg-sgy-player') || e.repeat || e.code !== 'Backquote') return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    panicLeave();
+  }, true);
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape' || !termsLayer || termsLayer.hidden) return;
+    closeTerms();
+  });
+  window.addEventListener('message', function(e) {
+    if (e.origin !== location.origin) return;
+    if (!e.data || e.data.type !== 'sg-panic') return;
+    panicLeave();
+  });
 
   var dd = document.createElement('div');
   dd.id = 'sg-dropdown';
@@ -593,6 +659,8 @@ gtag('config', 'G-C7MHSFPRSE');
     btn.hidden = false;
     btn.textContent = data.label || 'Dataset';
     if (data.title) btn.title = data.title;
+    var terms = document.querySelector('#sg-sgy-player .sg-terms');
+    if (terms) terms.hidden = false;
     var jerk = document.querySelector('#sg-sgy-player .sg-jerk');
     if (jerk) jerk.hidden = false;
   });
@@ -616,6 +684,7 @@ gtag('config', 'G-C7MHSFPRSE');
     close.type = 'button';
     close.className = 'popups-close';
     close.textContent = 'Close';
+    close.title = 'Close (`)';
     title.appendChild(back);
     title.appendChild(label);
     if (/(?:^|\/)polytrack\/index\.html(?:$|\?)/.test(String(href || '')) || /(?:^|\/)polytrack-0\.6\.3\/index\.html(?:$|\?)/.test(String(href || ''))) {
@@ -624,7 +693,18 @@ gtag('config', 'G-C7MHSFPRSE');
       datasetBtn.className = 'sg-dataset';
       datasetBtn.hidden = true;
       datasetBtn.textContent = 'Dataset';
-      datasetBtn.title = 'Good data is saved here and sent to the archive. Click to download a zip. One lap earns one cent.';
+      datasetBtn.title = 'Good data is saved here and sent to the archive. One saved lap accrues one cent. Payment is in whole dollars under the dataset terms. Click to download a zip.';
+      var termsBtn = document.createElement('button');
+      termsBtn.type = 'button';
+      termsBtn.className = 'sg-terms';
+      termsBtn.hidden = true;
+      termsBtn.textContent = 'Terms';
+      termsBtn.title = 'Dataset payment terms';
+      termsBtn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openTerms();
+      };
       var jerkLabel = document.createElement('label');
       jerkLabel.className = 'sg-jerk';
       jerkLabel.hidden = true;
@@ -646,6 +726,7 @@ gtag('config', 'G-C7MHSFPRSE');
         if (api && typeof api.download === 'function') api.download();
       };
       title.appendChild(datasetBtn);
+      title.appendChild(termsBtn);
       title.appendChild(jerkLabel);
     }
     title.appendChild(fs);
@@ -660,7 +741,21 @@ gtag('config', 'G-C7MHSFPRSE');
     if (doc) iframe.setAttribute('data-sg-doc', '1');
     iframe.setAttribute('scrolling', doc ? 'yes' : 'no');
     iframe.src = href;
-    iframe.addEventListener('load', function(){ fitGameFrame(iframe); });
+    iframe.addEventListener('load', function(){
+      fitGameFrame(iframe);
+      try {
+        var w = iframe.contentWindow;
+        if (!w || w.__sgPanic || w.__sgPanicBackup) return;
+        w.__sgPanicBackup = true;
+        w.addEventListener('keydown', function(e) {
+          if (e.repeat || e.code !== 'Backquote') return;
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          panicLeave();
+        }, true);
+      } catch (err) {}
+    });
     body.appendChild(iframe);
     setTimeout(function(){ fitGameFrame(iframe); }, 0);
     wrap.appendChild(title);
@@ -678,6 +773,7 @@ gtag('config', 'G-C7MHSFPRSE');
     back.onclick = close.onclick = function(e) {
       e.preventDefault();
       exitFs();
+      closeTerms();
       onClose();
     };
     fs.onclick = function(e) {

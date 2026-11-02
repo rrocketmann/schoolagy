@@ -2051,7 +2051,7 @@
       box.type = "checkbox";
       box.addEventListener("change", function () { setJerk(box.checked); });
       jerk.appendChild(box);
-      jerk.appendChild(document.createTextNode(" Jerk"));
+      jerk.appendChild(document.createTextNode(" Recover"));
       bar.appendChild(button);
       bar.appendChild(jerk);
       document.body.appendChild(bar);

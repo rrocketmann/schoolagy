@@ -632,7 +632,7 @@ gtag('config', 'G-C7MHSFPRSE');
       var jerkBox = document.createElement('input');
       jerkBox.type = 'checkbox';
       jerkLabel.appendChild(jerkBox);
-      jerkLabel.appendChild(document.createTextNode(' Jerk'));
+      jerkLabel.appendChild(document.createTextNode(' Recover'));
       jerkBox.addEventListener('change', function() {
         try {
           iframe.contentWindow.postMessage({ type: 'polytrack-dataset-jerk', on: jerkBox.checked }, location.origin);

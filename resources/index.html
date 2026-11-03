@@ -465,7 +465,10 @@ gtag('config', 'G-C7MHSFPRSE');
     '#popups-overlay.sg-sgy-player-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998}',
     '#popups-overlay.sg-sgy-player-overlay.show{display:block}',
     '.popups-box.sg-sgy-player-box{display:none;position:fixed;z-index:9999;top:28%;left:30%;width:40%;height:44%;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.4);flex-direction:column}',
-    '.popups-box.sg-sgy-player-box.show{display:flex}'
+    '.popups-box.sg-sgy-player-box.show{display:flex}',
+    '#sg-welcome{margin:0 0 16px;background:#fff;border:1px solid #e4e6e8;border-radius:4px;padding:14px 16px;color:#333;font:15px/1.45 Roboto,Arial,Helvetica,sans-serif}',
+    '#sg-welcome p{margin:0 0 8px}',
+    '#sg-welcome button{margin-top:4px;border:0;background:#0677ba;color:#fff;font:700 13px/32px sans-serif;padding:0 12px;border-radius:4px;cursor:pointer}'
   ].join('');
   document.head.appendChild(s);
 
@@ -693,7 +696,7 @@ gtag('config', 'G-C7MHSFPRSE');
       datasetBtn.className = 'sg-dataset';
       datasetBtn.hidden = true;
       datasetBtn.textContent = 'Dataset';
-      datasetBtn.title = 'Good data is saved here and sent to the archive. One saved lap accrues one cent. Payment is in whole dollars under the dataset terms. Click to download a zip.';
+      datasetBtn.title = 'Good data is saved here and sent to the archive. One saved lap accrues one cent, including a lap with Recover on. Those laps are filed under recovery-data in the zip. Payment is in whole dollars under the dataset terms. Click to download a zip.';
       var termsBtn = document.createElement('button');
       termsBtn.type = 'button';
       termsBtn.className = 'sg-terms';
@@ -708,7 +711,7 @@ gtag('config', 'G-C7MHSFPRSE');
       var jerkLabel = document.createElement('label');
       jerkLabel.className = 'sg-jerk';
       jerkLabel.hidden = true;
-      jerkLabel.title = 'While you are driving, the car sometimes yanks left, right, or onto the brake. You have to recover.';
+      jerkLabel.title = 'Once the car is moving, it yanks left, right, or onto the brake for about a second. You have to recover. That lap still counts and is saved under recovery-data.';
       var jerkBox = document.createElement('input');
       jerkBox.type = 'checkbox';
       jerkLabel.appendChild(jerkBox);
@@ -918,6 +921,38 @@ gtag('config', 'G-C7MHSFPRSE');
   }
 
   fillResources();
+  (function showWelcome() {
+    try { if (localStorage.getItem('sg-welcome') === '1') return; } catch (err) { return; }
+    if (document.getElementById('sg-welcome')) return;
+    var library = document.getElementById('library-main');
+    var anchor = library && library.parentNode;
+    if (!anchor) return;
+    var y = window.scrollY;
+    var card = document.createElement('div');
+    card.id = 'sg-welcome';
+    var games = document.createElement('p');
+    var gamesLead = document.createElement('strong');
+    gamesLead.textContent = 'Where the games are. ';
+    games.appendChild(gamesLead);
+    games.appendChild(document.createTextNode('Click Resources in the top bar. That opens the game list on this page, and you can search it. On the home page, games are also in the feed.'));
+    var leave = document.createElement('p');
+    var leaveLead = document.createElement('strong');
+    leaveLead.textContent = 'Leave a game ';
+    leave.appendChild(leaveLead);
+    leave.appendChild(document.createTextNode('with the ` key, the one to the left of 1. Shift is fine. Escape still belongs to the game.'));
+    var got = document.createElement('button');
+    got.type = 'button';
+    got.textContent = 'Got it';
+    got.addEventListener('click', function() {
+      try { localStorage.setItem('sg-welcome', '1'); } catch (err) {}
+      card.remove();
+    });
+    card.appendChild(games);
+    card.appendChild(leave);
+    card.appendChild(got);
+    anchor.insertBefore(card, anchor.firstChild);
+    if (window.scrollY !== y) window.scrollTo(0, y);
+  })();
   var fillTimer;
   var resOb = new MutationObserver(function() {
     clearTimeout(fillTimer);

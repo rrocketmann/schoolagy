@@ -284,6 +284,20 @@
     },
     vehicle: VEHICLE
   };
+
+  function filedRun(run) {
+    if (!run || !run.recovery) return run;
+    var copy = {};
+    var key;
+    for (key in run) {
+      if (Object.prototype.hasOwnProperty.call(run, key)) copy[key] = run[key];
+    }
+    if (copy.video && String(copy.video).indexOf("recovery-data/") !== 0) {
+      copy.video = "recovery-data/" + String(copy.video).replace(/^\/+/, "");
+    }
+    return copy;
+  }
+
   var DATASET_README = [
     "# Polytrack 0.6.3 good data",
     "",
@@ -291,12 +305,13 @@
     "",
     "Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. A run that fails the determinism check is not uploaded.",
     "",
-    "A saved lap is not a payment. One saved lap accrues one cent. Cash is paid only in whole dollars, only at JLS, only if the creator knows you, and only for an official lap with no checkpoint restart. The program can end without notice. The full terms are the Dataset terms page. A lap missing from this zip was not counted.",
+    "A saved lap is not a payment. One saved lap accrues one cent, including a lap driven with Recover on. Cash is paid only in whole dollars, only at JLS, only if the creator knows you, and only for an official lap with no checkpoint reset. A reset back to a checkpoint is not saved. The program can end without notice. The full terms are the Dataset terms page. A lap missing from this zip was not counted.",
     "",
     "## Files",
     "",
-    "- `runs.jsonl` is one JSON object per line. The first line is the header (`kind` is `header`). Each later line is one lap (`kind` is `run`).",
-    "- `videos/<id>.webm` is the canvas recording named by the lap's `video` field. That field is null when the browser could not record.",
+    "- `runs.jsonl` is one JSON object per line. The first line is the header (`kind` is `header`). Each later line is one lap (`kind` is `run`) from an attempt where Recover stayed off.",
+    "- `videos/<id>.webm` is the canvas recording named by that lap's `video` field. That field is null when the browser could not record.",
+    "- `recovery-data/` holds the laps from an attempt where Recover was on. They still accrue one cent. `recovery-data/runs.jsonl` lists them, and `recovery-data/videos/` holds their recordings.",
     "",
     "## Time",
     "",
@@ -1083,6 +1098,7 @@
     decodeCarState: decodeCarState,
     packTicks: packTicks,
     zipFiles: zipFiles,
+    filedRun: filedRun,
     readme: DATASET_README
   };
 
@@ -1100,8 +1116,10 @@
   var labelNode = null;
   var sendFailed = false;
   var driving = false;
+  var liveCars = {};
   var jerkOn = false;
   var jerkHeld = "";
+  var jerkPulse = 0;
   var nextJerk = 0;
   var userKeys = {};
   var INBOX_TOPIC = "pt360bad3248e4c33725e03b483f99b673448747fd";
@@ -1148,7 +1166,7 @@
       determinismOk = data.isDeterminstic === true || data.isDeterministic === true;
       if (button) {
         button.title = determinismOk
-          ? "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. One saved lap accrues one cent. Payment is in whole dollars under the dataset terms. Click to download a zip."
+          ? "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. One saved lap accrues one cent, including a lap with Recover on. Those laps are filed under recovery-data in the zip. Payment is in whole dollars under the dataset terms. Click to download a zip."
           : "Determinism check did not pass, so good data from this browser is not saved or sent. A lap that is not saved is not paid.";
         notifyParent();
       }
@@ -1194,11 +1212,13 @@
       massOffset: message.carMassOffset != null ? num(message.carMassOffset) : knownMassOffset,
       finished: false,
       acceptFinish: true,
+      checkpointReset: false,
       clock: performance.now(),
       chunks: [],
       videoBytes: 0,
       videoStarted: 0,
-      videoMeta: { fps: VIDEO_FPS, mime: "video/webm", width: 0, height: 0, bits_per_second: VIDEO_BPS, truncated: false }
+      videoMeta: { fps: VIDEO_FPS, mime: "video/webm", width: 0, height: 0, bits_per_second: VIDEO_BPS, truncated: false },
+      recovery: !!jerkOn
     };
     sessions[carId] = session;
     startVideo(session);
@@ -1208,8 +1228,9 @@
     var session = sessions[carId];
     if (!session) return;
     delete sessions[carId];
+    delete liveCars[carId];
     stopRecorder(session);
-    driving = false;
+    refreshDriving();
   }
 
   function trackKey(trackData) {
@@ -1397,12 +1418,14 @@
   function clearAttempt(session) {
     session.finished = false;
     session.acceptFinish = false;
+    session.checkpointReset = false;
     session.samples = [];
     session.tickBuf = [];
     session.tickCount = 0;
     session.tickTruncated = false;
     session.rowsTruncated = false;
     session.nextFrame = 0;
+    session.recovery = !!jerkOn;
     restartVideo(session);
   }
 
@@ -1414,12 +1437,17 @@
     // Reset keeps this car, so a finished lap has to open a new attempt.
     var restarted = frame < session.nextFrame - STEP_FRAMES || (session.finished && state.finishFrames == null);
     if (restarted) clearAttempt(session);
+    if (state.controls && state.controls.reset) session.checkpointReset = true;
     if (state.finishFrames == null) session.acceptFinish = true;
     if (session.finished || !state.hasStarted) {
-      driving = false;
+      delete liveCars[state.id];
+      refreshDriving();
       return;
     }
-    driving = state.finishFrames == null;
+    if (state.finishFrames == null) liveCars[state.id] = true;
+    else delete liveCars[state.id];
+    refreshDriving();
+    if (jerkOn) session.recovery = true;
     if (state.finishFrames != null && !session.acceptFinish) return;
     var lastTickFrame = session.tickCount ? session.tickBuf[(session.tickCount - 1) * TICK_FIELDS.length] : -1;
     if (frame !== lastTickFrame) pushTick(session, state, frame);
@@ -1467,6 +1495,8 @@
         massOffset: session.massOffset,
         frames: state.finishFrames | 0,
         ok: determinismOk,
+        recovery: !!session.recovery,
+        checkpointReset: !!session.checkpointReset,
         video: session.videoMeta
       };
       var videoPromise = stopRecorder(session);
@@ -1580,7 +1610,7 @@
   }
 
   function commit(job) {
-    if (!job.ok || job.samples.length < 10) return;
+    if (!job.ok || job.checkpointReset || job.samples.length < 10) return;
     job.trackPromise.then(function (track) {
       return layoutSig(track.parts || []).then(function (sig) {
         if (!OFFICIAL[sig]) return;
@@ -1595,12 +1625,14 @@
       var id = runId(name, job.frames, rows);
       var mime = job.video && job.video.mime || "video/webm";
       var file = job.blob ? videoFile(id, mime) : null;
+      if (file && job.recovery) file = "recovery-data/" + file;
       var run = {
         kind: "run",
         id: id,
         game: "polytrack-0.6.3",
         version: 1,
         determinism: "ok",
+        recovery: !!job.recovery,
         track: {
           name: name,
           author: track.author || "",
@@ -1892,13 +1924,24 @@
     return runs;
   }
 
-  function exportText() {
+  function jsonl(runs) {
     var lines = [JSON.stringify(HEADER)];
-    var runs = allRuns();
     var i;
-    for (i = 0; i < runs.length; i++) lines.push(JSON.stringify(runs[i]));
+    for (i = 0; i < runs.length; i++) lines.push(JSON.stringify(filedRun(runs[i])));
     return lines.join("\n") + "\n";
   }
+
+  function exportText() {
+    return jsonl(allRuns());
+  }
+
+  var RECOVERY_README = [
+    "# Recovery data",
+    "",
+    "Laps from an attempt where Recover was on. Each one still accrues one cent.",
+    "",
+    "`runs.jsonl` in this folder lists those laps. `videos/` next to it holds their recordings. Other laps stay at the top of the zip."
+  ].join("\n") + "\n";
 
   var packing = false;
 
@@ -1917,7 +1960,7 @@
           return loadVideo(run.id).then(function (blob) {
             if (!blob) return null;
             return blob.arrayBuffer().then(function (buffer) {
-              videos.push({ name: run.video, data: new Uint8Array(buffer) });
+              videos.push({ name: filedRun(run).video, data: new Uint8Array(buffer) });
             });
           });
         });
@@ -1925,11 +1968,19 @@
     }
     chain.then(function () {
       var encoder = new TextEncoder();
+      var normal = [];
+      var recovery = [];
+      var n;
+      for (n = 0; n < runs.length; n++) {
+        if (runs[n] && runs[n].recovery) recovery.push(runs[n]);
+        else normal.push(runs[n]);
+      }
       var files = [
         { name: "README.md", data: encoder.encode(DATASET_README) },
-        { name: "runs.jsonl", data: encoder.encode(exportText()) }
+        { name: "runs.jsonl", data: encoder.encode(jsonl(normal)) },
+        { name: "recovery-data/README.md", data: encoder.encode(RECOVERY_README) },
+        { name: "recovery-data/runs.jsonl", data: encoder.encode(jsonl(recovery)) }
       ];
-      var n;
       for (n = 0; n < videos.length; n++) files.push(videos[n]);
       return zipFiles(files);
     }).then(function (blob) {
@@ -1980,33 +2031,65 @@
     setLabel(label);
   }
 
+  function refreshDriving() {
+    var on = false;
+    var id;
+    for (id in liveCars) if (liveCars[id]) on = true;
+    var was = driving;
+    driving = on;
+    if (driving && !was && jerkOn) nextJerk = performance.now() + 600;
+  }
+
+  function markRecovery() {
+    var id;
+    for (id in sessions) if (sessions[id]) sessions[id].recovery = true;
+  }
+
+  function keyName(code) {
+    if (code === "KeyA") return "a";
+    if (code === "KeyD") return "d";
+    if (code === "KeyS") return "s";
+    return "";
+  }
+
   function releaseJerk() {
+    if (jerkPulse) { clearInterval(jerkPulse); jerkPulse = 0; }
     if (!jerkHeld) return;
     var code = jerkHeld;
     jerkHeld = "";
     try {
-      window.dispatchEvent(new KeyboardEvent("keyup", { code: code, key: code, bubbles: true, cancelable: true }));
+      window.dispatchEvent(new KeyboardEvent("keyup", { code: code, key: keyName(code), bubbles: true, cancelable: true }));
     } catch (err) {}
   }
 
   function setJerk(on) {
     jerkOn = !!on;
     if (!jerkOn) releaseJerk();
-    else nextJerk = performance.now() + 2000 + Math.random() * 3000;
+    else {
+      nextJerk = performance.now() + (driving ? 600 : 400);
+      markRecovery();
+    }
   }
 
   function pokeKey(code, holdMs) {
     if (jerkHeld || userKeys[code]) return;
     jerkHeld = code;
-    try {
-      window.dispatchEvent(new KeyboardEvent("keydown", { code: code, key: code, bubbles: true, cancelable: true }));
-    } catch (err) {
-      jerkHeld = "";
-      return;
+    var key = keyName(code);
+    function down() {
+      if (jerkHeld !== code) return;
+      try {
+        window.dispatchEvent(new KeyboardEvent("keydown", { code: code, key: key, bubbles: true, cancelable: true, repeat: false }));
+      } catch (err) {}
     }
+    down();
+    jerkPulse = setInterval(down, 160);
     setTimeout(function () {
       if (jerkHeld !== code) return;
-      if (userKeys[code]) { jerkHeld = ""; return; }
+      if (userKeys[code]) {
+        if (jerkPulse) { clearInterval(jerkPulse); jerkPulse = 0; }
+        jerkHeld = "";
+        return;
+      }
       releaseJerk();
     }, holdMs);
   }
@@ -2015,10 +2098,10 @@
     if (!jerkOn || !driving || jerkHeld) return;
     var now = performance.now();
     if (now < nextJerk) return;
-    var codes = ["KeyA", "KeyD", "KeyS"].filter(function (code) { return !userKeys[code]; });
+    var codes = ["KeyA", "KeyD", "KeyA", "KeyD", "KeyS"].filter(function (code) { return !userKeys[code]; });
     if (!codes.length) return;
-    pokeKey(codes[(Math.random() * codes.length) | 0], 140 + ((Math.random() * 180) | 0));
-    nextJerk = now + 3000 + Math.random() * 6000;
+    pokeKey(codes[(Math.random() * codes.length) | 0], 900 + ((Math.random() * 500) | 0));
+    nextJerk = now + 2200 + Math.random() * 1800;
   }
 
   function mount() {
@@ -2026,7 +2109,7 @@
     button = document.createElement("button");
     button.type = "button";
     button.id = "polytrack-063-dataset";
-    button.title = "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. One saved lap accrues one cent. Payment is in whole dollars under the dataset terms. Click to download a zip.";
+    button.title = "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. One saved lap accrues one cent, including a lap with Recover on. Those laps are filed under recovery-data in the zip. Payment is in whole dollars under the dataset terms. Click to download a zip.";
     labelNode = document.createTextNode("");
     button.appendChild(labelNode);
     button.addEventListener("mousedown", function (event) {
@@ -2088,7 +2171,7 @@
       });
       var jerk = document.createElement("label");
       jerk.id = "polytrack-063-jerk";
-      jerk.title = "While you are driving, the car sometimes yanks left, right, or onto the brake. You have to recover.";
+      jerk.title = "Once the car is moving, it yanks left, right, or onto the brake for about a second. You have to recover. That lap still counts and is saved under recovery-data.";
       var box = document.createElement("input");
       box.type = "checkbox";
       box.addEventListener("change", function () { setJerk(box.checked); });

@@ -4,12 +4,13 @@ Good data from Polytrack 0.6.3. A run is included only when that browser's deter
 
 Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. A run that fails the determinism check is not uploaded.
 
-A saved lap is not a payment. One saved lap accrues one cent. Cash is paid only in whole dollars, only at JLS, only if the creator knows you, and only for an official lap with no checkpoint restart. The program can end without notice. The full terms are the Dataset terms page. A lap missing from this zip was not counted.
+A saved lap is not a payment. One saved lap accrues one cent, including a lap driven with Recover on. Cash is paid only in whole dollars, only at JLS, only if the creator knows you, and only for an official lap with no checkpoint reset. A reset back to a checkpoint is not saved. The program can end without notice. The full terms are the Dataset terms page. A lap missing from this zip was not counted.
 
 ## Files
 
-- `runs.jsonl` is one JSON object per line. The first line is the header (`kind` is `header`). Each later line is one lap (`kind` is `run`).
-- `videos/<id>.webm` is the canvas recording named by the lap's `video` field. That field is null when the browser could not record.
+- `runs.jsonl` is one JSON object per line. The first line is the header (`kind` is `header`). Each later line is one lap (`kind` is `run`) from an attempt where Recover stayed off.
+- `videos/<id>.webm` is the canvas recording named by that lap's `video` field. That field is null when the browser could not record.
+- `recovery-data/` holds the laps from an attempt where Recover was on. They still accrue one cent. `recovery-data/runs.jsonl` lists them, and `recovery-data/videos/` holds their recordings.
 
 ## Time
 

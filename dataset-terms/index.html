@@ -22,6 +22,7 @@
   ol { margin: 0; padding: 8px 16px 16px 36px; }
   li { margin: 10px 0; line-height: 1.45; }
   .note { color: #677274; font-size: 14px; line-height: 1.5; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92em; }
 </style>
 </head>
 <body>
@@ -34,30 +35,32 @@
 </header>
 <main>
   <h1>Dataset payment terms</h1>
-  <p class="basis">These terms cover cash for Polytrack 0.6.3 laps saved by this site. They were posted on 2 November 2026. Driving after that is how you accept them. The button, the zip, and these terms can disagree. These terms are the ones that decide payment.</p>
+  <p class="basis">These terms cover cash for Polytrack 0.6.3 laps saved by this site. They were posted on 2 November 2026 and updated the same day for Recover. Driving after you can read them is how you accept them. If the button, the zip, and these terms disagree, these terms decide payment.</p>
 
   <section>
     <h2>Why a lap did not count</h2>
     <ol>
-      <li>A lap is saved only when that browser’s determinism check is Ok and the finish is an official campaign layout this build already knows. A failed check, a custom track, a community track, an editor test, or any layout that is not in that list is not saved. It cannot be added afterward.</li>
-      <li>The official layouts are Summer 1 through Summer 7, Winter 1 through Winter 5, and Desert 1 through Desert 5, as shipped in Polytrack 0.6.3 on this site. A track with the same name and a different layout does not count.</li>
+      <li>A lap is saved only when that browser’s determinism check is Ok and the finish is an official campaign layout this build already knows. A failed check, a custom track, a community track, an editor test, or any other layout is not saved. It cannot be added afterward.</li>
+      <li>The official layouts are Summer 1 through Summer 7, Winter 1 through Winter 5, and Desert 1 through Desert 5, as shipped in Polytrack 0.6.3 on this site. The same name on a different layout does not count.</li>
       <li>The lap has to finish, and the saver has to keep enough of it. Quitting, closing the tab, refreshing, or crashing before the finish is stored leaves nothing. A finish the saver drops as too short is not stored either.</li>
       <li>Polytrack 0.5.2 does not write this dataset. The Polytrack site, the app, and any copy that does not load this site’s dataset script do not write it either. A lap from before this recorder was on the public site was never stored.</li>
-      <li>The Dataset button counts laps in this browser’s own storage. Another computer, another browser, a private window, or cleared site data starts over. That number is not the archive, and it is not someone else’s laps.</li>
-      <li>“Not sent” means this computer still has the lap and the upload did not finish. The school network often blocks that upload. The archive does not have the lap yet, so nobody can pay it from the archive. Opening the game again later, on a network that allows the upload, is the retry. A lap that was never saved cannot be retried.</li>
-      <li>A checkpoint restart can still be saved and can still raise the number on the button. It is saved data. It is not a paid lap. People who finished with a checkpoint restart, on the wrong track, or on a browser that failed the check will see the lap missing from payment even when they remember finishing.</li>
+      <li>The Dataset button counts laps in this browser’s own storage, including laps filed under recovery data. Another computer, another browser, a private window, or cleared site data starts over. That number is not the archive, and it is not someone else’s laps.</li>
+      <li>“Not sent” means this computer still has the lap and the upload did not finish. The school network often blocks that upload. The archive does not have the lap yet, so it cannot be paid from the archive. Opening the game again later, on a network that allows the upload, retries it. A lap that was never saved cannot be retried.</li>
+      <li>A checkpoint reset is not saved. It does not raise the button and it does not accrue a cent. That means respawning at a checkpoint, or holding the checkpoint-reset control (R or Enter, unless you changed it), at any point in the attempt. Starting again from the start is a different control and can begin a new attempt. A finish on the wrong track, or on a browser that failed the check, is also missing.</li>
+      <li>Recover does not drop a lap. If Recover was on during the attempt, the lap is in the <code>recovery-data</code> folder of the zip, not in the top <code>runs.jsonl</code>. It still accrues one cent, and the button still counts it.</li>
     </ol>
   </section>
 
   <section>
     <h2>What a paid lap is</h2>
     <ol>
-      <li>One saved lap accrues one cent. The dollars and cents on the Dataset button are that tally for every saved lap on this browser. They are not a balance anyone owes you.</li>
+      <li>One saved lap accrues one cent. The dollars and cents on the Dataset button are that tally for every saved lap on this browser, including recovery laps. They are not a balance anyone owes you.</li>
       <li>Payment is cash, in whole dollars only. Qualifying cents are added up and rounded down to a whole dollar. Ninety-nine cents is not paid. There is no check for the leftover, no transfer, and no IOU. When the program ends, leftover cents are gone.</li>
-      <li>A qualifying lap is a finished official lap that you drove yourself in Polytrack 0.6.3 on this site, with the determinism check Ok, with Recover off for the whole attempt, and with no checkpoint restart. Checkpoint restart means respawning at a checkpoint or using the checkpoint-reset control (R or Enter unless you changed it) during that attempt.</li>
-      <li>Starting the track over from the start can begin a new attempt. A new attempt can qualify on its own. The attempt you restarted does not get paid twice, and the restarted one does not qualify.</li>
+      <li>A qualifying lap is a finished official lap that you drove yourself in Polytrack 0.6.3 on this site, with the determinism check Ok, and with no checkpoint reset. Recover may be on. If the car went back to a checkpoint during the attempt, that finish is not stored.</li>
+      <li>An attempt where Recover was on is still a qualifying lap when the rest of this list is met. In the zip it is stored under <code>recovery-data</code>, apart from laps driven with Recover off. The split is only so those laps can be told apart. It does not change the cent.</li>
+      <li>Starting the track over from the start can begin a new attempt. A new attempt can qualify on its own. The attempt you left does not get paid twice, and it does not qualify.</li>
       <li>The creator pays from laps the archive actually received. A lap that only exists on your computer, only exists in a zip you downloaded, or still says “not sent” is not paid.</li>
-      <li>The dataset does not store your name. A number on your screen does not tell the creator who drove. The creator can ignore every lap from before they watched you drive, and can require you to show the same browser.</li>
+      <li>The dataset does not store your name. A number on your screen does not say who drove. The creator can ignore every lap from before they watched you drive, and can require you to show the same browser.</li>
     </ol>
   </section>
 
@@ -65,8 +68,8 @@
     <h2>Who can be paid</h2>
     <ol>
       <li>You have to be at JLS (Jane Lathrop Stanford Middle School) when you are paid. Payment is in person, on campus. It is not mailed, not sent online, not left with the office, and not handed to a friend to pass on.</li>
-      <li>You have to know the creator of this site personally. Introducing yourself in order to get paid does not count. A message, a comment, or asking in front of a class is not a claim.</li>
-      <li>You have to be the person who drove. Laps do not pool, do not transfer to another browser, and do not pay the person who watched.</li>
+      <li>You have to already know the creator of this site. Introducing yourself in order to get paid does not count. A message, a comment, or asking in front of a class is not a claim.</li>
+      <li>You have to be the person who drove. Laps do not pool, do not move to another browser, and do not pay the person who watched.</li>
       <li>You ask the creator in person at JLS. The creator does not owe you a reply. Asking again, or asking where other people can hear it, can be ignored.</li>
     </ol>
   </section>
@@ -78,19 +81,19 @@
       <li>Nothing here is wages, a prize, a scholarship, a school fundraiser, or a debt. Finishing a lap does not create an amount the creator must pay. JLS, the school district, PowerSchool, and the Polytrack developer do not owe you anything and did not sponsor this.</li>
       <li>The creator can cap a person or a day, skip a week, pay one person and not another, and refuse a lap that looks copied, spliced, edited, impossibly clean, or driven by a bot. The creator’s decision is final.</li>
       <li>There is no minimum you can demand and no maximum you are promised. Food, extra credit, gift cards, and anything that is not cash are not a substitute unless the creator offers one, and that offer can be taken back.</li>
-      <li>These terms can be replaced without notice. Laps driven under a replaced version are paid, if at all, under the terms in force when you ask.</li>
+      <li>These terms can be replaced without notice. Laps driven under an older version are paid, if at all, under the terms in force when you ask.</li>
     </ol>
   </section>
 
   <section>
     <h2>Other rules</h2>
     <ol>
-      <li>Recover has to stay off. A lap where this page yanked the steering or the brake is not paid.</li>
+      <li>Recover yanks the steering or the brake while the car is moving, for about a second at a time. Turn it on from the player bar. An attempt driven with it on is saved under <code>recovery-data</code> and still accrues one cent.</li>
       <li>Editing IndexedDB, the zip, the physics file, or dataset.js voids the laps from that browser. Two tabs at once can drop or duplicate a lap. A duplicate is paid once, if it is paid at all.</li>
-      <li>A video is not required for the lap to be saved. The creator can still refuse a lap that has no video, or a lap whose video shows a checkpoint restart.</li>
+      <li>A video is not required for the lap to be saved. The creator can still refuse a lap that has no video.</li>
       <li>The zip you download is your copy of what this browser saved. Handing that zip over is not, by itself, a request that has to be paid.</li>
       <li>You are responsible for any tax and for any school consequence. These terms do not give you permission to play during class or to break a school rule.</li>
-      <li>The ` key leaves the game. It is not a driving control, and the game does not receive it.</li>
+      <li>The ` key leaves the game. It sits to the left of 1. Shift is fine. Ctrl, Alt, and Meta do not trigger it. The game does not receive that key. Escape still belongs to the game.</li>
       <li>If you do not accept these terms, you can still play. Do not drive in order to be paid.</li>
     </ol>
   </section>

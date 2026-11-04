@@ -1,10 +1,10 @@
-# Polytrack 0.6.3 good data
+# TrackData
 
 Good data from Polytrack 0.6.3. A run is included only when that browser's determinism check passed and the layout is an official campaign track.
 
 Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. A run that fails the determinism check is not uploaded.
 
-A saved lap is not a payment. One saved lap accrues one cent, including a lap driven with Recover on. Cash is paid only in whole dollars, only at JLS, only if the creator knows you, and only for an official lap with no checkpoint reset. A reset back to a checkpoint is not saved. The program can end without notice. The full terms are the Dataset terms page. A lap missing from this zip was not counted.
+A saved lap is not a payment. One saved lap accrues one cent, including a lap driven with Recover on. Cash is paid only in whole dollars, only at JLS, only if the creator knows you, and only for an official lap with no checkpoint reset. A reset back to a checkpoint is not saved. The program can end without notice. The full terms are the TrackData terms page. A lap missing from this zip was not counted.
 
 ## Files
 

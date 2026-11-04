@@ -1127,7 +1127,10 @@
   var REPOST_MS = 8 * 60 * 60 * 1000;
   var URL_FRESH_MS = 36 * 60 * 60 * 1000;
   var MAX_POSTS = 3;
+  var VIDEO_KEEP = 2;
   var publishChain = Promise.resolve();
+  var ledger = [];
+  var persistTries = 0;
 
   function watch(worker) {
     var post = worker.postMessage;
@@ -1668,32 +1671,45 @@
       return new Promise(function (resolve, reject) {
         var tx = db.transaction("outbox", "readwrite");
         tx.objectStore("outbox").put(rec);
-        tx.oncomplete = function () { resolve(); };
-        tx.onerror = function () { reject(tx.error); };
+        finishDb(db, tx, resolve, reject);
       });
     });
   }
 
   function loadOutbox(id) {
     return openDb().then(function (db) {
-      if (!db.objectStoreNames.contains("outbox")) return null;
+      if (!db.objectStoreNames.contains("outbox")) {
+        try { db.close(); } catch (err) {}
+        return null;
+      }
       return new Promise(function (resolve) {
         var tx = db.transaction("outbox", "readonly");
         var request = tx.objectStore("outbox").get(id);
-        request.onsuccess = function () { resolve(request.result || null); };
-        request.onerror = function () { resolve(null); };
+        function finish(value) {
+          try { db.close(); } catch (err) {}
+          resolve(value);
+        }
+        request.onsuccess = function () { finish(request.result || null); };
+        request.onerror = function () { finish(null); };
       });
     }).catch(function () { return null; });
   }
 
   function loadOutboxAll() {
     return openDb().then(function (db) {
-      if (!db.objectStoreNames.contains("outbox")) return [];
+      if (!db.objectStoreNames.contains("outbox")) {
+        try { db.close(); } catch (err) {}
+        return [];
+      }
       return new Promise(function (resolve) {
         var tx = db.transaction("outbox", "readonly");
         var request = tx.objectStore("outbox").getAll();
-        request.onsuccess = function () { resolve(request.result || []); };
-        request.onerror = function () { resolve([]); };
+        function finish(value) {
+          try { db.close(); } catch (err) {}
+          resolve(value);
+        }
+        request.onsuccess = function () { finish(request.result || []); };
+        request.onerror = function () { finish([]); };
       });
     }).catch(function () { return []; });
   }
@@ -1703,6 +1719,33 @@
     return new Response(stream).arrayBuffer().then(function (buf) {
       return new Blob([buf], { type: "application/gzip" });
     });
+  }
+
+  function bytesOf(buf) {
+    if (buf instanceof ArrayBuffer) return new Uint8Array(buf);
+    if (ArrayBuffer.isView(buf)) return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+    return null;
+  }
+
+  function decodeRecord(row) {
+    if (!row) return Promise.resolve(null);
+    if (row.kind === "run") return Promise.resolve(row);
+    if (!row.gz) return Promise.resolve(null);
+    var raw = bytesOf(row.gz);
+    if (!raw) return Promise.resolve(null);
+    var named = row.name || "lap.json.gz";
+    var textJob;
+    if (named.indexOf(".gz") < 0 || typeof DecompressionStream !== "function") {
+      textJob = Promise.resolve(new TextDecoder().decode(raw));
+    } else {
+      var stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream("gzip"));
+      textJob = new Response(stream).text();
+    }
+    return textJob.then(function (text) {
+      var run = JSON.parse(text);
+      if (!run || run.kind !== "run" || !run.id) return null;
+      return run;
+    }).catch(function () { return null; });
   }
 
   function encodeRun(run) {
@@ -1781,7 +1824,9 @@
           saved.posts = (saved.posts || 0) + 1;
           saved.lastPost = Date.now();
           paint();
-          return saveOutbox(saved);
+          return saveOutbox(saved).then(function () {
+            if (saved.posts >= 1) return deleteVideo(run.id);
+          });
         });
       });
     }).catch(function () {
@@ -1818,12 +1863,121 @@
     var i;
     for (i = 0; i < memoryRuns.length; i++) if (memoryRuns[i].id === run.id) return;
     memoryRuns.push(run);
+    mergeLedger([run.id]);
     paint();
-    var stored = saveLocal(run).catch(function () {});
-    var videoStored = blob ? saveVideo(run.id, blob).catch(function () {}) : Promise.resolve();
+    keepForever();
+    var stored = saveLocal(run).catch(function () {
+      return trimVideos().then(function () { return saveLocal(run); });
+    }).catch(function () {});
+    var videoStored = blob ? saveVideo(run.id, blob).catch(function () {
+      return trimVideos().then(function () { return saveVideo(run.id, blob); });
+    }).catch(function () {}) : Promise.resolve();
     Promise.all([stored, videoStored]).then(function () {
       schedulePublish(run, blob || null);
     });
+  }
+
+  function keepForever() {
+    if (persistTries >= 4) return;
+    persistTries += 1;
+    try {
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
+    } catch (err) {}
+  }
+
+  function parseLedger(json) {
+    var rows;
+    try { rows = JSON.parse(json); } catch (err) { return []; }
+    if (!Array.isArray(rows)) return [];
+    var out = [];
+    var i;
+    for (i = 0; i < rows.length; i++) if (typeof rows[i] === "string" && rows[i]) out.push(rows[i]);
+    return out;
+  }
+
+  function writeLedgerCookies(json) {
+    var chunks = [];
+    var i = 0;
+    while (i < json.length) {
+      var take = Math.min(2400, json.length - i);
+      var part = encodeURIComponent(json.slice(i, i + take));
+      while (part.length > 3800 && take > 1) {
+        take = Math.max(1, Math.floor(take * 0.75));
+        part = encodeURIComponent(json.slice(i, i + take));
+      }
+      chunks.push(part);
+      i += take;
+    }
+    if (!chunks.length) chunks.push("");
+    var n;
+    for (n = 0; n < chunks.length; n++) {
+      document.cookie = "pt063led" + n + "=" + chunks[n] + "; max-age=315360000; path=/; samesite=lax";
+    }
+    for (; n < 96; n++) document.cookie = "pt063led" + n + "=; max-age=0; path=/";
+  }
+
+  function readCookieLedger() {
+    var parts = String(document.cookie || "").split("; ");
+    var chunks = {};
+    var max = -1;
+    var i;
+    for (i = 0; i < parts.length; i++) {
+      var eq = parts[i].indexOf("=");
+      if (eq < 0) continue;
+      var name = parts[i].slice(0, eq);
+      if (name.indexOf("pt063led") !== 0) continue;
+      var n = parseInt(name.slice("pt063led".length), 10);
+      if (n !== n) continue;
+      chunks[n] = parts[i].slice(eq + 1);
+      if (n > max) max = n;
+    }
+    if (max < 0) return "";
+    var encoded = "";
+    for (i = 0; i <= max; i++) {
+      if (chunks[i] == null) return "";
+      encoded += chunks[i];
+    }
+    try { return decodeURIComponent(encoded); } catch (err) { return ""; }
+  }
+
+  function storeLedger() {
+    var json = JSON.stringify(ledger);
+    try { localStorage.setItem("polytrack-063-ledger", json); } catch (err) {}
+    try { writeLedgerCookies(json); } catch (err) {}
+  }
+
+  function loadLedger() {
+    var fromStore = [];
+    var fromCookie = [];
+    try { fromStore = parseLedger(localStorage.getItem("polytrack-063-ledger") || ""); } catch (err) {}
+    try { fromCookie = parseLedger(readCookieLedger()); } catch (err) {}
+    var seen = {};
+    ledger = [];
+    function add(list) {
+      var i;
+      for (i = 0; i < list.length; i++) {
+        if (!list[i] || seen[list[i]]) continue;
+        seen[list[i]] = 1;
+        ledger.push(list[i]);
+      }
+    }
+    add(fromStore);
+    add(fromCookie);
+    if (fromStore.length !== ledger.length || fromCookie.length !== ledger.length) storeLedger();
+  }
+
+  function mergeLedger(ids) {
+    var seen = {};
+    var i;
+    for (i = 0; i < ledger.length; i++) seen[ledger[i]] = 1;
+    var grew = false;
+    for (i = 0; i < ids.length; i++) {
+      if (!ids[i] || seen[ids[i]]) continue;
+      seen[ids[i]] = 1;
+      ledger.push(ids[i]);
+      grew = true;
+    }
+    if (grew) storeLedger();
   }
 
   function openDb() {
@@ -1844,13 +1998,30 @@
     });
   }
 
+  function finishDb(db, tx, resolve, reject) {
+    var settled = false;
+    function done(err) {
+      if (settled) return;
+      settled = true;
+      try { db.close(); } catch (closeErr) {}
+      if (err) reject(err);
+      else resolve();
+    }
+    tx.oncomplete = function () { done(); };
+    tx.onerror = function () { done(tx.error || new Error("indexedDB")); };
+    tx.onabort = function () { done(tx.error || new Error("indexedDB abort")); };
+  }
+
   function saveLocal(run) {
-    return openDb().then(function (db) {
-      return new Promise(function (resolve, reject) {
-        var tx = db.transaction("runs", "readwrite");
-        tx.objectStore("runs").put(run);
-        tx.oncomplete = function () { resolve(); };
-        tx.onerror = function () { reject(tx.error); };
+    return encodeRun(run).then(function (file) {
+      return file.blob.arrayBuffer().then(function (buf) {
+        return openDb().then(function (db) {
+          return new Promise(function (resolve, reject) {
+            var tx = db.transaction("runs", "readwrite");
+            tx.objectStore("runs").put({ id: run.id, gz: buf, name: file.name });
+            finishDb(db, tx, resolve, reject);
+          });
+        });
       });
     });
   }
@@ -1860,20 +2031,86 @@
       return new Promise(function (resolve, reject) {
         var tx = db.transaction("videos", "readwrite");
         tx.objectStore("videos").put(blob, id);
-        tx.oncomplete = function () { resolve(); };
-        tx.onerror = function () { reject(tx.error); };
+        finishDb(db, tx, resolve, reject);
       });
+    });
+  }
+
+  function deleteVideo(id) {
+    return openDb().then(function (db) {
+      if (!db.objectStoreNames.contains("videos")) {
+        try { db.close(); } catch (err) {}
+        return;
+      }
+      return new Promise(function (resolve) {
+        var tx = db.transaction("videos", "readwrite");
+        tx.objectStore("videos").delete(id);
+        finishDb(db, tx, resolve, resolve);
+      });
+    }).catch(function () {});
+  }
+
+  function videoKeys() {
+    return openDb().then(function (db) {
+      if (!db.objectStoreNames.contains("videos")) {
+        try { db.close(); } catch (err) {}
+        return [];
+      }
+      return new Promise(function (resolve) {
+        var tx = db.transaction("videos", "readonly");
+        var request = tx.objectStore("videos").getAllKeys();
+        request.onsuccess = function () {
+          var keys = request.result || [];
+          try { db.close(); } catch (err) {}
+          resolve(keys);
+        };
+        request.onerror = function () {
+          try { db.close(); } catch (err) {}
+          resolve([]);
+        };
+      });
+    }).catch(function () { return []; });
+  }
+
+  function trimVideos() {
+    return Promise.all([videoKeys(), loadOutboxAll()]).then(function (both) {
+      var keys = both[0];
+      var rows = both[1];
+      var posted = {};
+      var drop = [];
+      var keep = [];
+      var i;
+      for (i = 0; i < rows.length; i++) if (rows[i] && rows[i].posts >= 1) posted[rows[i].id] = 1;
+      for (i = 0; i < keys.length; i++) {
+        if (posted[keys[i]]) drop.push(keys[i]);
+        else keep.push(keys[i]);
+      }
+      if (keep.length > VIDEO_KEEP) drop = drop.concat(keep.slice(0, keep.length - VIDEO_KEEP));
+      var chain = Promise.resolve();
+      for (i = 0; i < drop.length; i++) {
+        (function (id) {
+          chain = chain.then(function () { return deleteVideo(id); });
+        })(drop[i]);
+      }
+      return chain;
     });
   }
 
   function loadVideo(id) {
     return openDb().then(function (db) {
-      if (!db.objectStoreNames.contains("videos")) return null;
+      if (!db.objectStoreNames.contains("videos")) {
+        try { db.close(); } catch (err) {}
+        return null;
+      }
       return new Promise(function (resolve) {
         var tx = db.transaction("videos", "readonly");
         var request = tx.objectStore("videos").get(id);
-        request.onsuccess = function () { resolve(request.result || null); };
-        request.onerror = function () { resolve(null); };
+        function finish(value) {
+          try { db.close(); } catch (err) {}
+          resolve(value);
+        }
+        request.onsuccess = function () { finish(request.result || null); };
+        request.onerror = function () { finish(null); };
       });
     }).catch(function () { return null; });
   }
@@ -1883,10 +2120,38 @@
       return new Promise(function (resolve, reject) {
         var tx = db.transaction("runs", "readonly");
         var request = tx.objectStore("runs").getAll();
-        request.onsuccess = function () { resolve(request.result || []); };
-        request.onerror = function () { reject(request.error); };
+        request.onsuccess = function () {
+          var rows = request.result || [];
+          try { db.close(); } catch (err) {}
+          resolve(rows);
+        };
+        request.onerror = function () {
+          try { db.close(); } catch (err) {}
+          reject(request.error);
+        };
       });
-    }).catch(function () { return []; });
+    }).then(function (rows) {
+      var jobs = [];
+      var i;
+      for (i = 0; i < rows.length; i++) jobs.push(decodeRecord(rows[i]));
+      return Promise.all(jobs).then(function (runs) {
+        var out = [];
+        var plain = [];
+        for (i = 0; i < runs.length; i++) {
+          if (!runs[i] || runs[i].kind !== "run" || !runs[i].id) continue;
+          out.push(runs[i]);
+          if (rows[i] && rows[i].kind === "run") plain.push(runs[i]);
+        }
+        var chain = Promise.resolve();
+        for (i = 0; i < plain.length; i++) {
+          (function (run) {
+            chain = chain.then(function () { return saveLocal(run).catch(function () {}); });
+          })(plain[i]);
+        }
+        chain.catch(function () {});
+        return out;
+      });
+    });
   }
 
   function loadPublished() {
@@ -2022,12 +2287,32 @@
     return "$" + (count / 100).toFixed(2);
   }
 
+  function lapCount() {
+    var seen = {};
+    var n = 0;
+    function add(id) {
+      if (!id || seen[id]) return;
+      seen[id] = 1;
+      n += 1;
+    }
+    var runs = allRuns();
+    var i;
+    for (i = 0; i < runs.length; i++) add(runs[i] && runs[i].id);
+    for (i = 0; i < ledger.length; i++) add(ledger[i]);
+    return n;
+  }
+
   function paint() {
     if (!button) return;
-    var count = allRuns().length;
+    var count = lapCount();
     var laps = count === 1 ? "1 lap" : count + " laps";
     var label = "TrackData · " + laps + " · " + money(count);
     if (sendFailed && count) label += " · not sent";
+    var base = button.getAttribute("data-base-title");
+    if (base) {
+      var missing = count - allRuns().length;
+      button.title = missing > 0 ? base + " " + missing + (missing === 1 ? " lap is" : " laps are") + " still counted after the full recording left this browser." : base;
+    }
     setLabel(label);
   }
 
@@ -2109,7 +2394,8 @@
     button = document.createElement("button");
     button.type = "button";
     button.id = "polytrack-063-dataset";
-    button.title = "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. One saved lap accrues one cent, including a lap with Recover on. Those laps are filed under recovery-data in the zip. Payment is in whole dollars under the dataset terms. Click to download a zip.";
+    button.title = "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. One saved lap accrues one cent, including a lap with Recover on. Those laps are filed under recovery-data in the zip. Payment is in whole dollars under the dataset terms. Click to download a zip. Restarting the computer does not clear this count.";
+    button.setAttribute("data-base-title", button.title);
     labelNode = document.createTextNode("");
     button.appendChild(labelNode);
     button.addEventListener("mousedown", function (event) {
@@ -2210,6 +2496,8 @@
   }
 
   function boot() {
+    loadLedger();
+    keepForever();
     keepCanvasFrames();
     var NativeWorker = window.Worker;
     function RecordingWorker(spec, options) {
@@ -2232,6 +2520,7 @@
     };
     window.addEventListener("keydown", function (event) {
       if (event.isTrusted && event.code) userKeys[event.code] = true;
+      if (event.isTrusted) keepForever();
     }, true);
     window.addEventListener("keyup", function (event) {
       if (event.isTrusted && event.code) userKeys[event.code] = false;
@@ -2243,18 +2532,24 @@
       return loadLocal();
     }).then(function (runs) {
       var i;
+      var ids = [];
       for (i = 0; i < runs.length; i++) {
-        if (!runs[i] || runs[i].determinism !== "ok") continue;
+        if (!runs[i] || runs[i].determinism !== "ok" || !runs[i].id) continue;
+        ids.push(runs[i].id);
         var known = false;
         var j;
         for (j = 0; j < memoryRuns.length; j++) if (memoryRuns[j].id === runs[i].id) known = true;
         if (!known) memoryRuns.push(runs[i]);
       }
+      mergeLedger(ids);
       paint();
       retryOutbox();
       setTimeout(retryOutbox, 20000);
       setTimeout(retryOutbox, 80000);
-    }).catch(function () {});
+      setTimeout(trimVideos, 30000);
+    }).catch(function () {
+      paint();
+    });
   }
 
   boot();

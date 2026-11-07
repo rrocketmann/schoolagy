@@ -285,6 +285,35 @@
     vehicle: VEHICLE
   };
 
+  var DOUBLE_CENTS = {
+    "Summer 5": 2,
+    "Summer 6": 2,
+    "Summer 7": 2,
+    "Winter 2": 2,
+    "Winter 3": 2,
+    "Desert 1": 2,
+    "Desert 2": 2,
+    "Desert 5": 2
+  };
+  var BONUS_LINE = "2¢: Summer 5, 6, 7 · Winter 2, 3 · Desert 1, 2, 5";
+  var PAY_TITLE = "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. A saved lap accrues one cent. A saved lap on Summer 5, Summer 6, Summer 7, Winter 2, Winter 3, Desert 1, Desert 2, or Desert 5 accrues two cents, including one already saved on this browser. A lap with Recover on accrues the same amount and is filed under recovery-data in the zip. Payment is in whole dollars under the dataset terms. Click to download a zip.";
+
+  function centsForId(id) {
+    var name = String(id || "").split("|")[0];
+    return DOUBLE_CENTS[name] || 1;
+  }
+
+  function money(cents) {
+    return "$" + (cents / 100).toFixed(2);
+  }
+
+  function trackDataLabel(laps, cents, failed) {
+    var lapText = laps === 1 ? "1 lap" : laps + " laps";
+    var label = "TrackData · " + lapText + " · " + money(cents) + " · " + BONUS_LINE;
+    if (failed && laps) label += " · not sent";
+    return label;
+  }
+
   function filedRun(run) {
     if (!run || !run.recovery) return run;
     var copy = {};
@@ -305,13 +334,13 @@
     "",
     "Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. A run that fails the determinism check is not uploaded.",
     "",
-    "A saved lap is not a payment. One saved lap accrues one cent, including a lap driven with Recover on. Cash is paid only in whole dollars, only at JLS, only if the creator knows you, and only for an official lap with no checkpoint reset. A reset back to a checkpoint is not saved. The program can end without notice. The full terms are the TrackData terms page. A lap missing from this zip was not counted.",
+    "A saved lap is not a payment. A saved lap accrues one cent. A saved lap on Summer 5, Summer 6, Summer 7, Winter 2, Winter 3, Desert 1, Desert 2, or Desert 5 accrues two cents, including one already saved on this browser. A lap driven with Recover on accrues the same amount. Cash is paid only in whole dollars, only at JLS, only if the creator knows you, and only for an official lap with no checkpoint reset. A reset back to a checkpoint is not saved. The program can end without notice. The full terms are the TrackData terms page. A lap missing from this zip was not counted.",
     "",
     "## Files",
     "",
     "- `runs.jsonl` is one JSON object per line. The first line is the header (`kind` is `header`). Each later line is one lap (`kind` is `run`) from an attempt where Recover stayed off.",
     "- `videos/<id>.webm` is the canvas recording named by that lap's `video` field. That field is null when the browser could not record.",
-    "- `recovery-data/` holds the laps from an attempt where Recover was on. They still accrue one cent. `recovery-data/runs.jsonl` lists them, and `recovery-data/videos/` holds their recordings.",
+    "- `recovery-data/` holds the laps from an attempt where Recover was on. They accrue the same cent as any other saved lap on that track. `recovery-data/runs.jsonl` lists them, and `recovery-data/videos/` holds their recordings.",
     "",
     "## Time",
     "",
@@ -1099,6 +1128,8 @@
     packTicks: packTicks,
     zipFiles: zipFiles,
     filedRun: filedRun,
+    centsForId: centsForId,
+    trackDataLabel: trackDataLabel,
     readme: DATASET_README
   };
 
@@ -1169,7 +1200,7 @@
       determinismOk = data.isDeterminstic === true || data.isDeterministic === true;
       if (button) {
         button.title = determinismOk
-          ? "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. One saved lap accrues one cent, including a lap with Recover on. Those laps are filed under recovery-data in the zip. Payment is in whole dollars under the dataset terms. Click to download a zip."
+          ? PAY_TITLE
           : "Determinism check did not pass, so good data from this browser is not saved or sent. A lap that is not saved is not paid.";
         notifyParent();
       }
@@ -2203,7 +2234,7 @@
   var RECOVERY_README = [
     "# Recovery data",
     "",
-    "Laps from an attempt where Recover was on. Each one still accrues one cent.",
+    "Laps from an attempt where Recover was on. Each one accrues the same cent as any other saved lap on that track.",
     "",
     "`runs.jsonl` in this folder lists those laps. `videos/` next to it holds their recordings. Other laps stay at the top of the zip."
   ].join("\n") + "\n";
@@ -2283,31 +2314,35 @@
     notifyParent();
   }
 
-  function money(count) {
-    return "$" + (count / 100).toFixed(2);
-  }
-
-  function lapCount() {
+  function eachLapId(fn) {
     var seen = {};
-    var n = 0;
     function add(id) {
       if (!id || seen[id]) return;
       seen[id] = 1;
-      n += 1;
+      fn(id);
     }
     var runs = allRuns();
     var i;
     for (i = 0; i < runs.length; i++) add(runs[i] && runs[i].id);
     for (i = 0; i < ledger.length; i++) add(ledger[i]);
+  }
+
+  function lapCount() {
+    var n = 0;
+    eachLapId(function () { n += 1; });
+    return n;
+  }
+
+  function lapCents() {
+    var n = 0;
+    eachLapId(function (id) { n += centsForId(id); });
     return n;
   }
 
   function paint() {
     if (!button) return;
     var count = lapCount();
-    var laps = count === 1 ? "1 lap" : count + " laps";
-    var label = "TrackData · " + laps + " · " + money(count);
-    if (sendFailed && count) label += " · not sent";
+    var label = trackDataLabel(count, lapCents(), sendFailed);
     var base = button.getAttribute("data-base-title");
     if (base) {
       var missing = count - allRuns().length;
@@ -2394,7 +2429,7 @@
     button = document.createElement("button");
     button.type = "button";
     button.id = "polytrack-063-dataset";
-    button.title = "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. One saved lap accrues one cent, including a lap with Recover on. Those laps are filed under recovery-data in the zip. Payment is in whole dollars under the dataset terms. Click to download a zip. Restarting the computer does not clear this count.";
+    button.title = PAY_TITLE + " Restarting the computer does not clear this count.";
     button.setAttribute("data-base-title", button.title);
     labelNode = document.createTextNode("");
     button.appendChild(labelNode);
@@ -2468,7 +2503,7 @@
       bar.appendChild(jerk);
       document.body.appendChild(bar);
       var style = document.createElement("style");
-      style.textContent = "#polytrack-063-tools{position:fixed;left:12px;bottom:12px;z-index:40;display:flex;gap:8px;align-items:center;}#polytrack-063-dataset,#polytrack-063-terms{margin:0;padding:6px 10px;border:0;background:#28346a;color:#fff;font:16px/1.2 sans-serif;cursor:pointer;pointer-events:auto;}#polytrack-063-dataset:hover,#polytrack-063-terms:hover{background:#334b77;}#polytrack-063-jerk{display:flex;gap:6px;align-items:center;color:#fff;font:14px/1.2 sans-serif;cursor:pointer;}#polytrack-063-terms-layer{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;}#polytrack-063-terms-layer[hidden]{display:none;}#polytrack-063-terms-layer > div{width:min(720px,92vw);height:min(80vh,640px);background:#fff;display:flex;flex-direction:column;}#polytrack-063-terms-layer > div > div{display:flex;align-items:center;justify-content:space-between;height:40px;padding:0 8px 0 12px;background:#0677ba;color:#fff;font:700 14px/40px sans-serif;}#polytrack-063-terms-layer button{border:0;background:transparent;color:#fff;font:700 13px/32px sans-serif;cursor:pointer;}#polytrack-063-terms-layer iframe{flex:1;border:0;width:100%;background:#eef1f4;}";
+      style.textContent = "#polytrack-063-tools{position:fixed;left:12px;bottom:12px;z-index:40;display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:calc(100vw - 24px);}#polytrack-063-dataset,#polytrack-063-terms{margin:0;padding:6px 10px;border:0;background:#28346a;color:#fff;font:16px/1.3 sans-serif;cursor:pointer;pointer-events:auto;text-align:left;}#polytrack-063-dataset{white-space:normal;}#polytrack-063-dataset:hover,#polytrack-063-terms:hover{background:#334b77;}#polytrack-063-jerk{display:flex;gap:6px;align-items:center;color:#fff;font:14px/1.2 sans-serif;cursor:pointer;}#polytrack-063-terms-layer{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;}#polytrack-063-terms-layer[hidden]{display:none;}#polytrack-063-terms-layer > div{width:min(720px,92vw);height:min(80vh,640px);background:#fff;display:flex;flex-direction:column;}#polytrack-063-terms-layer > div > div{display:flex;align-items:center;justify-content:space-between;height:40px;padding:0 8px 0 12px;background:#0677ba;color:#fff;font:700 14px/40px sans-serif;}#polytrack-063-terms-layer button{border:0;background:transparent;color:#fff;font:700 13px/32px sans-serif;cursor:pointer;}#polytrack-063-terms-layer iframe{flex:1;border:0;width:100%;background:#eef1f4;}";
       document.head.appendChild(style);
     }
     setInterval(jerkTick, 200);

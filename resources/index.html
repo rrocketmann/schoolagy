@@ -442,10 +442,10 @@ gtag('config', 'G-C7MHSFPRSE');
     '#sg-dropdown .sg-empty{padding:10px 16px;color:#677274;font-size:14px}',
     '#library-main.active-loader .loading-overlay,#library-main.active-loader .loading-image{display:none!important}',
     '#sg-sgy-player{display:flex;flex-direction:column;height:100%;min-height:0;background:#fff}',
-    '#sg-sgy-player .popups-title{display:flex;align-items:center;gap:10px;background:#333;color:#fff;padding:8px 12px;font-size:14px;font-weight:700}',
+    '#sg-sgy-player .popups-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#333;color:#fff;padding:8px 12px;font-size:14px;font-weight:700}',
     '#sg-sgy-player .popups-title-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '#sg-sgy-player .popups-title button{background:transparent;border:0;color:#fff;cursor:pointer;font-size:13px;padding:4px 8px}',
-    '#sg-sgy-player .popups-title button.sg-dataset{font-weight:700;white-space:nowrap}',
+    '#sg-sgy-player .popups-title button.sg-dataset{font-weight:700;white-space:normal;text-align:left;line-height:1.3}',
     '#sg-sgy-player .popups-title button.sg-dataset[hidden]{display:none!important}',
     '#sg-sgy-player .popups-title button.sg-terms{font-weight:700;white-space:nowrap}',
     '#sg-sgy-player .popups-title button.sg-terms[hidden]{display:none!important}',
@@ -696,7 +696,7 @@ gtag('config', 'G-C7MHSFPRSE');
       datasetBtn.className = 'sg-dataset';
       datasetBtn.hidden = true;
       datasetBtn.textContent = 'TrackData';
-      datasetBtn.title = 'Good data is saved here and sent to the archive. One saved lap accrues one cent, including a lap with Recover on. Those laps are filed under recovery-data in the zip. Payment is in whole dollars under the dataset terms. Click to download a zip.';
+      datasetBtn.title = 'Good data is saved here and sent to the archive. A saved lap accrues one cent. A saved lap on Summer 5, Summer 6, Summer 7, Winter 2, Winter 3, Desert 1, Desert 2, or Desert 5 accrues two cents, including one already saved on this browser. A lap with Recover on accrues the same amount and is filed under recovery-data in the zip. Payment is in whole dollars under the dataset terms. Click to download a zip.';
       var termsBtn = document.createElement('button');
       termsBtn.type = 'button';
       termsBtn.className = 'sg-terms';

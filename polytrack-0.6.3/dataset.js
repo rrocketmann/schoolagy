@@ -285,22 +285,10 @@
     vehicle: VEHICLE
   };
 
-  var DOUBLE_CENTS = {
-    "Summer 5": 2,
-    "Summer 6": 2,
-    "Summer 7": 2,
-    "Winter 2": 2,
-    "Winter 3": 2,
-    "Desert 1": 2,
-    "Desert 2": 2,
-    "Desert 5": 2
-  };
-  var BONUS_LINE = "2¢: Summer 5, 6, 7 · Winter 2, 3 · Desert 1, 2, 5";
-  var PAY_TITLE = "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. A saved lap accrues one cent. A saved lap on Summer 5, Summer 6, Summer 7, Winter 2, Winter 3, Desert 1, Desert 2, or Desert 5 accrues two cents, including one already saved on this browser. A lap with Recover on accrues the same amount and is filed under recovery-data in the zip. Payment is in whole dollars under the dataset terms. Click to download a zip.";
+  var PAY_TITLE = "Good data from Polytrack 0.6.3 is saved here and sent to the 0.6.3 archive. A saved lap accrues one cent, including one already saved on this browser. A lap with Recover on accrues the same amount and is filed under recovery-data in the zip. Payment is in whole dollars under the dataset terms. Click to download a zip.";
 
   function centsForId(id) {
-    var name = String(id || "").split("|")[0];
-    return DOUBLE_CENTS[name] || 1;
+    return 1;
   }
 
   function money(cents) {
@@ -309,7 +297,7 @@
 
   function trackDataLabel(laps, cents, failed) {
     var lapText = laps === 1 ? "1 lap" : laps + " laps";
-    var label = "TrackData · " + lapText + " · " + money(cents) + " · " + BONUS_LINE;
+    var label = "TrackData · " + lapText + " · " + money(cents);
     if (failed && laps) label += " · not sent";
     return label;
   }
@@ -334,7 +322,7 @@
     "",
     "Good data is uploaded for the site owner as well as saved in this zip. Profile names are not included. A run that fails the determinism check is not uploaded.",
     "",
-    "A saved lap is not a payment. A saved lap accrues one cent. A saved lap on Summer 5, Summer 6, Summer 7, Winter 2, Winter 3, Desert 1, Desert 2, or Desert 5 accrues two cents, including one already saved on this browser. A lap driven with Recover on accrues the same amount. Cash is paid only in whole dollars, only at JLS, only if the creator knows you, and only for an official lap with no checkpoint reset. A reset back to a checkpoint is not saved. The program can end without notice. The full terms are the TrackData terms page. A lap missing from this zip was not counted.",
+    "A saved lap is not a payment. A saved lap accrues one cent, including one already saved on this browser. A lap driven with Recover on accrues the same amount. Cash is paid only in whole dollars, only at JLS, only if the creator knows you, and only for an official lap with no checkpoint reset. A reset back to a checkpoint is not saved. The program can end without notice. The full terms are the TrackData terms page. A lap missing from this zip was not counted.",
     "",
     "## Files",
     "",

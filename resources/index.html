@@ -669,18 +669,30 @@ gtag('config', 'G-C7MHSFPRSE');
     if (event.origin !== location.origin) return;
     var data = event.data;
     if (!data || data.type !== 'polytrack-dataset') return;
-    var frame = document.querySelector('#sg-sgy-player iframe');
-    var btn = document.querySelector('#sg-sgy-player .sg-dataset');
-    if (!frame || !btn || event.source !== frame.contentWindow) return;
+    var active = sgActiveHref && sgPlayerCache[sgActiveHref];
+    if (!active || !active.iframe || !active.iframe.contentWindow || event.source !== active.iframe.contentWindow) return;
+    var btn = active.wrap.querySelector('.sg-dataset');
+    if (!btn) return;
     btn.hidden = false;
     btn.textContent = data.label || 'TrackData';
     if (data.title) btn.title = data.title;
-    var terms = document.querySelector('#sg-sgy-player .sg-terms');
+    var terms = active.wrap.querySelector('.sg-terms');
     if (terms) terms.hidden = false;
-    var jerk = document.querySelector('#sg-sgy-player .sg-jerk');
+    var jerk = active.wrap.querySelector('.sg-jerk');
     if (jerk) jerk.hidden = false;
   });
 
+  var sgPlayerCache = {};
+  var sgActiveHref = '';
+  var sgPlayerHost = null;
+  function getSgPlayerHost() {
+    if (!sgPlayerHost) {
+      sgPlayerHost = document.createElement('div');
+      sgPlayerHost.style.display = 'none';
+      document.body.appendChild(sgPlayerHost);
+    }
+    return sgPlayerHost;
+  }
   function playerChrome(name, href, onClose) {
     var wrap = document.createElement('div');
     wrap.id = 'sg-sgy-player';
@@ -703,6 +715,30 @@ gtag('config', 'G-C7MHSFPRSE');
     close.title = 'Close (`)';
     title.appendChild(back);
     title.appendChild(label);
+    var body = document.createElement('div');
+    body.className = 'popups-body';
+    var iframe = document.createElement('iframe');
+    iframe.allowFullscreen = true;
+    iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-fullscreen allow-downloads');
+    var doc = String(href || '').indexOf('credits/') !== -1;
+    if (doc) iframe.setAttribute('data-sg-doc', '1');
+    iframe.setAttribute('scrolling', doc ? 'yes' : 'no');
+    iframe.addEventListener('load', function(){
+      fitGameFrame(iframe);
+      try {
+        var w = iframe.contentWindow;
+        if (!w || w.__sgPanic || w.__sgPanicBackup) return;
+        w.__sgPanicBackup = true;
+        w.addEventListener('keydown', function(e) {
+          if (sgActiveHref !== href || e.repeat || e.code !== 'Backquote') return;
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          panicLeave();
+        }, true);
+      } catch (err) {}
+    });
     if (/(?:^|\/)polytrack\/index\.html(?:$|\?)/.test(String(href || '')) || /(?:^|\/)polytrack-0\.6\.3\/index\.html(?:$|\?)/.test(String(href || ''))) {
       var datasetBtn = document.createElement('button');
       datasetBtn.type = 'button';
@@ -747,31 +783,7 @@ gtag('config', 'G-C7MHSFPRSE');
     }
     title.appendChild(fs);
     title.appendChild(close);
-    var body = document.createElement('div');
-    body.className = 'popups-body';
-    var iframe = document.createElement('iframe');
-    iframe.allowFullscreen = true;
-    iframe.allow = 'autoplay; fullscreen; microphone; camera; display-capture';
-    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-fullscreen allow-downloads');
-    var doc = String(href || '').indexOf('credits/') !== -1;
-    if (doc) iframe.setAttribute('data-sg-doc', '1');
-    iframe.setAttribute('scrolling', doc ? 'yes' : 'no');
     iframe.src = href;
-    iframe.addEventListener('load', function(){
-      fitGameFrame(iframe);
-      try {
-        var w = iframe.contentWindow;
-        if (!w || w.__sgPanic || w.__sgPanicBackup) return;
-        w.__sgPanicBackup = true;
-        w.addEventListener('keydown', function(e) {
-          if (e.repeat || e.code !== 'Backquote') return;
-          if (e.ctrlKey || e.metaKey || e.altKey) return;
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          panicLeave();
-        }, true);
-      } catch (err) {}
-    });
     body.appendChild(iframe);
     setTimeout(function(){ fitGameFrame(iframe); }, 0);
     wrap.appendChild(title);
@@ -803,7 +815,7 @@ gtag('config', 'G-C7MHSFPRSE');
       }
       setTimeout(function(){ fitGameFrame(iframe); }, 50);
     };
-    return wrap;
+    return { wrap: wrap, iframe: iframe, label: label };
   }
 
   function showPopupPlayer(name, href) {
@@ -820,13 +832,25 @@ gtag('config', 'G-C7MHSFPRSE');
       box.className = 'popups-box popups-large sg-sgy-player-box';
       document.body.appendChild(box);
     }
-    box.innerHTML = '';
-    box.appendChild(playerChrome(name, href, function() {
-      overlay.classList.remove('show');
-      box.classList.remove('show');
+    var host = getSgPlayerHost();
+    if (sgActiveHref && sgPlayerCache[sgActiveHref] && sgPlayerCache[sgActiveHref].wrap.parentNode === box) {
+      host.appendChild(sgPlayerCache[sgActiveHref].wrap);
+    } else {
       box.innerHTML = '';
-    }));
+    }
+    if (!sgPlayerCache[href]) {
+      sgPlayerCache[href] = playerChrome(name, href, function() {
+        if (sgPlayerCache[href] && sgPlayerCache[href].wrap.parentNode === box) host.appendChild(sgPlayerCache[href].wrap);
+        overlay.classList.remove('show');
+        box.classList.remove('show');
+      });
+    } else {
+      sgPlayerCache[href].label.textContent = name;
+    }
+    sgActiveHref = href;
+    box.appendChild(sgPlayerCache[href].wrap);
     box.classList.add('show');
+    setTimeout(function(){ fitGameFrame(sgPlayerCache[href].iframe); }, 0);
   }
 
   window.openGame = function(name, url) {

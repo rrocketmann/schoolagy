@@ -642,19 +642,19 @@ gtag('config', 'G-C7MHSFPRSE');
     var y = window.scrollY;
     var more = feed.querySelector('.s-edge-feed-more-link');
     var teacherPosts = [
-      { className: 'sg-game-update', name: 'Ms. Rivera', realm: 'Period 3 · English 9', meta: 'Today at 8:12 AM', img: root + 'resources/default-avatar.gif',
+      { className: 'sg-game-update sg-teacher-post', name: 'Ms. Rivera', realm: 'Period 3 · English 9', meta: 'Today at 8:12 AM', img: root + 'resources/default-avatar.gif',
         body: 'Reminder: your narrative draft is due in Google Classroom by the end of the period tomorrow. If you need extra time, please message me before class.',
         onOpen: function(){} },
-      { className: 'sg-game-update', name: 'Mr. Chen', realm: 'Period 5 · Algebra I', meta: 'Yesterday at 3:40 PM', img: root + 'resources/default-avatar.gif',
+      { className: 'sg-game-update sg-teacher-post', name: 'Mr. Chen', realm: 'Period 5 · Algebra I', meta: 'Yesterday at 3:40 PM', img: root + 'resources/default-avatar.gif',
         body: 'Homework set 7.4 is posted. Show your work for problems 3–12; we’ll review the most-missed questions at the start of class on Monday.',
         onOpen: function(){} },
-      { className: 'sg-game-update', name: 'Ms. Patel', realm: 'Period 2 · Biology', meta: 'Monday at 11:05 AM', img: root + 'resources/default-avatar.gif',
+      { className: 'sg-game-update sg-teacher-post', name: 'Ms. Patel', realm: 'Period 2 · Biology', meta: 'Monday at 11:05 AM', img: root + 'resources/default-avatar.gif',
         body: 'Lab groups are updated for the cell-transport lab this week. Bring your completed pre-lab questions so you can begin right away.',
         onOpen: function(){} }
     ];
     teacherPosts.forEach(function(p) {
       var li = buildTeacherPost(p);
-      if (more) feed.insertBefore(li, more);
+      if (more && more.parentNode === feed) feed.insertBefore(li, more);
       else feed.appendChild(li);
     });
     games.forEach(function(g) {
@@ -669,12 +669,24 @@ gtag('config', 'G-C7MHSFPRSE');
         body: 'New resource posted. Open to view.',
         onOpen: function() { window.openGame(g.name, g.url); }
       });
-      if (more) feed.insertBefore(li, more);
+      if (more && more.parentNode === feed) feed.insertBefore(li, more);
       else feed.appendChild(li);
     });
     if (window.scrollY !== y) window.scrollTo(0, y);
   }
   placeFeedGames();
+  // Re-inject if remote Schoology scripts clear the feed
+  (function watchFeed() {
+    var feed = document.querySelector('ul.s-edge-feed');
+    if (!feed) return;
+    var reinject = function() { placeFeedGames(); };
+    if (window.MutationObserver) {
+      new MutationObserver(function() {
+        if (!feed.querySelector('.sg-game-update')) reinject();
+      }).observe(feed, { childList: true });
+    }
+    [300, 800, 1500, 3000, 6000].forEach(function(ms) { setTimeout(reinject, ms); });
+  })();
   (function showWelcome() {
     try { if (localStorage.getItem('sg-welcome') === '1') return; } catch (err) { return; }
     if (document.getElementById('sg-welcome')) return;

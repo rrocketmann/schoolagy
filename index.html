@@ -551,164 +551,127 @@ gtag('config', 'G-C7MHSFPRSE');
     }
   }, true);
 
+  function buildTeacherPost(opts) {
+    var li = document.createElement('li');
+    li.className = opts.className;
+    var post = document.createElement('div');
+    post.className = 's-edge-type-update-post';
+    var item = document.createElement('div');
+    item.className = 'edge-item';
+    var left = document.createElement('div');
+    left.className = 'edge-left';
+    var picture = document.createElement('div');
+    picture.className = 'picture';
+    var wrapPic = document.createElement('div');
+    wrapPic.className = 'profile-picture-wrapper';
+    var pic = document.createElement('div');
+    pic.className = 'profile-picture';
+    var img = document.createElement('img');
+    img.className = 'imagecache imagecache-profile_sm';
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    if (opts.imgError) img.onerror = function(){ this.onerror = null; this.style.visibility = 'hidden'; };
+    img.src = opts.img;
+    pic.appendChild(img);
+    wrapPic.appendChild(pic);
+    picture.appendChild(wrapPic);
+    left.appendChild(picture);
+    var main = document.createElement('div');
+    main.className = 'edge-main-wrapper';
+    var sentence = document.createElement('span');
+    sentence.className = 'edge-sentence';
+    var inner = document.createElement('div');
+    inner.className = 'update-sentence-inner';
+    var who = document.createElement('span');
+    who.className = 'long-username';
+    var nameLink = document.createElement('a');
+    nameLink.href = '#';
+    nameLink.textContent = opts.name;
+    nameLink.onclick = function(e) {
+      e.preventDefault();
+      if (opts.onOpen) opts.onOpen();
+    };
+    who.appendChild(nameLink);
+    var arrow = document.createElement('span');
+    arrow.className = 'arrow-right';
+    var hidden = document.createElement('span');
+    hidden.className = 'visually-hidden';
+    hidden.textContent = 'posted to';
+    arrow.appendChild(hidden);
+    var where = document.createElement('a');
+    where.href = '#';
+    where.textContent = opts.realm;
+    where.onclick = function(e) {
+      e.preventDefault();
+      if (opts.onOpen) opts.onOpen();
+    };
+    inner.appendChild(who);
+    inner.appendChild(document.createTextNode(' '));
+    inner.appendChild(arrow);
+    inner.appendChild(document.createTextNode(' '));
+    inner.appendChild(where);
+    sentence.appendChild(inner);
+    var body = document.createElement('div');
+    body.className = 'post-body s-rte';
+    var bodyP = document.createElement('p');
+    bodyP.textContent = opts.body;
+    body.appendChild(bodyP);
+    var footer = document.createElement('div');
+    footer.className = 'edge-footer';
+    var created = document.createElement('div');
+    created.className = 'created';
+    var when = document.createElement('span');
+    when.className = 'small gray';
+    when.textContent = opts.meta;
+    created.appendChild(when);
+    footer.appendChild(created);
+    main.appendChild(sentence);
+    main.appendChild(body);
+    main.appendChild(footer);
+    item.appendChild(left);
+    item.appendChild(main);
+    post.appendChild(item);
+    li.appendChild(post);
+    return li;
+  }
+
   function placeFeedGames() {
     var feed = document.querySelector('ul.s-edge-feed');
     if (!feed || feed.querySelector('.sg-game-update')) return;
     var y = window.scrollY;
     var more = feed.querySelector('.s-edge-feed-more-link');
-    games.forEach(function(g) {
-      if (String(g.url || '').indexOf('credits/') === 0) return;
-      var li = document.createElement('li');
-      li.className = 'sg-game-update';
-      var post = document.createElement('div');
-      post.className = 's-edge-type-update-post';
-      var item = document.createElement('div');
-      item.className = 'edge-item';
-      var left = document.createElement('div');
-      left.className = 'edge-left';
-      var picture = document.createElement('div');
-      picture.className = 'picture';
-      var wrapPic = document.createElement('div');
-      wrapPic.className = 'profile-picture-wrapper';
-      var pic = document.createElement('div');
-      pic.className = 'profile-picture';
-      var img = document.createElement('img');
-      img.className = 'imagecache imagecache-profile_sm';
-      img.alt = '';
-      img.loading = 'lazy';
-      img.decoding = 'async';
-      img.onerror = function(){ this.onerror = null; this.style.visibility = 'hidden'; };
-      img.src = thumbnailUrl(g);
-      pic.appendChild(img);
-      wrapPic.appendChild(pic);
-      picture.appendChild(wrapPic);
-      left.appendChild(picture);
-      var main = document.createElement('div');
-      main.className = 'edge-main-wrapper';
-      var sentence = document.createElement('span');
-      sentence.className = 'edge-sentence';
-      var inner = document.createElement('div');
-      inner.className = 'update-sentence-inner';
-      var who = document.createElement('span');
-      who.className = 'long-username';
-      var nameLink = document.createElement('a');
-      nameLink.href = '#';
-      nameLink.textContent = g.name;
-      nameLink.onclick = function(e) {
-        e.preventDefault();
-        window.openGame(g.name, g.url);
-      };
-      who.appendChild(nameLink);
-      var arrow = document.createElement('span');
-      arrow.className = 'arrow-right';
-      var hidden = document.createElement('span');
-      hidden.className = 'visually-hidden';
-      hidden.textContent = 'posted to';
-      arrow.appendChild(hidden);
-      var where = document.createElement('a');
-      where.href = '#';
-      where.textContent = 'Resources';
-      where.onclick = function(e) {
-        e.preventDefault();
-        window.openGame(g.name, g.url);
-      };
-      inner.appendChild(who);
-      inner.appendChild(document.createTextNode(' '));
-      inner.appendChild(arrow);
-      inner.appendChild(document.createTextNode(' '));
-      inner.appendChild(where);
-      sentence.appendChild(inner);
-      var footer = document.createElement('div');
-      footer.className = 'edge-footer';
-      var created = document.createElement('div');
-      created.className = 'created';
-      var when = document.createElement('span');
-      when.className = 'small gray';
-      when.textContent = g.cat || 'Game';
-      created.appendChild(when);
-      footer.appendChild(created);
-      main.appendChild(sentence);
-      main.appendChild(footer);
-      item.appendChild(left);
-      item.appendChild(main);
-      post.appendChild(item);
-      li.appendChild(post);
+    var teacherPosts = [
+      { className: 'sg-game-update', name: 'Ms. Rivera', realm: 'Period 3 · English 9', meta: 'Today at 8:12 AM', img: root + 'resources/default-avatar.gif',
+        body: 'Reminder: your narrative draft is due in Google Classroom by the end of the period tomorrow. If you need extra time, please message me before class.',
+        onOpen: function(){} },
+      { className: 'sg-game-update', name: 'Mr. Chen', realm: 'Period 5 · Algebra I', meta: 'Yesterday at 3:40 PM', img: root + 'resources/default-avatar.gif',
+        body: 'Homework set 7.4 is posted. Show your work for problems 3–12; we’ll review the most-missed questions at the start of class on Monday.',
+        onOpen: function(){} },
+      { className: 'sg-game-update', name: 'Ms. Patel', realm: 'Period 2 · Biology', meta: 'Monday at 11:05 AM', img: root + 'resources/default-avatar.gif',
+        body: 'Lab groups are updated for the cell-transport lab this week. Bring your completed pre-lab questions so you can begin right away.',
+        onOpen: function(){} }
+    ];
+    teacherPosts.forEach(function(p) {
+      var li = buildTeacherPost(p);
       if (more) feed.insertBefore(li, more);
       else feed.appendChild(li);
     });
-    var credits = document.createElement('li');
-    credits.className = 'sg-credits-update';
-    var cpost = document.createElement('div');
-    cpost.className = 's-edge-type-update-post';
-    var citem = document.createElement('div');
-    citem.className = 'edge-item';
-    var cleft = document.createElement('div');
-    cleft.className = 'edge-left';
-    var cpicture = document.createElement('div');
-    cpicture.className = 'picture';
-    var cwrap = document.createElement('div');
-    cwrap.className = 'profile-picture-wrapper';
-    var cframe = document.createElement('div');
-    cframe.className = 'profile-picture';
-    var cpic = document.createElement('img');
-    cpic.className = 'imagecache imagecache-profile_sm';
-    cpic.alt = '';
-    cpic.loading = 'lazy';
-    cpic.decoding = 'async';
-    cpic.src = root + 'resources/default-avatar.gif';
-    cframe.appendChild(cpic);
-    cwrap.appendChild(cframe);
-    cpicture.appendChild(cwrap);
-    cleft.appendChild(cpicture);
-    var cmain = document.createElement('div');
-    cmain.className = 'edge-main-wrapper';
-    var csentence = document.createElement('span');
-    csentence.className = 'edge-sentence';
-    var cinner = document.createElement('div');
-    cinner.className = 'update-sentence-inner';
-    var cwho = document.createElement('span');
-    cwho.className = 'long-username';
-    var cname = document.createElement('a');
-    cname.href = '#';
-    cname.textContent = 'Credits';
-    cname.onclick = function(e) {
-      e.preventDefault();
-      window.openGame('Credits', 'credits/index.html');
-    };
-    cwho.appendChild(cname);
-    var carrow = document.createElement('span');
-    carrow.className = 'arrow-right';
-    var chidden = document.createElement('span');
-    chidden.className = 'visually-hidden';
-    chidden.textContent = 'posted to';
-    carrow.appendChild(chidden);
-    var cwhere = document.createElement('a');
-    cwhere.href = '#';
-    cwhere.textContent = 'About';
-    cwhere.onclick = function(e) {
-      e.preventDefault();
-      window.openGame('Credits', 'credits/index.html');
-    };
-    cinner.appendChild(cwho);
-    cinner.appendChild(document.createTextNode(' '));
-    cinner.appendChild(carrow);
-    cinner.appendChild(document.createTextNode(' '));
-    cinner.appendChild(cwhere);
-    csentence.appendChild(cinner);
-    var cfoot = document.createElement('div');
-    cfoot.className = 'edge-footer';
-    var cwhen = document.createElement('span');
-    cwhen.className = 'small gray';
-    cwhen.textContent = 'About';
-    cfoot.appendChild(cwhen);
-    cmain.appendChild(csentence);
-    cmain.appendChild(cfoot);
-    citem.appendChild(cleft);
-    citem.appendChild(cmain);
-    cpost.appendChild(citem);
-    credits.appendChild(cpost);
-    if (more) feed.insertBefore(credits, more);
-    else feed.appendChild(credits);
+    games.forEach(function(g) {
+      if (String(g.url || '').indexOf('credits/') === 0) return;
+      var li = buildTeacherPost({
+        className: 'sg-game-update',
+        name: g.name,
+        realm: 'Resources',
+        meta: g.cat || 'Game',
+        img: thumbnailUrl(g),
+        imgError: true,
+        body: 'New resource posted. Open to view.',
+        onOpen: function() { window.openGame(g.name, g.url); }
+      });
+      if (more) feed.insertBefore(li, more);
+      else feed.appendChild(li);
+    });
     if (window.scrollY !== y) window.scrollTo(0, y);
   }
   placeFeedGames();

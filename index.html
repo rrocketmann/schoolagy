@@ -361,14 +361,23 @@ gtag('config', 'G-C7MHSFPRSE');
     var jq = window.jQuery;
     if (!jq || jq.ajax.__sgHome) return;
     var real = jq.ajax;
-    var upcomingHtml = '<div id="upcoming-events" class="upcoming-events upcoming-events-wrapper"><aside role="complementary" aria-label="Upcoming Events"><div class="upcoming-calendar-link"><a href="/user-calendar">Calendar</a></div><h2 class="h2-med">Upcoming Events</h2><div class="upcoming-list"></div></aside></div>';
-    var recentHtml = '';
+    function submission(title, due, start) {
+      return '<div class="upcoming-event hidden-important" data-start="' + start + '"><div class="upcoming-item-content"><span class="mini-icon grade-item-icon submission-event-icon"></span><a class="event-title" href="#">' + title + '<br><span class="small gray">Due ' + due + '<br>Class</span></a></div></div>';
+    }
+    var submissionsHtml = '<div><div class="upcoming-list"><div id="upcoming_submissions" class="date-header"><div class="upcoming-date-title">Upcoming</div></div>'
+      + submission('Class Notes', 'Monday, November 30, 2026 at 11:59 pm', '1796111940')
+      + submission('Reading', 'Monday, November 30, 2026 at 11:59 pm', '1796111940')
+      + submission('Quiz', 'Thursday, December 3, 2026 at 11:59 pm', '1796371140')
+      + submission('Practice', 'Monday, December 7, 2026 at 11:59 pm', '1796716740')
+      + submission('Test', 'Thursday, December 10, 2026 at 11:59 pm', '1796975940')
+      + '</div></div>';
+    var upcomingHtml = '<div id="upcoming-events" class="upcoming-events upcoming-events-wrapper"><aside role="complementary" aria-label="Upcoming Events"><div class="upcoming-calendar-link"><a href="/user-calendar">Calendar</a></div><h2 class="h2-med">Upcoming Events</h2><div class="upcoming-list"><div id="upcoming_events" class="date-header hidden"><div class="upcoming-date-title">Wednesday, December 2, 2026</div></div><div class="upcoming-event hidden-important" data-start="1796240400"><div class="upcoming-item-content"><span class="mini-event-icon day-02"></span><span class="infotip"><a class="event-title" href="#">Class Meeting</a><span class="upcoming-time">11:40 am</span></span></div></div></div></aside></div>';
     var bodies = {
       '/home/upcoming_ajax': { html: upcomingHtml },
-      '/home/recently_completed_ajax': { html: recentHtml },
+      '/home/recently_completed_ajax': { html: '' },
       '/home/course_reminders_ajax': { html: '' },
       '/home/overdue_submissions_ajax': { html: '' },
-      '/home/upcoming_submissions_ajax': { html: '' }
+      '/home/upcoming_submissions_ajax': { html: submissionsHtml }
     };
     function homePath(url) {
       var s = String(url || '');
@@ -453,7 +462,6 @@ gtag('config', 'G-C7MHSFPRSE');
 
   var s = document.createElement('style');
   s.textContent = [
-    '#todo .upcoming-event,#todo .date-header{display:none!important}',
     '#lightbox,#lightboxOverlay,#popups-overlay,.popups-box,.s-lightbox,#s-lightbox{display:none!important}',
     '#header [class*="dark-red"],#header [class*="background-color-dark-red"]{display:none!important}',
     '#sg-dropdown{display:none;position:fixed;z-index:1000;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.2);min-width:240px;max-height:400px;overflow:hidden;overscroll-behavior:contain;flex-direction:column}',
@@ -705,6 +713,84 @@ gtag('config', 'G-C7MHSFPRSE');
       }).observe(feed, { childList: true });
     }
     [300, 800, 1500, 3000, 6000].forEach(function(ms) { setTimeout(reinject, ms); });
+  })();
+  // The captured composer stores "Write a comment" as the field value, and the
+  // real post goes to Schoology. Keep the placeholder, and keep new comments in
+  // the page only so a refresh drops them.
+  (function localComments() {
+    function placeholder(area) {
+      return area.getAttribute('defaulttext') || area.getAttribute('placeholder') || '';
+    }
+    function clearPrefill(area) {
+      var hint = placeholder(area);
+      if (hint && area.value === hint) area.value = '';
+    }
+    function commentTime() {
+      var d = new Date();
+      var h = d.getHours();
+      var m = d.getMinutes();
+      var ap = h >= 12 ? 'pm' : 'am';
+      h = h % 12 || 12;
+      var mm = m < 10 ? '0' + m : '' + m;
+      return 'Today at ' + h + ':' + mm + ' ' + ap;
+    }
+    function postComment(form) {
+      var area = form.querySelector('textarea[name="comment"]');
+      var feed = form.closest('.feed-comments');
+      if (!area || !feed) return;
+      clearPrefill(area);
+      var text = area.value.replace(/^\s+|\s+$/g, '');
+      if (!text || text === placeholder(area)) return;
+      var level = feed.querySelector('.s_comments_level');
+      if (!level) {
+        var wrap = document.createElement('div');
+        wrap.className = 's_comments';
+        wrap.innerHTML = '<div class="s_comments_level "></div>';
+        var formWrap = feed.querySelector('.s-comments-post-form');
+        feed.insertBefore(wrap, formWrap || null);
+        level = wrap.firstChild;
+      }
+      var card = document.createElement('div');
+      card.className = 'discussion-card';
+      card.innerHTML = '<div class="comment s-js-comment-wrapper no-children has-action-link-behavior"><div class="comment-grade-wrapper"></div><div class="comment_picture"><div class="picture"><div class="profile-picture-wrapper"><div class="profile-picture"><a href="#"><img src="resources/default-avatar.gif" alt="" class="imagecache imagecache-profile_tiny"></a></div></div></div></div><div class="comment-contents"><div class="comment-comment"><div class="comment-top"><span class="comment-author"><a href="#" title="View user profile.">Student</a></span><div class="comment-body-wrapper"></div></div></div></div><div class="comment-footer"><div class="comment-time-wrapper"><span class="comment-time"><span class="small gray"></span></span></div>&nbsp;·&nbsp;<span tabindex="0" role="button" class="like-btn clickable"><span class="content">Like&nbsp;</span><span class="visually-hidden">\'s comment</span></span></div></div>';
+      var body = card.querySelector('.comment-body-wrapper');
+      text.split('\n').forEach(function(line, i) {
+        if (i) body.appendChild(document.createElement('br'));
+        body.appendChild(document.createTextNode(line));
+      });
+      card.querySelector('.comment-time .small').textContent = commentTime();
+      level.appendChild(card);
+      var view = feed.querySelector('.feed-comments-viewall');
+      if (view) {
+        var found = view.textContent.match(/(\d+)/);
+        if (found) {
+          var n = Number(found[1]) + 1;
+          view.textContent = 'View all ' + n + ' comment' + (n === 1 ? '' : 's');
+        }
+      }
+      area.value = '';
+    }
+    document.querySelectorAll('textarea[name="comment"]').forEach(function(area) {
+      var form = area.closest('form');
+      if (!form) return;
+      clearPrefill(area);
+      area.addEventListener('focus', function() { clearPrefill(area); });
+      area.addEventListener('blur', function() { clearPrefill(area); });
+      area.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter' || e.shiftKey) return;
+        e.preventDefault();
+        postComment(form);
+      });
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        postComment(form);
+      });
+    });
+    [0, 300, 800, 1500].forEach(function(ms) {
+      setTimeout(function() {
+        document.querySelectorAll('textarea[name="comment"]').forEach(clearPrefill);
+      }, ms);
+    });
   })();
   (function showWelcome() {
     try { if (localStorage.getItem('sg-welcome') === '1') return; } catch (err) { return; }

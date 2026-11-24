@@ -361,8 +361,8 @@ gtag('config', 'G-C7MHSFPRSE');
     var jq = window.jQuery;
     if (!jq || jq.ajax.__sgHome) return;
     var real = jq.ajax;
-    var upcomingHtml = '<div id="upcoming-events" class="upcoming-events upcoming-events-wrapper"><aside role="complementary" aria-label="Upcoming Events"><div class="upcoming-calendar-link"><a href="/user-calendar">Calendar</a></div><h2 class="h2-med">Upcoming Events</h2><div class="upcoming-list"><div id="upcoming_events" class="date-header hidden"><div class="upcoming-date-title">Thursday, June 3</div></div><div class="upcoming-event hidden-important" data-start="1812006000"><div class="upcoming-item-content"><span class="mini-event-icon day-03"></span><span class="infotip"><a class="event-title" href="#">End of School</a><span class="upcoming-time">All day</span></span></div></div></div></aside></div>';
-    var recentHtml = '<div class="recently-completed-event"><span class="infotip" title="Thursday, August 13"><span class="recently-completed-title">Start of School in PAUSD</span><br><span class="realm-title-course-title"><span class="small gray realm-main-titles">Thursday, August 13</span></span></span><span class="infotip grade-infotip" title="Submitted"><span class="recently-completed-grade submitted"></span></span></div>';
+    var upcomingHtml = '<div id="upcoming-events" class="upcoming-events upcoming-events-wrapper"><aside role="complementary" aria-label="Upcoming Events"><div class="upcoming-calendar-link"><a href="/user-calendar">Calendar</a></div><h2 class="h2-med">Upcoming Events</h2><div class="upcoming-list"></div></aside></div>';
+    var recentHtml = '';
     var bodies = {
       '/home/upcoming_ajax': { html: upcomingHtml },
       '/home/recently_completed_ajax': { html: recentHtml },
